@@ -128,6 +128,7 @@ class AutoCrystFEL(object):
                                },
                 "maxchunksize": {"type": "integer"},
                 "processing_directory": {"type": "string"},
+                "doSubmit": {"type": "boolean"},
                 "doMerging": {"type": "boolean"},
                 "GeneratePeaklist": {"type": "boolean"},
                 "geometry_file": {"type": "string"},
@@ -487,19 +488,9 @@ class AutoCrystFEL(object):
             self.make_list_events(str(geomfile))
 
             maxchunksize = self.jshandle.get('maxchunksize', 10)
-            if len(self.filelist) <= maxchunksize:
-                infile = str(self.getOutputDirectory() / 'input.lst')
-                outname = datetime.now().strftime('%H-%M-%S.stream')
-                outstream = str(self.getOutputDirectory() / outname)
+            doSubmit = self.jshandle.get('doSubmit', True)
 
-                ofh = open(infile, 'w')
-                for fname in self.filelist:
-                    ofh.write(fname)
-                    ofh.write('\n')
-                ofh.close()
-
-                self.run_as_command(self.indexamajig_cmd(infile, outstream, str(geomfile)))
-            elif len(self.filelist) > maxchunksize:
+            if doSubmit:
                 file_chunk = int(len(self.filelist) / maxchunksize) + 1
                 for jj in range(file_chunk):
                     start = maxchunksize * jj
@@ -520,12 +511,28 @@ class AutoCrystFEL(object):
                         ofh.write('\n')
                     ofh.close()
 
-                    if self.is_executable('oarsub'):
+                    if self.is_executable('sbatch') is True and self.is_executable('oarsub') is True:
+                        self.slurm_submit(shellfile, self.indexamajig_cmd(infile, outstream, str(geomfile)))
+                    elif self.is_executable('oarsub'):
                         self.oarshell_submit(shellfile, self.indexamajig_cmd(infile, outstream, str(geomfile)))
                     elif self.is_executable('sbatch'):
                         self.slurm_submit(shellfile, self.indexamajig_cmd(infile, outstream, str(geomfile)))
                     else:
-                        self.run_as_command(self.indexamajig_cmd(infile, outstream, str(geomfile)))
+                        error_message = "doSubmit was set True but queue system is unavailable in running node; " \
+                                        "please change doSubmit to False"
+                        logger.error(error_message)
+            else:
+                infile = str(self.getOutputDirectory() / 'input.lst')
+                outname = datetime.now().strftime('%H-%M-%S.stream')
+                outstream = str(self.getOutputDirectory() / outname)
+
+                ofh = open(infile, 'w')
+                for fname in self.filelist:
+                    ofh.write(fname)
+                    ofh.write('\n')
+                ofh.close()
+
+                self.run_as_command(self.indexamajig_cmd(infile, outstream, str(geomfile)))
 
         except Exception as err:
             self.setFailure()
@@ -651,7 +658,10 @@ def __run__(inData):
         crystTask.run_indexing()
         crystTask.writeInputData(inData)
 
-        if crystTask.is_executable('oarsub'):
+        if crystTask.is_executable('sbatch') is True and crystTask.is_executable('oarsub') is True:
+            crystTask.combine_streams()
+
+        elif crystTask.is_executable('oarsub'):
             crystTask.check_oarstat()
 
         elif crystTask.is_executable('sbatch'):
@@ -704,6 +714,7 @@ def optparser():
     parser.add_argument("--processing_directory", type=str,
                         help="optional key, if you want to dump at a different folder")
     parser.add_argument("--doMerging", type=bool, default=False)
+    parser.add_argument("--doSubmit", type=bool, default=True)
     parser.add_argument("--GeneratePeaklist", type=bool, default=False)
     parser.add_argument("--indexing_method", type=str, default="mosflm",
                         help="change to asdf,or dirax or xds if needed")
