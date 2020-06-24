@@ -251,7 +251,7 @@ class ImageQualityIndicatorsTask(AbstractTask):
         if not self.isFailure() and doCrystfel:
             # Select only the strongest images to be run by CrystFEL
             listIndicatorsSorted = sorted(listImageQualityIndicators, key=lambda k: k['dozorScore'])[::-1]
-            listForCrystFEL = [k['image'] for k in listIndicatorsSorted[0:min(200, len(listIndicatorsSorted))-1]]
+            listForCrystFEL = [k['image'] for k in listIndicatorsSorted[0:min(200, len(listIndicatorsSorted))]]
 
             if len(listForCrystFEL) % batchSize == 0:
                 file_chunk = int(len(listForCrystFEL) / batchSize)
