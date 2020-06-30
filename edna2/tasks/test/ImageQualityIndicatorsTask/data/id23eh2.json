@@ -8,6 +8,6 @@
 	"template": "mesh-LRmesh_0_####.cbf",
 	"startNo": 1,
 	"endNo": 4592,
-    "batchSize": 40,
+    "batchSize": 200,
     "doSubmit": true
 }
