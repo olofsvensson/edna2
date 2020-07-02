@@ -102,7 +102,7 @@ else:
     logger = UtilsLogging.getLogger('INFO')
 
 # Load and run EDNA2 task
-tasks = __import__('tasks.{0}'.format(taskName))
+tasks = __import__('edna2.tasks.{0}'.format(taskName))
 tasksModule = getattr(tasks, taskName)
 TaskClass = getattr(tasksModule, taskName)
 
