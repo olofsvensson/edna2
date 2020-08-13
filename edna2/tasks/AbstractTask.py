@@ -194,7 +194,7 @@ class AbstractTask(object):
             time = '0:10:00'
             script = '#!/bin/bash\n'
             script += '#SBATCH --job-name="{0}"\n'.format(jobName)
-            script += '#SBATCH --partition={0}\n'.format('mx')
+            script += '#SBATCH --partition={0}\n'.format('grid')
             mem = 2000  # 2 Gb memory by default
             script += '#SBATCH --mem={0}\n'.format(mem)
             script += '#SBATCH --nodes={0}\n'.format(nodes)

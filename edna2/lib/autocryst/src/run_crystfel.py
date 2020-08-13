@@ -237,7 +237,7 @@ class AutoCrystFEL(object):
         slurm_handle.close()
         sub.call('chmod +x %s' % shellfile, shell=True)
 
-        AutoCrystFEL.run_as_command('sbatch -p mx -J autoCryst %s' % shellfile)
+        AutoCrystFEL.run_as_command('sbatch -p grid -J autoCryst %s' % shellfile)
         return
 
     @staticmethod
@@ -247,7 +247,7 @@ class AutoCrystFEL(object):
         slurm_handle.write("cat *.stream >> alltogether.stream")
         slurm_handle.close()
         AutoCrystFEL.run_as_command('chmod +x tmp_cat.sh')
-        AutoCrystFEL.run_as_command('sbatch --wait -d singleton -p mx -J autoCryst tmp_cat.sh')
+        AutoCrystFEL.run_as_command('sbatch --wait -d singleton -p grid -J autoCryst tmp_cat.sh')
         return
 
     @staticmethod
