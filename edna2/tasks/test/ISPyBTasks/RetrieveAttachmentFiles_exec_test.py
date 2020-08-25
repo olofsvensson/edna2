@@ -47,7 +47,7 @@ class RetrieveAttachmentFilesExecTest(unittest.TestCase):
         retrieveAttachmentFiles.execute()
         self.assertTrue(retrieveAttachmentFiles.isSuccess())
         outData = retrieveAttachmentFiles.outData
-        self.assertEqual(2, len(outData['filePath']))
+        self.assertEqual(1, len(outData['filePath']))
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ispyb test with default config')
