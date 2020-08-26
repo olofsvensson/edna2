@@ -258,6 +258,9 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         }
         # Create template for image name
         template = inData['nameTemplateImage']
+        # HDF5 workaround
+        if template.endswith(".h5"):
+            template = template.replace("1_??????", "??????")
         noWildCards = template.count('?')
         template = template.replace('?'*noWildCards,
                                     '{0:0'+str(noWildCards) + '}')
