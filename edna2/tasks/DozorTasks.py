@@ -661,7 +661,8 @@ class ControlDozor(AbstractTask):
                 fileName = '{0}_{1}_master.h5'.format(prefix, hdf5ImageNumber)
             image = directory / fileName
         inDataReadHeader = {
-            'imagePath': [image]
+            'imagePath': [image],
+            "skipNumberOfImages": True
         }
         controlHeader = ReadImageHeader(inData=inDataReadHeader)
         controlHeader.execute()
