@@ -190,12 +190,12 @@ class AbstractTask(object):
             if workingDir.startswith("/mntdirect/_users"):
                 workingDir = workingDir.replace("/mntdirect/_users", "/home/esrf")
             nodes = 1
-            core = 20
-            time = '0:10:00'
+            core = 10
+            time = '1:00:00'
+            mem = 4000  # 4 Gb memory by default
             script = '#!/bin/bash\n'
             script += '#SBATCH --job-name="{0}"\n'.format(jobName)
             script += '#SBATCH --partition={0}\n'.format('grid')
-            mem = 2000  # 2 Gb memory by default
             script += '#SBATCH --mem={0}\n'.format(mem)
             script += '#SBATCH --nodes={0}\n'.format(nodes)
             script += '#SBATCH --cpus-per-task={0}\n'.format(core)
