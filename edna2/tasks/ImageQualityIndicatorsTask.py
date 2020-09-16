@@ -67,6 +67,7 @@ class ImageQualityIndicatorsTask(AbstractTask):
         return {
             "type": "object",
             "properties": {
+                "beamline": {"type": "string"},
                 "doDistlSignalStrength": {"type": "boolean"},
                 "doIndexing": {"type": "boolean"},
                 "doCrystfel": {"type": "boolean"},
@@ -102,6 +103,7 @@ class ImageQualityIndicatorsTask(AbstractTask):
         }
 
     def run(self, inData):
+        beamline = inData.get('beamline', None)
         doSubmit = inData.get('doSubmit', False)
         batchSize = inData.get('batchSize', 1)
         doDistlSignalStrength = inData.get('doDistlSignalStrength', False)
@@ -187,6 +189,7 @@ class ImageQualityIndicatorsTask(AbstractTask):
                 batchEndNo = UtilsImage.getImageNumber(pathToLastImage)
                 # Run Control Dozor
                 inDataControlDozor = {
+                    'beamline': beamline,
                     'template': template,
                     'directory': directory,
                     'startNo': batchStartNo,
