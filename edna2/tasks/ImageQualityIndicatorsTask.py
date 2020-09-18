@@ -189,7 +189,6 @@ class ImageQualityIndicatorsTask(AbstractTask):
                 batchEndNo = UtilsImage.getImageNumber(pathToLastImage)
                 # Run Control Dozor
                 inDataControlDozor = {
-                    'beamline': beamline,
                     'template': template,
                     'directory': directory,
                     'startNo': batchStartNo,
@@ -197,6 +196,8 @@ class ImageQualityIndicatorsTask(AbstractTask):
                     'batchSize': batchSize,
                     'doSubmit': doSubmit
                 }
+                if beamline is not None:
+                    inDataControlDozor["beamline"] = beamline
                 controlDozor = ControlDozor(inDataControlDozor)
                 controlDozor.start()
                 listDozorTask.append((controlDozor, inDataControlDozor,
