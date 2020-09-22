@@ -887,7 +887,7 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
     #         EDPluginISPyBSetImageQualityIndicatorsPlot.dataInput = xsDataInputISPyBSetImageQualityIndicatorsPlot
     #         EDPluginISPyBSetImageQualityIndicatorsPlot.executeSynchronous()
         except Exception as e:
-            logger.warning("Couldn't copy files to pyarch: {0}".format(dozorPlotPyarchPath))
+            logger.warning("Couldn't copy files to pyarch.")
             logger.warning(e)
     #
     # self.sendMessageToMXCuBE("Processing finished", "info")
