@@ -40,6 +40,7 @@ from edna2.tasks.ISPyBTasks import ISPyBRetrieveDataCollection
 
 from edna2.utils import UtilsPath
 from edna2.utils import UtilsImage
+from edna2.utils import UtilsIspyb
 from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 from edna2.utils import UtilsDetector
@@ -510,7 +511,8 @@ class ControlDozor(AbstractTask):
                 "hdf5BatchSize": {"type": "integer"},
                 "wedgeNumber": {"type": "integer"},
                 "radiationDamage": {"type": "string"},
-                "keepCbfTmpDirectory": {"type": "boolean"}
+                "keepCbfTmpDirectory": {"type": "boolean"},
+                "doISPyBUpload": {"type": "boolean"}
             }
         }
 
@@ -541,29 +543,12 @@ class ControlDozor(AbstractTask):
         overlap = inData.get('overlap', self.overlap)
         # Check if connection to ISPyB needed
         batchSize, dictImage = self.determineBatchsize(inData)
+        startImageNo = inData.get("startNo", 1)
+        firstImagePath = dictImage[startImageNo]
         logger.debug("ExecDozor batch size: {0}".format(batchSize))
         if 'hdf5BatchSize' in inData:
            hdf5BatchSize = inData['hdf5BatchSize']
         listAllBatches = self.createListOfBatches(dictImage.keys(), batchSize)
-        # if dictImage[listAllBatches[0][0]].endswith('h5'):
-        #     hasHdf5Prefix = True
-        #     # Convert HDF5 images to CBF
-        #     logger.debug("HDF5 converter batch size: {0}".format(batchSize))
-        #     doRadiationDamage = inData.get('doRadiationDamage', False)
-        #     if doRadiationDamage:
-        #        cbfTempDir = None
-        #     else:
-        #        cbfTempDir = tempfile.mkdtemp(prefix='CbfTemp_')
-        #     listHdf5Batches = self.createListOfBatches(
-        #         dictImage.keys(),
-        #         batchSize
-        #     )
-        #     dictImage, hasHdf5Prefix = self.convertToCBF(
-        #         dictImage,
-        #         listHdf5Batches,
-        #         doRadiationDamage=doRadiationDamage,
-        #         cbfTempDir=cbfTempDir
-        #     )
         outData['imageQualityIndicators'] = []
         for listBatch in listAllBatches:
             outDataDozor, detectorType = self.runDozorTask(
@@ -600,7 +585,11 @@ class ControlDozor(AbstractTask):
                     outData['imageQualityIndicators'].append(imageQualityIndicators)
             # Make plot if we have a data collection id
         if 'dataCollectionId' in inData:
-            self.makePlot(inData['dataCollectionId'], outData, self.getWorkingDirectory())
+            processDirectory = pathlib.Path(inData.get("processDirectory", None))
+            dozorPlotPath, dozorCsvPath = self.makePlot(inData['dataCollectionId'], outData, self.getWorkingDirectory())
+            doIspybUpload = inData.get("doISPyBUpload", False)
+            if doIspybUpload:
+                self.storeDataOnPyarch(dozorPlotPath, dozorCsvPath, processDirectory, firstImagePath)
         #            xsDataResultControlDozor.halfDoseTime = edPluginDozor.dataOutput.halfDoseTime
         #            xsDataResultControlDozor.pngPlots = edPluginDozor.dataOutput.pngPlots
         #
@@ -852,12 +841,8 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
         return dozorPlotPath, dozorCsvPath
 
     @classmethod
-    def storeDataOnPyarch(cls, dozorPlotPath, dozorCsvPath,
-                          directory, processDirectory=None):
-        if processDirectory is None:
-            processDirectory = pathlib.Path(
-                str(directory).replace('RAW_DATA', 'PROCESSED_DATA'))
-        resultsDirectory = processDirectory / 'results'
+    def storeDataOnPyarch(cls, dataCollectionId,  dozorPlotPath, dozorCsvPath, workingDirectory):
+        resultsDirectory = pathlib.Path(workingDirectory) / 'results'
         try:
             if not resultsDirectory.exists():
                 resultsDirectory.mkdir(parents=True, mode=0o755)
@@ -878,21 +863,12 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
                 os.makedirs(os.path.dirname(dozorPlotPyarchPath), 0o755)
             shutil.copy(dozorPlotResultPath, dozorPlotPyarchPath)
             shutil.copy(dozorCsvResultPath, dozorCsvPyarchPath)
-    #         # Upload to data collection
-    #         xsDataInputISPyBSetImageQualityIndicatorsPlot = XSDataInputISPyBSetImageQualityIndicatorsPlot()
-    #         xsDataInputISPyBSetImageQualityIndicatorsPlot.dataCollectionId = XSDataInteger(dataCollectionId)
-    #         xsDataInputISPyBSetImageQualityIndicatorsPlot.imageQualityIndicatorsPlotPath = XSDataString(dozorPlotPyarchPath)
-    #         xsDataInputISPyBSetImageQualityIndicatorsPlot.imageQualityIndicatorsCSVPath = XSDataString(dozorCsvPyarchPath)
-    #         EDPluginISPyBSetImageQualityIndicatorsPlot = self.loadPlugin("EDPluginISPyBSetImageQualityIndicatorsPlotv1_4")
-    #         EDPluginISPyBSetImageQualityIndicatorsPlot.dataInput = xsDataInputISPyBSetImageQualityIndicatorsPlot
-    #         EDPluginISPyBSetImageQualityIndicatorsPlot.executeSynchronous()
+            # Upload to data collection
+            dataCollectionId = UtilsIspyb.setImageQualityIndicatorsPlot(
+                dataCollectionId, dozorPlotPyarchPath, dozorCsvPyarchPath)
         except Exception as e:
             logger.warning("Couldn't copy files to pyarch.")
             logger.warning(e)
-    #
-    # self.sendMessageToMXCuBE("Processing finished", "info")
-    # self.setStatusToMXCuBE("Success")
-    #
 
     def createImageDict(self, inData):
         # Create dictionary of all images with the image number as key
