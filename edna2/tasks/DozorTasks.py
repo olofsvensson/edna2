@@ -215,7 +215,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         command += 'pixel %f\n' % pixelSize
         command += 'exposure %.3f\n' % inData['exposureTime']
         command += 'spot_size %d\n' % inData['spotSize']
-        command += 'spot_level %d\n' % inData.get('spotLevel', 5)
+        command += 'spot_level %d\n' % inData.get('spotLevel', 6)
         command += 'detector_distance %.3f\n' % \
             inData['detectorDistance']
         command += 'X-ray_wavelength %.3f\n' % inData['wavelength']
