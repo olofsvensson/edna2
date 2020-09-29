@@ -543,7 +543,7 @@ class ControlDozor(AbstractTask):
         overlap = inData.get('overlap', self.overlap)
         # Check if connection to ISPyB needed
         batchSize, dictImage = self.determineBatchsize(inData)
-        startImageNo = inData.get("startNo", 1)
+        startImageNo = inData.get("startNo", sorted(dictImage.keys())[0])
         firstImagePath = dictImage[startImageNo]
         logger.debug("ExecDozor batch size: {0}".format(batchSize))
         if 'hdf5BatchSize' in inData:
