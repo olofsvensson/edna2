@@ -34,6 +34,15 @@ class UtilsImageUnitTest(unittest.TestCase):
 
     def setUp(self):
         self.imageFileName = "ref-testscale_1_0001.img"
+        self.imageFileNameH5 = "mesh-local-user_0_1_000001.h5"
+
+    def test_getPrefix(self):
+        prefix = UtilsImage.getPrefix(self.imageFileName)
+        self.assertEqual(prefix, "ref-testscale_1")
+
+    def test_getPrefixH5(self):
+        prefix = UtilsImage.getPrefix(self.imageFileNameH5)
+        self.assertEqual(prefix, "mesh-local-user_0_1")
 
     def test_getImageNumber(self):
         imageNumber = UtilsImage.getImageNumber(self.imageFileName)
