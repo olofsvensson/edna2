@@ -68,6 +68,7 @@ class ImageQualityIndicatorsTask(AbstractTask):
             "type": "object",
             "properties": {
                 "beamline": {"type": "string"},
+                "doDozorm": {"type": "boolean"},
                 "doDistlSignalStrength": {"type": "boolean"},
                 "doIndexing": {"type": "boolean"},
                 "doCrystfel": {"type": "boolean"},
@@ -99,12 +100,14 @@ class ImageQualityIndicatorsTask(AbstractTask):
                     }
                 },
                 "inputDozor": {"type": "number"},
+                "dozorAllFile": {"type": "string"},
             },
         }
 
     def run(self, inData):
         beamline = inData.get('beamline', None)
         doSubmit = inData.get('doSubmit', False)
+        doDozorm = inData.get('doDozorm', False)
         batchSize = inData.get('batchSize', 1)
         doDistlSignalStrength = inData.get('doDistlSignalStrength', False)
         doIndexing = inData.get('doIndexing', False)
@@ -142,6 +145,7 @@ class ImageQualityIndicatorsTask(AbstractTask):
         listOfImagesInBatch = []
         listOfAllBatches = []
         listOfAllH5Files = []
+        listControlDozorAllFile = []
         indexBatch = 0
         self.listH5FilePath = []
         detectorType = None
@@ -194,7 +198,8 @@ class ImageQualityIndicatorsTask(AbstractTask):
                     'startNo': batchStartNo,
                     'endNo': batchEndNo,
                     'batchSize': batchSize,
-                    'doSubmit': doSubmit
+                    'doSubmit': doSubmit,
+                    'doDozorm': doDozorm
                 }
                 if beamline is not None:
                     inDataControlDozor["beamline"] = beamline
@@ -251,6 +256,9 @@ class ImageQualityIndicatorsTask(AbstractTask):
                                 listImageQualityIndicators.append(imageQualityIndicators)
                 else:
                     listImageQualityIndicators += listOutDataControlDozor
+                # Check if dozorm
+                if doDozorm:
+                    listControlDozorAllFile.append(controlDozor.outData['dozorAllFile'])
 
         if not self.isFailure() and doCrystfel:
             # Select only the strongest images to be run by CrystFEL
@@ -299,6 +307,14 @@ class ImageQualityIndicatorsTask(AbstractTask):
                 listcrystfel_output.append(crystfel_outdata)
             else:
                 logger.error("CrystFEL did not run properly")
+        # Assemble all controlDozorAllFiles into one
+        if doDozorm:
+            imageQualityIndicatorsDozorAllFile = str(self.getWorkingDirectory() / "dozor_all")
+            os.system('touch {0}'.format(imageQualityIndicatorsDozorAllFile))
+            for controlDozorAllFile in listControlDozorAllFile:
+                command = 'cat ' + controlDozorAllFile + ' >> ' + imageQualityIndicatorsDozorAllFile
+                os.system(command)
+            outData["dozorAllFile"] = imageQualityIndicatorsDozorAllFile
 
         outData['imageQualityIndicators'] = listImageQualityIndicators
         outData['crystfel_results'] = listcrystfel_output

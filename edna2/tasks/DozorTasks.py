@@ -111,7 +111,8 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 "nameTemplateImage": {"type": "string"},
                 "wedgeNumber": {"type": "integer"},
                 "radiationDamage": {"type": "boolean"},
-                "overlap": {"type": "number"}
+                "overlap": {"type": "number"},
+                "doDozorm": {"type": "boolean"}
             }
         }
 
@@ -133,11 +134,13 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
                     "type": "array",
                     "items": {"type": "string"}
                 },
+                "dozorAllFile": {"type": "string"},
             },
         }
 
     def run(self, inData):
         doSubmit = inData.get('doSubmit', False)
+        doDozorm = inData.get('doDozorm', False)
         commands = self.generateCommands(inData)
         with open(str(self.getWorkingDirectory() / 'dozor.dat'), 'w') as f:
             f.write(commands)
@@ -150,6 +153,8 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         else:
             executable = UtilsConfig.get(self, 'executable', 'dozor')
         commandLine = executable + ' -pall'
+        if doDozorm:
+            commandLine += ' -mesh'
         if 'radiationDamage' in inData:
             commandLine += ' -rd dozor.dat'
         else:
@@ -157,7 +162,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         self.setLogFileName('dozor.log')
         self.runCommandLine(commandLine, doSubmit=doSubmit)
         log = self.getLog()
-        outData = self.parseOutput(inData, log,
+        outData = self.parseOutput(inData, log, doDozorm=doDozorm,
                                    workingDir=self.getWorkingDirectory())
         return outData
 
@@ -252,7 +257,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         # logger.debug('command: {0}'.format(command))
         return command
 
-    def parseOutput(self, inData, output, workingDir=None):
+    def parseOutput(self, inData, output, doDozorm=False, workingDir=None):
         """
         This method parses the output of dozor
         """
@@ -352,6 +357,11 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 resultDozor['plotmtvFile'] = mtvFilePath
                 resultDozor['pngPlots'] = self.generatePngPlots(mtvFilePath,
                                                                 workingDir)
+        if doDozorm:
+            # Create 'dozor_all_result' file
+            dozorAllFile = str(self.getWorkingDirectory() / 'dozor_all')
+            os.system('cat {0}/*.all > {1}'.format(str(self.getWorkingDirectory()), dozorAllFile))
+            resultDozor["dozorAllFile"] = dozorAllFile
         return resultDozor
 
     @classmethod
@@ -512,7 +522,8 @@ class ControlDozor(AbstractTask):
                 "wedgeNumber": {"type": "integer"},
                 "radiationDamage": {"type": "string"},
                 "keepCbfTmpDirectory": {"type": "boolean"},
-                "doISPyBUpload": {"type": "boolean"}
+                "doISPyBUpload": {"type": "boolean"},
+                "doDozorm": {"type": "boolean"}
             }
         }
 
@@ -532,15 +543,21 @@ class ControlDozor(AbstractTask):
                 "dozorPlot":  {"type": "string"},
                 "pathToCbfDirectory":  {"type": "string"},
                 "pngPlots":  {"type": "string"},
+                "dozorAllFile": {"type": "string"},
             },
         }
 
     def run(self, inData):
+        # workingDirectory = self.getWorkingDirectory()
         outData = {}
+        controlDozorAllFile = None
+        listDozorAllFile = []
         hasHdf5Prefix = False
         detectorType = None
         # Check overlap
         overlap = inData.get('overlap', self.overlap)
+        # Check doDozorm
+        doDozorm = inData.get('doDozorm', False)
         # Check if connection to ISPyB needed
         batchSize, dictImage = self.determineBatchsize(inData)
         startImageNo = inData.get("startNo", sorted(dictImage.keys())[0])
@@ -583,7 +600,16 @@ class ControlDozor(AbstractTask):
                             imageQualityIndicators['dozorSpotListShape'] = \
                                 list(numpyArray.shape)
                     outData['imageQualityIndicators'].append(imageQualityIndicators)
-            # Make plot if we have a data collection id
+                if doDozorm:
+                    listDozorAllFile.append(outDataDozor['dozorAllFile'])
+        # Assemble all dozorAllFiles into one
+        if doDozorm:
+            controlDozorAllFile = str(self.getWorkingDirectory() / "dozor_all")
+            os.system('touch {0}'.format(controlDozorAllFile))
+            for dozorAllFile in listDozorAllFile:
+                command = 'cat ' + dozorAllFile + ' >> ' + controlDozorAllFile
+                os.system(command)
+        # Make plot if we have a data collection id
         if 'dataCollectionId' in inData:
             if "processDirectory" in inData:
                 processDirectory = pathlib.Path(inData["processDirectory"])
@@ -609,6 +635,8 @@ class ControlDozor(AbstractTask):
 
         # Read the header from the first image in the batch
         outData['detectorType'] = detectorType
+        if doDozorm:
+            outData['dozorAllFile'] = controlDozorAllFile
         return outData
 
     def determineBatchsize(self, inData):
@@ -645,6 +673,7 @@ class ControlDozor(AbstractTask):
                      overlap, workingDirectory,
                      hasHdf5Prefix, hasOverlap):
         doSubmit = inData.get('doSubmit', False)
+        doDozorm = inData.get('doDozorm', False)
         outDataDozor = None
         image = dictImage[listBatch[0]]
         prefix = UtilsImage.getPrefix(image)
@@ -685,7 +714,9 @@ class ControlDozor(AbstractTask):
                        'numberImages': len(listBatch),
                        'workingDirectory': workingDirectory,
                        'overlap': overlap,
-                       'doSubmit': doSubmit}
+                       'doSubmit': doSubmit,
+                       'doDozorm': doDozorm
+                       }
         if 'beamline' in inData:
             inDataDozor['beamline'] = inData['beamline']
         fileName = os.path.basename(subWedge['image'][0]['path'])
