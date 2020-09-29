@@ -8,3 +8,6 @@ testdata/
 docs/build
 edna2/lib/autocryst/ext/build
 *.so
+.cache
+.pytest_cache
+
