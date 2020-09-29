@@ -589,7 +589,10 @@ class ControlDozor(AbstractTask):
             dozorPlotPath, dozorCsvPath = self.makePlot(inData['dataCollectionId'], outData, self.getWorkingDirectory())
             doIspybUpload = inData.get("doISPyBUpload", False)
             if doIspybUpload:
-                self.storeDataOnPyarch(dozorPlotPath, dozorCsvPath, processDirectory, firstImagePath)
+                self.storeDataOnPyarch(inData["dataCollectionId"],
+                                       dozorPlotPath=dozorPlotPath,
+                                       dozorCsvPath=dozorCsvPath,
+                                       workingDirectory=processDirectory)
         #            xsDataResultControlDozor.halfDoseTime = edPluginDozor.dataOutput.halfDoseTime
         #            xsDataResultControlDozor.pngPlots = edPluginDozor.dataOutput.pngPlots
         #
