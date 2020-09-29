@@ -91,10 +91,8 @@ class ControlDozorExecTest(unittest.TestCase):
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run control dozor test with default config')
-    @unittest.skipIf(not os.path.exists('/data/id30a2/inhouse/opid30a2/' +
-                                        '20190627/RAW_DATA/t1/t1b_1_0001.cbf'),
-                    'Image /data/id30a2/inhouse/opid30a2/' +
-                    '20190627/RAW_DATA/t1/t1b_1_0001.cbf doesn\'t exist')
+    @unittest.skipIf(not os.path.exists('/data/id30a2/inhouse/opid30a2/20200907/RAW_DATA/opid30a2_1_0001.cbf'),
+                    'Image /data/id30a2/inhouse/opid30a2/20200907/RAW_DATA/opid30a2_1_0001.cbf doesn\'t exist')
     def test_execute_ControlDozor_ispyb(self):
         currentSite = UtilsConfig.getSite()
         referenceDataPath = self.dataPath / 'ControlDozor_ispyb.json'
