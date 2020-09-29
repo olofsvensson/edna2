@@ -585,7 +585,10 @@ class ControlDozor(AbstractTask):
                     outData['imageQualityIndicators'].append(imageQualityIndicators)
             # Make plot if we have a data collection id
         if 'dataCollectionId' in inData:
-            processDirectory = pathlib.Path(inData.get("processDirectory", None))
+            if "processDirectory" in inData:
+                processDirectory = pathlib.Path(inData["processDirectory"])
+            else:
+                processDirectory = self.getWorkingDirectory()
             dozorPlotPath, dozorCsvPath = self.makePlot(inData['dataCollectionId'], outData, self.getWorkingDirectory())
             doIspybUpload = inData.get("doISPyBUpload", False)
             if doIspybUpload:
