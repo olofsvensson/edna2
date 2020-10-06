@@ -30,15 +30,20 @@ import random
 import unittest
 
 from edna2.utils import UtilsIspyb
+from edna2.utils import UtilsConfig
 
 
 class UtilsIspybExecTest(unittest.TestCase):
 
+    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
+                     'Cannot run control dozor test with default config')
     def test_findDataCollectionFromFileLocationAndFileName(self):
         firstImagePath = "/data/id30a2/inhouse/opid30a2/20200907/RAW_DATA/MeshScan_10/mesh-opid30a2_1_0001.cbf"
         dataCollection = UtilsIspyb.findDataCollectionFromFileLocationAndFileName(firstImagePath)
         self.assertEqual(2483117, dataCollection.dataCollectionId)
 
+    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
+                     'Cannot run control dozor test with default config')
     def test_setImageQualityIndicatorsPlot(self):
         dataCollectionId = 2483117
         letters = string.ascii_lowercase
