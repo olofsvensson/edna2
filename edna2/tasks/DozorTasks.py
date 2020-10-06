@@ -497,8 +497,8 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
 
 class ControlDozor(AbstractTask):
 
-    def __init__(self, inData):
-        AbstractTask.__init__(self, inData)
+    def __init__(self, inData, workingDirectorySuffix=None):
+        AbstractTask.__init__(self, inData, workingDirectorySuffix=workingDirectorySuffix)
         self.hasOverlap = False
         self.overlap = 0.0
 
@@ -686,14 +686,22 @@ class ControlDozor(AbstractTask):
             hdf5ImageNumber = 1
             if UtilsConfig.isEMBL():
                 fileName = '{0}_master.h5'.format(prefix)
+                workingDirectorySuffix = '{0}_master'.format(prefix)
             else:
                 fileName = '{0}_{1}_master.h5'.format(prefix, hdf5ImageNumber)
+                workingDirectorySuffix='{0}_{1}_master'.format(prefix, hdf5ImageNumber)
             image = directory / fileName
+        else:
+            workingDirectorySuffix='{0}_{1:04d}'.format(
+                prefix, UtilsImage.getImageNumber(image))
         inDataReadHeader = {
             'imagePath': [image],
             "skipNumberOfImages": True
         }
-        controlHeader = ReadImageHeader(inData=inDataReadHeader)
+        controlHeader = ReadImageHeader(
+            inData=inDataReadHeader,
+            workingDirectorySuffix=workingDirectorySuffix
+        )
         controlHeader.execute()
         outDataHeader = controlHeader.outData
         subWedge = outDataHeader['subWedge'][0]
@@ -734,7 +742,7 @@ class ControlDozor(AbstractTask):
             inDataDozor['wedgeNumber'] = inData['wedgeNumber']
         if 'radiationDamage' in inData:
             inDataDozor['radiationDamage'] = inData['radiationDamage']
-        dozor = ExecDozor(inData=inDataDozor)
+        dozor = ExecDozor(inData=inDataDozor, workingDirectorySuffix='{0:04d}_{1:04d}'.format(imageNumber, imageNumber+len(listBatch)-1))
         dozor.execute()
         if not dozor.isFailure():
             outDataDozor = dozor.outData

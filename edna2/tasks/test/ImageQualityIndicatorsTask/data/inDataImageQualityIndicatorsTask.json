@@ -1,6 +1,6 @@
 {
     "doDistlSignalStrength": false,
-    "doCrystfel": true,
+    "doCrystfel": false,
     "doIndexing": true,
     "doUploadToIspyb": false,
     "directory": "/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a2/inhouse/opid30a2/20191129/RAW_DATA/t1/MeshScan_05",

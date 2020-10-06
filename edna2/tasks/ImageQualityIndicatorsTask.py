@@ -203,7 +203,9 @@ class ImageQualityIndicatorsTask(AbstractTask):
                 }
                 if beamline is not None:
                     inDataControlDozor["beamline"] = beamline
-                controlDozor = ControlDozor(inDataControlDozor)
+                controlDozor = ControlDozor(
+                    inDataControlDozor,
+                    workingDirectorySuffix='{0:04d}_{1:04d}'.format(batchStartNo, batchEndNo))
                 controlDozor.start()
                 listDozorTask.append((controlDozor, inDataControlDozor,
                                       list(listOfImagesInBatch), listOfH5FilesInBatch))
@@ -213,7 +215,9 @@ class ImageQualityIndicatorsTask(AbstractTask):
                         inDataDistl = {
                             'referenceImage': str(image)
                         }
-                        distlTask = DistlSignalStrengthTask(inData=inDataDistl)
+                        distlTask = DistlSignalStrengthTask(
+                            inData=inDataDistl,
+                            workingDirectorySuffix=UtilsImage.getImageNumber(image))
                         distlTask.start()
                         listDistlTask.append((image, distlTask))
 
@@ -356,7 +360,11 @@ class ImageQualityIndicatorsTask(AbstractTask):
                     'size': minImageSize,
                     'timeOut': waitFileTimeOut
                 }
-                waitFileTask = WaitFileTask(inData=inDataWaitFileTask)
+                workingDirectorySuffix = h5DataFilePath.name.split('.h5')[0]
+                waitFileTask = WaitFileTask(
+                    inData=inDataWaitFileTask,
+                    workingDirectorySuffix=workingDirectorySuffix
+                )
                 logger.info("Waiting for file {0}".format(h5DataFilePath))
                 logger.debug("Wait file timeOut set to %f" % waitFileTimeOut)
                 waitFileTask.execute()
