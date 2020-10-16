@@ -86,3 +86,10 @@ def getSuffix(pathToImage):
     if listResult is not None:
         suffix = listResult[4]
     return suffix
+
+
+def getPrefixNumber(pathToImage):
+    prefix = getPrefix(pathToImage)
+    number = getImageNumber(pathToImage)
+    prefixNumber = '{0}_{1:04d}'.format(prefix, number)
+    return prefixNumber

@@ -44,7 +44,10 @@ class ControlIndexingTaskExecTest(unittest.TestCase):
     def test_execute_ControlIndexingTask_opid30a1_4(self):
         referenceDataPath = self.dataPath / 'opid30a1_4.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        controlIndexingTask = ControlIndexingTask(inData=inData)
+        controlIndexingTask = ControlIndexingTask(
+            inData=inData,
+            workingDirectorySuffix='opid30a1_4'
+        )
         controlIndexingTask.execute()
         self.assertTrue(controlIndexingTask.isSuccess())
         self.assertEqual(controlIndexingTask.outData["xdsIndexing"]["idxref"]["spaceGroupNumber"], 143)
@@ -54,7 +57,10 @@ class ControlIndexingTaskExecTest(unittest.TestCase):
     def test_execute_ControlIndexingTask_TRYP_X1_4(self):
         referenceDataPath = self.dataPath / 'TRYP-X1_4.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        controlIndexingTask = ControlIndexingTask(inData=inData)
+        controlIndexingTask = ControlIndexingTask(
+            inData=inData,
+            workingDirectorySuffix='TRYP-X1_4'
+        )
         controlIndexingTask.execute()
         self.assertTrue(controlIndexingTask.isSuccess())
         self.assertEqual(controlIndexingTask.outData["xdsIndexing"]["idxref"]["spaceGroupNumber"], 16)
@@ -64,7 +70,10 @@ class ControlIndexingTaskExecTest(unittest.TestCase):
     def test_execute_ControlIndexingTask_adrcpt_For1_4(self):
         referenceDataPath = self.dataPath / 'adrcpt-For1_4.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        controlIndexingTask = ControlIndexingTask(inData=inData)
+        controlIndexingTask = ControlIndexingTask(
+            inData=inData,
+            workingDirectorySuffix='adrcpt-For1_4'
+        )
         controlIndexingTask.execute()
         self.assertTrue(controlIndexingTask.isSuccess())
         self.assertEqual(controlIndexingTask.outData["xdsIndexing"]["idxref"]["spaceGroupNumber"], 75)
@@ -74,7 +83,10 @@ class ControlIndexingTaskExecTest(unittest.TestCase):
     def test_execute_ControlIndexingTask_MWB_CD269A_07_4(self):
         referenceDataPath = self.dataPath / 'MWB-CD269A_07_4.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        controlIndexingTask = ControlIndexingTask(inData=inData)
+        controlIndexingTask = ControlIndexingTask(
+            inData=inData,
+            workingDirectorySuffix='MWB-CD269A_07_4'
+        )
         controlIndexingTask.execute()
         self.assertTrue(controlIndexingTask.isSuccess())
         self.assertEqual(controlIndexingTask.outData["xdsIndexing"]["idxref"]["spaceGroupNumber"], 75)
