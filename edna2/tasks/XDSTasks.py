@@ -364,43 +364,6 @@ class XDSIndexingTask(XDSTask):
                 "detector_X":   list(map(float, xparm[9].split())),
                 "detector_Y":   list(map(float, xparm[10].split()))
             }
-            A = np.array(xparamDict["A"])
-            B = np.array(xparamDict["B"])
-            C = np.array(xparamDict["C"])
-
-            volum = np.cross(A, B).dot(C)
-            Ar = np.cross(B, C) / volum
-            Br = np.cross(C, A) / volum
-            Cr = np.cross(A, B) / volum
-            UBxds = np.array([Ar, Br, Cr]).transpose()
-
-            BEAM = np.array(xparamDict["beam"])
-            ROT = np.array(xparamDict["rot"])
-            wavelength = 1 / np.linalg.norm(BEAM)
-
-            xparamDict["cell_volum"] = volum
-            xparamDict["wavelength"] = wavelength
-            xparamDict["Ar"] = Ar.tolist()
-            xparamDict["Br"] = Br.tolist()
-            xparamDict["Cr"] = Cr.tolist()
-            xparamDict["UB"] = UBxds.tolist()
-
-            normROT = float(np.linalg.norm(ROT))
-            CAMERA_z = np.true_divide(ROT, normROT)
-            CAMERA_y = np.cross(CAMERA_z, BEAM)
-            normCAMERA_y = float(np.linalg.norm(CAMERA_y))
-            CAMERA_y = np.true_divide(CAMERA_y, normCAMERA_y)
-            CAMERA_x = np.cross(CAMERA_y, CAMERA_z)
-            CAMERA = np.transpose(np.array([CAMERA_x, CAMERA_y, CAMERA_z]))
-
-            mosflmUB = CAMERA.dot(UBxds)*xparamDict["wavelength"]
-            # mosflmUB = UBxds*xparamDict["wavelength"]
-            xparamDict["mosflmUB"] = mosflmUB.tolist()
-
-            reciprocCell = XDSIndexingTask.reciprocal(xparamDict["cell"])
-            B = XDSIndexingTask.BusingLevy(reciprocCell)
-            mosflmU = np.dot(mosflmUB, np.linalg.inv(B)) / xparamDict["wavelength"]
-            xparamDict["mosflmU"] = mosflmU.tolist()
         else:
             xparamDict = {}
         return xparamDict

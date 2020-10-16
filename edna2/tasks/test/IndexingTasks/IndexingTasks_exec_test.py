@@ -50,7 +50,7 @@ class ControlIndexingTaskExecTest(unittest.TestCase):
         )
         controlIndexingTask.execute()
         self.assertTrue(controlIndexingTask.isSuccess())
-        self.assertEqual(controlIndexingTask.outData["xdsIndexing"]["idxref"]["spaceGroupNumber"], 143)
+        self.assertEqual(controlIndexingTask.outData["resultIndexing"]["spaceGroupNumber"], 143)
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run indexing test with default config')
@@ -63,7 +63,7 @@ class ControlIndexingTaskExecTest(unittest.TestCase):
         )
         controlIndexingTask.execute()
         self.assertTrue(controlIndexingTask.isSuccess())
-        self.assertEqual(controlIndexingTask.outData["xdsIndexing"]["idxref"]["spaceGroupNumber"], 16)
+        self.assertEqual(controlIndexingTask.outData["resultIndexing"]["spaceGroupNumber"], 16)
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run indexing test with default config')
@@ -76,7 +76,7 @@ class ControlIndexingTaskExecTest(unittest.TestCase):
         )
         controlIndexingTask.execute()
         self.assertTrue(controlIndexingTask.isSuccess())
-        self.assertEqual(controlIndexingTask.outData["xdsIndexing"]["idxref"]["spaceGroupNumber"], 75)
+        self.assertEqual(controlIndexingTask.outData["resultIndexing"]["spaceGroupNumber"], 75)
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run indexing test with default config')
@@ -89,4 +89,4 @@ class ControlIndexingTaskExecTest(unittest.TestCase):
         )
         controlIndexingTask.execute()
         self.assertTrue(controlIndexingTask.isSuccess())
-        self.assertEqual(controlIndexingTask.outData["xdsIndexing"]["idxref"]["spaceGroupNumber"], 75)
+        self.assertEqual(controlIndexingTask.outData["resultIndexing"]["spaceGroupNumber"], 75)

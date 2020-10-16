@@ -23,6 +23,8 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "14/04/2020"
 
+import numpy as np
+
 
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.ReadImageHeader import ReadImageHeader
@@ -61,42 +63,13 @@ class ControlIndexingTask(AbstractTask):
         # First get the list of subWedges
         listSubWedge = self.getListSubWedge(inData)
         # Get list of spots from Dozor
-        listDozorSpotFile = []
-        xdsWorkingDirectorySuffix = ""
-        for subWedge in listSubWedge:
-            listSubWedgeImage = subWedge['image']
-            for image in listSubWedgeImage:
-                # listImage.append(image['path'])
-                inDataControlDozor = {
-                    'image': [image['path']]
-                }
-                controlDozor = ControlDozor(
-                    inData=inDataControlDozor,
-                    workingDirectorySuffix=UtilsImage.getPrefixNumber(image['path'])
-                )
-                controlDozor.execute()
-                if controlDozor.isSuccess():
-                    dozorSpotFile = controlDozor.outData["imageQualityIndicators"][0]["dozorSpotFile"]
-                    listDozorSpotFile.append(dozorSpotFile)
-                    if len(xdsWorkingDirectorySuffix) == 0:
-                        xdsWorkingDirectorySuffix = str(UtilsImage.getImageNumber(image['path']))
-                    else:
-                        xdsWorkingDirectorySuffix += "_" + str(UtilsImage.getImageNumber(image['path']))
         imageDict = listSubWedge[0]
-        imageDict["dozorSpotFile"] = listDozorSpotFile
-        xdsIndexinInData = {
-            "image": [imageDict]
+        imageDict["dozorSpotFile"] = self.getDozorSpotFiles(listSubWedge)
+        # Run XDS indexing
+        resultIndexing = self.runXdsIndexing(imageDict)
+        outData = {
+            "resultIndexing": resultIndexing
         }
-        xdsIndexingTask = XDSIndexingTask(
-            inData=xdsIndexinInData,
-            workingDirectorySuffix=xdsWorkingDirectorySuffix
-        )
-        xdsIndexingTask.execute()
-        if xdsIndexingTask.isSuccess():
-            xdsIndexingOutData = xdsIndexingTask.outData
-            outData = {
-                "xdsIndexing": xdsIndexingOutData
-            }
         return outData
 
     @staticmethod
@@ -125,3 +98,103 @@ class ControlIndexingTask(AbstractTask):
         readImageHeader.execute()
         listSubWedge = readImageHeader.outData["subWedge"]
         return listSubWedge
+
+    @staticmethod
+    def getDozorSpotFiles(listSubWedge):
+        listDozorSpotFile = []
+        for subWedge in listSubWedge:
+            listSubWedgeImage = subWedge['image']
+            for image in listSubWedgeImage:
+                # listImage.append(image['path'])
+                inDataControlDozor = {
+                    'image': [image['path']]
+                }
+                controlDozor = ControlDozor(
+                    inData=inDataControlDozor,
+                    workingDirectorySuffix=UtilsImage.getPrefixNumber(image['path'])
+                )
+                controlDozor.execute()
+                if controlDozor.isSuccess():
+                    dozorSpotFile = controlDozor.outData["imageQualityIndicators"][0]["dozorSpotFile"]
+                    listDozorSpotFile.append(dozorSpotFile)
+        return listDozorSpotFile
+
+    @staticmethod
+    def getResultIndexingFromXds(xdsIndexingOutData):
+        idxref = xdsIndexingOutData["idxref"]
+        xparamDict = xdsIndexingOutData["xparm"]
+        # Calculate MOSFLM UB matrix
+        A = np.array(xparamDict["A"])
+        B = np.array(xparamDict["B"])
+        C = np.array(xparamDict["C"])
+
+        volum = np.cross(A, B).dot(C)
+        Ar = np.cross(B, C) / volum
+        Br = np.cross(C, A) / volum
+        Cr = np.cross(A, B) / volum
+        UBxds = np.array([Ar, Br, Cr]).transpose()
+
+        BEAM = np.array(xparamDict["beam"])
+        ROT = np.array(xparamDict["rot"])
+        wavelength = 1 / np.linalg.norm(BEAM)
+
+        xparamDict["cell_volum"] = volum
+        xparamDict["wavelength"] = wavelength
+        xparamDict["Ar"] = Ar.tolist()
+        xparamDict["Br"] = Br.tolist()
+        xparamDict["Cr"] = Cr.tolist()
+        xparamDict["UB"] = UBxds.tolist()
+
+        normROT = float(np.linalg.norm(ROT))
+        CAMERA_z = np.true_divide(ROT, normROT)
+        CAMERA_y = np.cross(CAMERA_z, BEAM)
+        normCAMERA_y = float(np.linalg.norm(CAMERA_y))
+        CAMERA_y = np.true_divide(CAMERA_y, normCAMERA_y)
+        CAMERA_x = np.cross(CAMERA_y, CAMERA_z)
+        CAMERA = np.transpose(np.array([CAMERA_x, CAMERA_y, CAMERA_z]))
+
+        mosflmUB = CAMERA.dot(UBxds) * xparamDict["wavelength"]
+        # mosflmUB = UBxds*xparamDict["wavelength"]
+        # xparamDict["mosflmUB"] = mosflmUB.tolist()
+
+        reciprocCell = XDSIndexingTask.reciprocal(xparamDict["cell"])
+        B = XDSIndexingTask.BusingLevy(reciprocCell)
+        mosflmU = np.dot(mosflmUB, np.linalg.inv(B)) / xparamDict["wavelength"]
+        # xparamDict[
+
+        resultIndexing = {
+            "spaceGroupNumber": idxref["spaceGroupNumber"],
+            "cell": {
+                "a": idxref["a"],
+                "b": idxref["b"],
+                "c": idxref["c"],
+                "alpha": idxref["alpha"],
+                "beta": idxref["beta"],
+                "gamma": idxref["gamma"],
+            },
+            "xBeam": idxref["xBeam"],
+            "yBeam": idxref["yBeam"],
+            "distance": idxref["distance"],
+            "qualityOfFit": idxref["qualityOfFit"],
+            "mosaicity": idxref["mosaicity"],
+            "XDS_xparm": xparamDict,
+            "mosflmB": mosflmU.tolist(),
+            "mosflmU": mosflmU.tolist()
+        }
+        return resultIndexing
+
+    @staticmethod
+    def runXdsIndexing(imageDict):
+        xdsIndexinInData = {
+            "image": [imageDict]
+        }
+        xdsIndexingTask = XDSIndexingTask(
+            inData=xdsIndexinInData,
+            workingDirectorySuffix=UtilsImage.getPrefix(imageDict["image"][0]["path"])
+        )
+        xdsIndexingTask.execute()
+        resultIndexing = {}
+        if xdsIndexingTask.isSuccess():
+            xdsIndexingOutData = xdsIndexingTask.outData
+            resultIndexing = ControlIndexingTask.getResultIndexingFromXds(xdsIndexingOutData)
+        return resultIndexing
