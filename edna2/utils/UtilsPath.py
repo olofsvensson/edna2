@@ -40,14 +40,30 @@ logger = UtilsLogging.getLogger()
 DEFAULT_TIMEOUT = 120 # s
 
 
-def getWorkingDirectory(task, inData):
+def getWorkingDirectory(task, inData, workingDirectorySuffix=None):
     parentDirectory = inData.get('workingDirectory', None)
     if parentDirectory is None:
         parentDirectory = os.getcwd()
-    workingDirectory = tempfile.mkdtemp(
-        prefix=task.__class__.__name__ + '_',
-        dir=parentDirectory)
-    return pathlib.Path(workingDirectory)
+    parentDirectory = pathlib.Path(parentDirectory)
+    if workingDirectorySuffix is None:
+        # Create unique directory
+        workingDirectory = tempfile.mkdtemp(
+            prefix=task.__class__.__name__ + '_',
+            dir=parentDirectory)
+        workingDirectory = pathlib.Path(workingDirectory)
+    else:
+        # Here we asume that the user knows what he is doing and there's no
+        # race condition for creating the working directory!
+        workingDirectoryName = task.__class__.__name__ + '_' + workingDirectorySuffix
+        workingDirectory = parentDirectory / workingDirectoryName
+        index = 1
+        while workingDirectory.exists():
+            workingDirectoryName = task.__class__.__name__ + '_' + workingDirectorySuffix + '_{0:02d}'.format(index)
+            workingDirectory = parentDirectory / workingDirectoryName
+            index += 1
+        workingDirectory.mkdir(mode=0o775, parents=True, exist_ok=False)
+
+    return workingDirectory
 
 
 def createPyarchFilePath(filePath):

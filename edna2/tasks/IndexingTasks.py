@@ -28,8 +28,8 @@ from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.ReadImageHeader import ReadImageHeader
 from edna2.tasks.DozorTasks import ControlDozor
 from edna2.tasks.XDSTasks import XDSIndexingTask
-from edna2.tasks.MosflmTasks import MosflmGeneratePredictionTask
 
+from edna2.utils import UtilsImage
 
 class ControlIndexingTask(AbstractTask):
     """
@@ -62,6 +62,7 @@ class ControlIndexingTask(AbstractTask):
         listSubWedge = self.getListSubWedge(inData)
         # Get list of spots from Dozor
         listDozorSpotFile = []
+        xdsWorkingDirectorySuffix = ""
         for subWedge in listSubWedge:
             listSubWedgeImage = subWedge['image']
             for image in listSubWedgeImage:
@@ -69,54 +70,33 @@ class ControlIndexingTask(AbstractTask):
                 inDataControlDozor = {
                     'image': [image['path']]
                 }
-                controlDozor = ControlDozor(inData=inDataControlDozor)
+                controlDozor = ControlDozor(
+                    inData=inDataControlDozor,
+                    workingDirectorySuffix=UtilsImage.getPrefixNumber(image['path'])
+                )
                 controlDozor.execute()
                 if controlDozor.isSuccess():
                     dozorSpotFile = controlDozor.outData["imageQualityIndicators"][0]["dozorSpotFile"]
                     listDozorSpotFile.append(dozorSpotFile)
+                    if len(xdsWorkingDirectorySuffix) == 0:
+                        xdsWorkingDirectorySuffix = str(UtilsImage.getImageNumber(image['path']))
+                    else:
+                        xdsWorkingDirectorySuffix += "_" + str(UtilsImage.getImageNumber(image['path']))
         imageDict = listSubWedge[0]
         imageDict["dozorSpotFile"] = listDozorSpotFile
         xdsIndexinInData = {
             "image": [imageDict]
         }
-        xdsIndexingTask = XDSIndexingTask(inData=xdsIndexinInData)
+        xdsIndexingTask = XDSIndexingTask(
+            inData=xdsIndexinInData,
+            workingDirectorySuffix=xdsWorkingDirectorySuffix
+        )
         xdsIndexingTask.execute()
         if xdsIndexingTask.isSuccess():
             xdsIndexingOutData = xdsIndexingTask.outData
             outData = {
                 "xdsIndexing": xdsIndexingOutData
             }
-            # Run MOSFLM prediction
-            mosflmUB = xdsIndexingOutData["xparm"]["mosflmUB"]
-            mosflmU = xdsIndexingOutData["xparm"]["mosflmU"]
-            matrix = {
-                "matrixA": mosflmUB,
-                "missettingsAngles": [
-                    0.0,
-                    0.0,
-                    0.0
-                ],
-                "matrixU": mosflmU,
-                "cell": {
-                    "a": xdsIndexingOutData["idxref"]["a"],
-                    "b": xdsIndexingOutData["idxref"]["b"],
-                    "c": xdsIndexingOutData["idxref"]["c"],
-                    "alpha": xdsIndexingOutData["idxref"]["alpha"],
-                    "beta": xdsIndexingOutData["idxref"]["beta"],
-                    "gamma": xdsIndexingOutData["idxref"]["gamma"]
-                },
-            }
-            mosflmInData = MosflmGeneratePredictionTask.generateMOSFLMInData(inData={"subWedge": listSubWedge})
-            mosflmInData["matrix"] = matrix
-            mosflmInData.update({
-                "mosaicityEstimation": xdsIndexingOutData["idxref"]["mosaicity"],
-                "deviationAngular": 1.0,
-                "refinedDistance": xdsIndexingOutData["idxref"]["distance"],
-                "symmetry": "P1"
-            })
-            mosflmGeneratePredictionTask =MosflmGeneratePredictionTask(inData=mosflmInData)
-            mosflmGeneratePredictionTask.execute()
-            pass
         return outData
 
     @staticmethod
@@ -138,7 +118,10 @@ class ControlIndexingTask(AbstractTask):
         inDataReadImageHeader = {
             "imagePath": listImagePath
         }
-        readImageHeader = ReadImageHeader(inData=inDataReadImageHeader)
+        readImageHeader = ReadImageHeader(
+            inData=inDataReadImageHeader,
+            workingDirectorySuffix=UtilsImage.getPrefix(listImagePath[0])
+        )
         readImageHeader.execute()
         listSubWedge = readImageHeader.outData["subWedge"]
         return listSubWedge

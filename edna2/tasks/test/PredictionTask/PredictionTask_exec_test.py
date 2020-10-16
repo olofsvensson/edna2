@@ -19,10 +19,9 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__authors__ = ["O. Svensson", "S.Basu"]
+__authors__ = ["O. Svensson"]
 __license__ = "MIT"
-__date__ = "12/07/2019"
-__commandtoRun__ = "python -m unittest edna2.tasks.test.CrystfelTask.CrystfelTask_exec_test"
+__date__ = "14/04/2020"
 
 import unittest
 
@@ -30,31 +29,12 @@ from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 
-try:
-    from edna2.tasks.CrystfelTasks import ExeCrystFEL
-    crystFelImportFailed = False
-except ImportError:
-    crystFelImportFailed = True
-
+from edna2.tasks.IndexingTasks import ControlIndexingTask
 
 logger = UtilsLogging.getLogger()
 
 
-class CrystfelTaskExecTest(unittest.TestCase):
+class PredictionTaskExecTest(unittest.TestCase):
 
-    def setUp(self):
-        self.dataPath = UtilsTest.prepareTestDataPath(__file__)
-
-    @unittest.skipIf(crystFelImportFailed, 'Import of ExeCrystFEL failed.')
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run ImageQualityIndicatorsExecTest ' +
-                     'test with default config')
-    def tes_execute_listOfImages(self):
-        referenceDataPath = self.dataPath / 'pilatus2m_listimages.json'
-        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        task = ExeCrystFEL(inData=inData)
-        task.execute()
-        self.assertFalse(task.isFailure())
-        outData = task.outData
-        self.assertTrue('streamfile' in outData)
-        return
+    def tes_(self):
+        pass

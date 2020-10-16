@@ -1,4 +1,5 @@
 {
-	"dataCollectionId": 2473358,
-	"processDirectory": "/data/visitor/mx415/id30a2/20180502/PROCESSED_DATA/t1/autoprocessing_t1_run1_1/dozor"
+	"dataCollectionId": 2483098,
+	"processDirectory": "/data/id30a2/inhouse/opid30a2/20200907/PROCESSED_DATA/autoprocessing_opid30a2_run2_1/dozor",
+	"doISPyBUpload": true
 }

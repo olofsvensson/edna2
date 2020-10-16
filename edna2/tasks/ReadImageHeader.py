@@ -83,7 +83,8 @@ class ReadImageHeader(AbstractTask):
             if imageSuffix == 'cbf':
                 subWedge = self.createCBFHeaderData(imagePath)
             elif imageSuffix == 'h5':
-                subWedge = self.createHdf5HeaderData(imagePath)
+                skipNumberOfImages = inData.get("skipNumberOfImages", False)
+                subWedge = self.createHdf5HeaderData(imagePath, skipNumberOfImages)
             else:
                 raise RuntimeError(
                     '{0} cannot read image header from images with extension {1}'.format(
@@ -225,7 +226,7 @@ class ReadImageHeader(AbstractTask):
         return dictHeader
 
     @classmethod
-    def createHdf5HeaderData(cls, masterImagePath):
+    def createHdf5HeaderData(cls, masterImagePath, skipNumberOfImages=False):
         dictHeader = cls.readHdf5Header(masterImagePath)
         description = dictHeader['description']
         if 'Eiger 4M' in description:
@@ -244,15 +245,20 @@ class ReadImageHeader(AbstractTask):
         prefix = masterImagePath.split('master')[0]
         listDataImage = []
         noImages = 0
-        for data in dictHeader['data']:
-            dataFilePath = prefix + data + '.h5'
-            listDataImage.append({
-                'path': dataFilePath
-            })
-            f = h5py.File(dataFilePath, 'r')
-            dataShape = f['entry']['data']['data'].shape
-            noImages += dataShape[0]
-            f.close()
+        if not skipNumberOfImages:
+            for data in dictHeader['data']:
+                dataFilePath = prefix + data + '.h5'
+                timedOut, finalSize = UtilsPath.waitForFile(
+                    dataFilePath, expectedSize=10000000, timeOut=DEFAULT_TIME_OUT)
+                if timedOut:
+                    raise RuntimeError('Timeout waiting for file {0}'.format(dataFilePath))
+                listDataImage.append({
+                    'path': dataFilePath
+                })
+                f = h5py.File(dataFilePath, 'r')
+                dataShape = f['entry']['data']['data'].shape
+                noImages += dataShape[0]
+                f.close()
         experimentalCondition = {}
         # Pixel size and beam position
         detector = {

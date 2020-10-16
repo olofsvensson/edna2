@@ -22,39 +22,3 @@
 __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "21/04/2019"
-
-
-
-import unittest
-
-from edna2.utils import UtilsImage
-
-
-class UtilsImageUnitTest(unittest.TestCase):
-
-    def setUp(self):
-        self.imageFileName = "ref-testscale_1_0001.img"
-        self.imageFileNameH5 = "mesh-local-user_0_1_000001.h5"
-
-    def test_getPrefix(self):
-        prefix = UtilsImage.getPrefix(self.imageFileName)
-        self.assertEqual(prefix, "ref-testscale_1")
-
-    def test_getPrefixH5(self):
-        prefix = UtilsImage.getPrefix(self.imageFileNameH5)
-        self.assertEqual(prefix, "mesh-local-user_0_1")
-
-    def test_getImageNumber(self):
-        imageNumber = UtilsImage.getImageNumber(self.imageFileName)
-        self.assertEqual(imageNumber, 1)
-
-    def test_getTemplateHash(self):
-        template = UtilsImage.getTemplate(self.imageFileName)
-        templateReference = "ref-testscale_1_####.img"
-        self.assertEqual(templateReference, template)
-
-    def test_getTemplateQuestionMark(self):
-        template = UtilsImage.getTemplate(self.imageFileName, symbol="?")
-        templateReference = "ref-testscale_1_????.img"
-        self.assertEqual(templateReference, template)
-

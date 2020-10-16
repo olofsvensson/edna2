@@ -13,5 +13,6 @@
 	"startingAngle": 92.1515,
 	"firstImageNumber": 1,
 	"numberImages": 10,
-	"nameTemplateImage": "$EDNA2_TESTDATA_IMAGES/x_1_????.cbf"
+	"nameTemplateImage": "$EDNA2_TESTDATA_IMAGES/x_1_????.cbf",
+	"doDozorm": true
 }

@@ -335,3 +335,29 @@ class RetrieveAttachmentFiles(AbstractTask):
                 'error': urlError
             }
         return outData
+
+
+class ISPyBFindDetectorByParam(AbstractTask):
+
+    def run(self, inData):
+        dictConfig = UtilsConfig.getTaskConfig('ISPyB')
+        username = dictConfig['username']
+        password = dictConfig['password']
+        httpAuthenticated = HttpAuthenticated(username=username,
+                                              password=password)
+        wdsl = dictConfig['ispyb_ws_url'] + '/ispybWS/ToolsForCollectionWebService?wsdl'
+        client = Client(wdsl, transport=httpAuthenticated, cache=None)
+        manufacturer = inData['manufacturer']
+        model = inData['model']
+        mode = inData['mode']
+        detector = client.service.findDetectorByParam(
+            "",
+            manufacturer,
+            model,
+            mode
+        )
+        if detector is not None:
+            outData = Client.dict(detector)
+        else:
+            outData = {}
+        return outData
