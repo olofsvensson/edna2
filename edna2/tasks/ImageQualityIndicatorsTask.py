@@ -381,7 +381,11 @@ class ImageQualityIndicatorsTask(AbstractTask):
                     'size': minImageSize,
                     'timeOut': waitFileTimeOut
                 }
-                waitFileTask = WaitFileTask(inData=inDataWaitFileTask)
+                workingDirectorySuffix = imagePath.name.split(imagePath.suffix)[0]
+                waitFileTask = WaitFileTask(
+                    inData=inDataWaitFileTask,
+                    workingDirectorySuffix=workingDirectorySuffix
+                )
                 logger.debug("Wait file timeOut set to %.0f s" % waitFileTimeOut)
                 waitFileTask.execute()
             if not imagePath.exists():
