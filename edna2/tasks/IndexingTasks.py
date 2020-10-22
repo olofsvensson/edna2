@@ -43,12 +43,7 @@ class ControlIndexingTask(AbstractTask):
         return {
             "type": "object",
             "properties": {
-                "dataCollectionId": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer",
-                    }
-                },
+                "dataCollectionId": { "type": "integer" },
                 "imagePath": {
                     "type": "array",
                     "items": {
@@ -76,10 +71,11 @@ class ControlIndexingTask(AbstractTask):
     def getListSubWedge(inData):
         listSubWedge = None
         # First check if we have data collection ids or image list
-        if "dataCollectionId" in inData:
-            # TODO: get list of data collections from ISPyB
-            raise RuntimeError("Not implemented!")
-        elif "imagePath" in inData:
+        # if "dataCollectionId" in inData:
+        #     # TODO: get list of data collections from ISPyB
+        #         logger.warning("Not implemented!")
+        # el
+        if "imagePath" in inData:
             listSubWedge = ControlIndexingTask.readImageHeaders(inData["imagePath"])
         else:
             raise RuntimeError("No dataCollectionId or imagePath in inData")
