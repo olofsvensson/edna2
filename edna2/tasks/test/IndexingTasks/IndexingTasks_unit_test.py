@@ -23,7 +23,10 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "14/04/2020"
 
+import pprint
 import unittest
+
+from edna2.tasks.IndexingTasks import ControlIndexingTask
 
 from edna2.utils import UtilsLogging
 
@@ -32,5 +35,7 @@ logger = UtilsLogging.getLogger()
 
 class IndexingTasksUnitTest(unittest.TestCase):
 
-    def tes_(self):
-        pass
+    def test_getListPermutation(self):
+        listFile = list(range(4))
+        listPermutation = ControlIndexingTask.getListPermutation(listFile)
+        pprint.pprint(listPermutation)

@@ -23,6 +23,9 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "14/04/2020"
 
+import itertools
+from collections import Counter
+
 import numpy as np
 
 
@@ -58,14 +61,56 @@ class ControlIndexingTask(AbstractTask):
         # First get the list of subWedges
         listSubWedge = self.getListSubWedge(inData)
         # Get list of spots from Dozor
+        listDozorSpotFile = self.getDozorSpotFiles(listSubWedge)
+        listPermetution = self.getListPermutation(listDozorSpotFile)
         imageDict = listSubWedge[0]
-        imageDict["dozorSpotFile"] = self.getDozorSpotFiles(listSubWedge)
-        # Run XDS indexing
-        resultIndexing = self.runXdsIndexing(imageDict)
+        listXdsIndexingTask = []
+        listResult = []
+        listSpaceGroup = []
+        index = 1
+        for listDozorSpotFile in listPermetution:
+            # Run XDS indexing
+            imageDict["dozorSpotFile"] = listDozorSpotFile
+            listXdsIndexingTask.append(self.startXdsIndexing(imageDict, index))
+            index += 1
+        for xdsIndexingTask in listXdsIndexingTask:
+            xdsIndexingTask.join()
+            if xdsIndexingTask.isSuccess():
+                xdsIndexingOutData = xdsIndexingTask.outData
+                resultIndexing = ControlIndexingTask.getResultIndexingFromXds(xdsIndexingOutData)
+                if "spaceGroupNumber" in resultIndexing:
+                    listResult.append(resultIndexing)
+                    listSpaceGroup.append(resultIndexing["spaceGroupNumber"])
+        counter = Counter(listSpaceGroup)
+        best = counter.most_common(1)
+        print([best])
+        bestSpaceGroup = best[0][0]
+        print(bestSpaceGroup)
+        for result in listResult[::-1]:
+            if result["spaceGroupNumber"] == bestSpaceGroup:
+                resultIndexing = result
+                break
+        resultIndexing["counterSpaceGroup"] = counter.most_common()
         outData = {
             "resultIndexing": resultIndexing
         }
         return outData
+
+    @staticmethod
+    def getListPermutation(listDozorSpotFile):
+        listPermutation = []
+        noSpotFiles = len(listDozorSpotFile)
+        if noSpotFiles > 2:
+            start = 2
+        else:
+            start = 1
+        for index in range(start,noSpotFiles+1):
+            tupleCombination = itertools.combinations(listDozorSpotFile, index)
+            for combination in tupleCombination:
+                listCombination = list(combination)
+                if len(listCombination) > 0:
+                    listPermutation += [listCombination]
+        return listPermutation
 
     @staticmethod
     def getListSubWedge(inData):
@@ -119,78 +164,77 @@ class ControlIndexingTask(AbstractTask):
     def getResultIndexingFromXds(xdsIndexingOutData):
         idxref = xdsIndexingOutData["idxref"]
         xparamDict = xdsIndexingOutData["xparm"]
-        # Calculate MOSFLM UB matrix
-        A = np.array(xparamDict["A"])
-        B = np.array(xparamDict["B"])
-        C = np.array(xparamDict["C"])
+        if "A" in xparamDict:
+            # Calculate MOSFLM UB matrix
+            A = np.array(xparamDict["A"])
+            B = np.array(xparamDict["B"])
+            C = np.array(xparamDict["C"])
 
-        volum = np.cross(A, B).dot(C)
-        Ar = np.cross(B, C) / volum
-        Br = np.cross(C, A) / volum
-        Cr = np.cross(A, B) / volum
-        UBxds = np.array([Ar, Br, Cr]).transpose()
+            volum = np.cross(A, B).dot(C)
+            Ar = np.cross(B, C) / volum
+            Br = np.cross(C, A) / volum
+            Cr = np.cross(A, B) / volum
+            UBxds = np.array([Ar, Br, Cr]).transpose()
 
-        BEAM = np.array(xparamDict["beam"])
-        ROT = np.array(xparamDict["rot"])
-        wavelength = 1 / np.linalg.norm(BEAM)
+            BEAM = np.array(xparamDict["beam"])
+            ROT = np.array(xparamDict["rot"])
+            wavelength = 1 / np.linalg.norm(BEAM)
 
-        xparamDict["cell_volum"] = volum
-        xparamDict["wavelength"] = wavelength
-        xparamDict["Ar"] = Ar.tolist()
-        xparamDict["Br"] = Br.tolist()
-        xparamDict["Cr"] = Cr.tolist()
-        xparamDict["UB"] = UBxds.tolist()
+            xparamDict["cell_volum"] = volum
+            xparamDict["wavelength"] = wavelength
+            xparamDict["Ar"] = Ar.tolist()
+            xparamDict["Br"] = Br.tolist()
+            xparamDict["Cr"] = Cr.tolist()
+            xparamDict["UB"] = UBxds.tolist()
 
-        normROT = float(np.linalg.norm(ROT))
-        CAMERA_z = np.true_divide(ROT, normROT)
-        CAMERA_y = np.cross(CAMERA_z, BEAM)
-        normCAMERA_y = float(np.linalg.norm(CAMERA_y))
-        CAMERA_y = np.true_divide(CAMERA_y, normCAMERA_y)
-        CAMERA_x = np.cross(CAMERA_y, CAMERA_z)
-        CAMERA = np.transpose(np.array([CAMERA_x, CAMERA_y, CAMERA_z]))
+            normROT = float(np.linalg.norm(ROT))
+            CAMERA_z = np.true_divide(ROT, normROT)
+            CAMERA_y = np.cross(CAMERA_z, BEAM)
+            normCAMERA_y = float(np.linalg.norm(CAMERA_y))
+            CAMERA_y = np.true_divide(CAMERA_y, normCAMERA_y)
+            CAMERA_x = np.cross(CAMERA_y, CAMERA_z)
+            CAMERA = np.transpose(np.array([CAMERA_x, CAMERA_y, CAMERA_z]))
 
-        mosflmUB = CAMERA.dot(UBxds) * xparamDict["wavelength"]
-        # mosflmUB = UBxds*xparamDict["wavelength"]
-        # xparamDict["mosflmUB"] = mosflmUB.tolist()
+            mosflmUB = CAMERA.dot(UBxds) * xparamDict["wavelength"]
+            # mosflmUB = UBxds*xparamDict["wavelength"]
+            # xparamDict["mosflmUB"] = mosflmUB.tolist()
 
-        reciprocCell = XDSIndexingTask.reciprocal(xparamDict["cell"])
-        B = XDSIndexingTask.BusingLevy(reciprocCell)
-        mosflmU = np.dot(mosflmUB, np.linalg.inv(B)) / xparamDict["wavelength"]
-        # xparamDict[
+            reciprocCell = XDSIndexingTask.reciprocal(xparamDict["cell"])
+            B = XDSIndexingTask.BusingLevy(reciprocCell)
+            mosflmU = np.dot(mosflmUB, np.linalg.inv(B)) / xparamDict["wavelength"]
+            # xparamDict[
 
-        resultIndexing = {
-            "spaceGroupNumber": idxref["spaceGroupNumber"],
-            "cell": {
-                "a": idxref["a"],
-                "b": idxref["b"],
-                "c": idxref["c"],
-                "alpha": idxref["alpha"],
-                "beta": idxref["beta"],
-                "gamma": idxref["gamma"],
-            },
-            "xBeam": idxref["xBeam"],
-            "yBeam": idxref["yBeam"],
-            "distance": idxref["distance"],
-            "qualityOfFit": idxref["qualityOfFit"],
-            "mosaicity": idxref["mosaicity"],
-            "XDS_xparm": xparamDict,
-            "mosflmB": mosflmU.tolist(),
-            "mosflmU": mosflmU.tolist()
-        }
+            resultIndexing = {
+                "spaceGroupNumber": idxref["spaceGroupNumber"],
+                "cell": {
+                    "a": idxref["a"],
+                    "b": idxref["b"],
+                    "c": idxref["c"],
+                    "alpha": idxref["alpha"],
+                    "beta": idxref["beta"],
+                    "gamma": idxref["gamma"],
+                },
+                "xBeam": idxref["xBeam"],
+                "yBeam": idxref["yBeam"],
+                "distance": idxref["distance"],
+                "qualityOfFit": idxref["qualityOfFit"],
+                "mosaicity": idxref["mosaicity"],
+                "XDS_xparm": xparamDict,
+                "mosflmB": mosflmU.tolist(),
+                "mosflmU": mosflmU.tolist()
+            }
+        else:
+            resultIndexing = {}
         return resultIndexing
 
     @staticmethod
-    def runXdsIndexing(imageDict):
+    def startXdsIndexing(imageDict, index):
         xdsIndexinInData = {
             "image": [imageDict]
         }
         xdsIndexingTask = XDSIndexingTask(
             inData=xdsIndexinInData,
-            workingDirectorySuffix=UtilsImage.getPrefix(imageDict["image"][0]["path"])
+            workingDirectorySuffix=UtilsImage.getPrefix(imageDict["image"][0]["path"]) + "_" + str(index)
         )
-        xdsIndexingTask.execute()
-        resultIndexing = {}
-        if xdsIndexingTask.isSuccess():
-            xdsIndexingOutData = xdsIndexingTask.outData
-            resultIndexing = ControlIndexingTask.getResultIndexingFromXds(xdsIndexingOutData)
-        return resultIndexing
+        xdsIndexingTask.start()
+        return xdsIndexingTask
