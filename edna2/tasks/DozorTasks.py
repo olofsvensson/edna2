@@ -523,7 +523,8 @@ class ControlDozor(AbstractTask):
                 "radiationDamage": {"type": "string"},
                 "keepCbfTmpDirectory": {"type": "boolean"},
                 "doISPyBUpload": {"type": "boolean"},
-                "doDozorm": {"type": "boolean"}
+                "doDozorm": {"type": "boolean"},
+                "returnSpotList": {"type": "boolean"}
             }
         }
 
@@ -556,6 +557,7 @@ class ControlDozor(AbstractTask):
         detectorType = None
         # Check overlap
         overlap = inData.get('overlap', self.overlap)
+        returnSpotList = inData.get('returnSpotList', False)
         # Check doDozorm
         doDozorm = inData.get('doDozorm', False)
         # Check if connection to ISPyB needed
@@ -594,11 +596,12 @@ class ControlDozor(AbstractTask):
                         if os.path.exists(imageDozor['spotFile']):
                             spotFile = imageDozor['spotFile']
                             imageQualityIndicators['dozorSpotFile'] = spotFile
-                            numpyArray = numpy.loadtxt(spotFile, skiprows=3)
-                            imageQualityIndicators['dozorSpotList'] = \
-                                base64.b64encode(numpyArray.tostring()).decode('utf-8')
-                            imageQualityIndicators['dozorSpotListShape'] = \
-                                list(numpyArray.shape)
+                            if returnSpotList:
+                                numpyArray = numpy.loadtxt(spotFile, skiprows=3)
+                                imageQualityIndicators['dozorSpotList'] = \
+                                    base64.b64encode(numpyArray.tostring()).decode('utf-8')
+                                imageQualityIndicators['dozorSpotListShape'] = \
+                                    list(numpyArray.shape)
                     outData['imageQualityIndicators'].append(imageQualityIndicators)
                 if doDozorm:
                     listDozorAllFile.append(outDataDozor['dozorAllFile'])

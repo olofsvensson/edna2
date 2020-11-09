@@ -61,7 +61,11 @@ class ControlIndexingTask(AbstractTask):
         # First get the list of subWedges
         listSubWedge = self.getListSubWedge(inData)
         # Get list of spots from Dozor
-        listDozorSpotFile = self.getDozorSpotFiles(listSubWedge)
+        listOutDataControlDozor = self.runControlDozor(listSubWedge)
+        listDozorSpotFile = []
+        for outDataControlDozor in listOutDataControlDozor:
+            dozorSpotFile = outDataControlDozor["imageQualityIndicators"][0]["dozorSpotFile"]
+            listDozorSpotFile.append(dozorSpotFile)
         listPermetution = self.getListPermutation(listDozorSpotFile)
         imageDict = listSubWedge[0]
         listXdsIndexingTask = []
@@ -92,7 +96,8 @@ class ControlIndexingTask(AbstractTask):
                 break
         resultIndexing["counterSpaceGroup"] = counter.most_common()
         outData = {
-            "resultIndexing": resultIndexing
+            "resultIndexing": resultIndexing,
+            "resultDozor": listOutDataControlDozor
         }
         return outData
 
@@ -141,8 +146,8 @@ class ControlIndexingTask(AbstractTask):
         return listSubWedge
 
     @staticmethod
-    def getDozorSpotFiles(listSubWedge):
-        listDozorSpotFile = []
+    def runControlDozor(listSubWedge):
+        listOutDataControlDozor = []
         for subWedge in listSubWedge:
             listSubWedgeImage = subWedge['image']
             for image in listSubWedgeImage:
@@ -156,9 +161,8 @@ class ControlIndexingTask(AbstractTask):
                 )
                 controlDozor.execute()
                 if controlDozor.isSuccess():
-                    dozorSpotFile = controlDozor.outData["imageQualityIndicators"][0]["dozorSpotFile"]
-                    listDozorSpotFile.append(dozorSpotFile)
-        return listDozorSpotFile
+                    listOutDataControlDozor.append(controlDozor.outData)
+        return listOutDataControlDozor
 
     @staticmethod
     def getResultIndexingFromXds(xdsIndexingOutData):
