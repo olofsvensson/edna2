@@ -26,7 +26,7 @@ __date__ = '21/04/2019'
 import os
 import unittest
 
-from edna2.tasks.DozorTasks import ExecDozorM
+from edna2.tasks.ControlDozor import ExecDozorM
 
 from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig

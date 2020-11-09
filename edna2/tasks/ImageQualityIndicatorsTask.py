@@ -37,7 +37,7 @@ import pathlib
 
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.WaitFileTask import WaitFileTask
-from edna2.tasks.DozorTasks import ControlDozor
+from edna2.tasks.ControlDozor import ControlDozor
 from edna2.tasks.H5ToCBFTask import H5ToCBFTask
 from edna2.tasks.PhenixTasks import DistlSignalStrengthTask
 from edna2.tasks.ReadImageHeader import ReadImageHeader

@@ -31,12 +31,12 @@ import numpy as np
 
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.ReadImageHeader import ReadImageHeader
-from edna2.tasks.DozorTasks import ControlDozor
+from edna2.tasks.ControlDozor import ControlDozor
 from edna2.tasks.XDSTasks import XDSIndexingTask
 
 from edna2.utils import UtilsImage
 
-class ControlIndexingTask(AbstractTask):
+class ControlIndexing(AbstractTask):
     """
     This task receives a list of images or data collection ids and
     returns result of indexing
@@ -81,7 +81,7 @@ class ControlIndexingTask(AbstractTask):
             xdsIndexingTask.join()
             if xdsIndexingTask.isSuccess():
                 xdsIndexingOutData = xdsIndexingTask.outData
-                resultIndexing = ControlIndexingTask.getResultIndexingFromXds(xdsIndexingOutData)
+                resultIndexing = ControlIndexing.getResultIndexingFromXds(xdsIndexingOutData)
                 if "spaceGroupNumber" in resultIndexing:
                     listResult.append(resultIndexing)
                     listSpaceGroup.append(resultIndexing["spaceGroupNumber"])
@@ -126,7 +126,7 @@ class ControlIndexingTask(AbstractTask):
         #         logger.warning("Not implemented!")
         # el
         if "imagePath" in inData:
-            listSubWedge = ControlIndexingTask.readImageHeaders(inData["imagePath"])
+            listSubWedge = ControlIndexing.readImageHeaders(inData["imagePath"])
         else:
             raise RuntimeError("No dataCollectionId or imagePath in inData")
         return listSubWedge

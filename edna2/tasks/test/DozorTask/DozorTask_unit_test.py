@@ -29,7 +29,7 @@ import shutil
 import unittest
 import tempfile
 
-from edna2.tasks.DozorTasks import ExecDozor
+from edna2.tasks.ControlDozor import ExecDozor
 
 from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig

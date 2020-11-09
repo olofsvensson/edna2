@@ -26,16 +26,16 @@ __date__ = "14/04/2020"
 import pprint
 import unittest
 
-from edna2.tasks.ControlIndexingTask import ControlIndexingTask
+from edna2.tasks.ControlIndexing import ControlIndexing
 
 from edna2.utils import UtilsLogging
 
 logger = UtilsLogging.getLogger()
 
 
-class IndexingTasksUnitTest(unittest.TestCase):
+class ControlIndexingUnitTest(unittest.TestCase):
 
     def test_getListPermutation(self):
         listFile = list(range(4))
-        listPermutation = ControlIndexingTask.getListPermutation(listFile)
+        listPermutation = ControlIndexing.getListPermutation(listFile)
         pprint.pprint(listPermutation)

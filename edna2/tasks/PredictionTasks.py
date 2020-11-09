@@ -26,7 +26,7 @@ __date__ = "16/10/2020"
 
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.ReadImageHeader import ReadImageHeader
-from edna2.tasks.DozorTasks import ControlDozor
+from edna2.tasks.ControlDozor import ControlDozor
 from edna2.tasks.XDSTasks import XDSIndexingTask
 from edna2.tasks.MosflmTasks import MosflmGeneratePredictionTask
 
