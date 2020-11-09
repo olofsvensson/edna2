@@ -29,7 +29,7 @@ from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 
-from edna2.tasks.IndexingTasks import ControlIndexingTask
+from edna2.tasks.ControlIndexingTask import ControlIndexingTask
 
 logger = UtilsLogging.getLogger()
 

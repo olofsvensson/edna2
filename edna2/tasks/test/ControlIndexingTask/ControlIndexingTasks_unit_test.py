@@ -26,7 +26,7 @@ __date__ = "14/04/2020"
 import pprint
 import unittest
 
-from edna2.tasks.IndexingTasks import ControlIndexingTask
+from edna2.tasks.ControlIndexingTask import ControlIndexingTask
 
 from edna2.utils import UtilsLogging
 
