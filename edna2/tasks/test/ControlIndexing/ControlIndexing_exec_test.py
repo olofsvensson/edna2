@@ -44,49 +44,49 @@ class ControlIndexingExecTest(unittest.TestCase):
     def test_execute_ControlIndexing_opid30a1_4(self):
         referenceDataPath = self.dataPath / 'opid30a1_4.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        controlIndexingTask = ControlIndexing(
+        controlIndexing = ControlIndexing(
             inData=inData,
             workingDirectorySuffix='opid30a1_4'
         )
-        controlIndexingTask.execute()
-        self.assertTrue(controlIndexingTask.isSuccess())
-        self.assertEqual(controlIndexingTask.outData["resultIndexing"]["spaceGroupNumber"], 143)
+        controlIndexing.execute()
+        self.assertTrue(controlIndexing.isSuccess())
+        self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 143)
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run indexing test with default config')
     def test_execute_ControlIndexing_TRYP_X1_4(self):
         referenceDataPath = self.dataPath / 'TRYP-X1_4.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        controlIndexingTask = ControlIndexing(
+        controlIndexing = ControlIndexing(
             inData=inData,
             workingDirectorySuffix='TRYP-X1_4'
         )
-        controlIndexingTask.execute()
-        self.assertTrue(controlIndexingTask.isSuccess())
-        self.assertEqual(controlIndexingTask.outData["resultIndexing"]["spaceGroupNumber"], 16)
+        controlIndexing.execute()
+        self.assertTrue(controlIndexing.isSuccess())
+        self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 16)
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run indexing test with default config')
     def test_execute_ControlIndexing_adrcpt_For1_4(self):
         referenceDataPath = self.dataPath / 'adrcpt-For1_4.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        controlIndexingTask = ControlIndexing(
+        controlIndexing = ControlIndexing(
             inData=inData,
             workingDirectorySuffix='adrcpt-For1_4'
         )
-        controlIndexingTask.execute()
-        self.assertTrue(controlIndexingTask.isSuccess())
-        self.assertEqual(controlIndexingTask.outData["resultIndexing"]["spaceGroupNumber"], 75)
+        controlIndexing.execute()
+        self.assertTrue(controlIndexing.isSuccess())
+        self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 75)
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run indexing test with default config')
     def test_execute_ControlIndexing_MWB_CD269A_07_4(self):
         referenceDataPath = self.dataPath / 'MWB-CD269A_07_4.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        controlIndexingTask = ControlIndexing(
+        controlIndexing = ControlIndexing(
             inData=inData,
             workingDirectorySuffix='MWB-CD269A_07_4'
         )
-        controlIndexingTask.execute()
-        self.assertTrue(controlIndexingTask.isSuccess())
-        self.assertEqual(controlIndexingTask.outData["resultIndexing"]["spaceGroupNumber"], 75)
+        controlIndexing.execute()
+        self.assertTrue(controlIndexing.isSuccess())
+        self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 75)
