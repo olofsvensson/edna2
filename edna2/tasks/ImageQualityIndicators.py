@@ -58,7 +58,7 @@ DEFAULT_MIN_IMAGE_SIZE = 1000000
 DEFAULT_WAIT_FILE_TIMEOUT = 120
 
 
-class ImageQualityIndicatorsTask(AbstractTask):
+class ImageQualityIndicators(AbstractTask):
     """
     This task controls the plugins that generate image quality indicators.
     """

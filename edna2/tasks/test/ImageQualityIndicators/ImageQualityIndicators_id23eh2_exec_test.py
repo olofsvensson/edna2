@@ -33,7 +33,7 @@ from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 
-from edna2.tasks.ImageQualityIndicatorsTask import ImageQualityIndicatorsTask
+from edna2.tasks.ImageQualityIndicators import ImageQualityIndicators
 
 logger = UtilsLogging.getLogger()
 
@@ -48,14 +48,14 @@ class ImageQualityIndicatorsExecTest(unittest.TestCase):
                      'Cannot run ImageQualityIndicatorsExecTest ' +
                      'test with default config')
     def test_execute(self):
-        referenceDataPath = self.dataPath / 'id30a1.json'
+        referenceDataPath = self.dataPath / 'id23eh2.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        task = ImageQualityIndicatorsTask(inData=inData)
+        task = ImageQualityIndicators(inData=inData)
         task.execute()
         self.assertFalse(task.isFailure())
         outData = task.outData
         self.assertTrue('imageQualityIndicators' in outData)
-        self.assertEqual(304, len(outData['imageQualityIndicators']))
+        self.assertEqual(4592, len(outData['imageQualityIndicators']))
 
 
 if __name__ == '__main__':

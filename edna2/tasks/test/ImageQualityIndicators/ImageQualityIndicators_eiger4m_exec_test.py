@@ -33,12 +33,12 @@ from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 
-from edna2.tasks.ImageQualityIndicatorsTask import ImageQualityIndicatorsTask
+from edna2.tasks.ImageQualityIndicators import ImageQualityIndicators
 
 logger = UtilsLogging.getLogger()
 
 
-class ImageQualityIndicatorsExecTest(unittest.TestCase):
+class ImageQualityIndicatorsEiger4MExecTest(unittest.TestCase):
 
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
@@ -47,20 +47,15 @@ class ImageQualityIndicatorsExecTest(unittest.TestCase):
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ImageQualityIndicatorsExecTest ' +
                      'test with default config')
-    @unittest.skipIf(not os.path.exists(
-        '/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a2/inhouse/opid30a2' +
-        '/20191129/RAW_DATA/t1/MeshScan_05/mesh-t1_1_0001.cbf'),
-        'Cannot find CBF file mesh-t1_1_0001.cbf')
-    def test_execute(self):
-        referenceDataPath = self.dataPath / 'inDataImageQualityIndicatorsTask.json'
+    def test_execute_eiger4m_h5_10images(self):
+        referenceDataPath = self.dataPath / 'eiger4m_h5_10images.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        task = ImageQualityIndicatorsTask(inData=inData)
+        task = ImageQualityIndicators(inData=inData)
         task.execute()
         self.assertFalse(task.isFailure())
         outData = task.outData
         self.assertTrue('imageQualityIndicators' in outData)
-        # self.assertTrue('resolution_limit' in outData['crystfel_results'][0])
-        self.assertEqual(72, len(outData['imageQualityIndicators']))
+        self.assertEqual(len(outData['imageQualityIndicators']), 51)
 
 
 if __name__ == '__main__':

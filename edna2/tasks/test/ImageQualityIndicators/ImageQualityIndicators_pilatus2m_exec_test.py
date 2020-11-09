@@ -32,12 +32,12 @@ from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 
-from edna2.tasks.ImageQualityIndicatorsTask import ImageQualityIndicatorsTask
+from edna2.tasks.ImageQualityIndicators import ImageQualityIndicators
 
 logger = UtilsLogging.getLogger()
 
 
-class ImageQualityIndicatorsPilatus6MExecTest(unittest.TestCase):
+class ImageQualityIndicatorsPilatus2MExecTest(unittest.TestCase):
 
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
@@ -45,34 +45,10 @@ class ImageQualityIndicatorsPilatus6MExecTest(unittest.TestCase):
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ImageQualityIndicatorsExecTest ' +
                      'test with default config')
-    def test_execute_pilatus6m_10images_list(self):
-        referenceDataPath = self.dataPath / 'pilatus6m_10images_list.json'
+    def test_execute_pilatus2m_10images(self):
+        referenceDataPath = self.dataPath / 'pilatus2m_20images.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        task = ImageQualityIndicatorsTask(inData=inData)
-        task.execute()
-        self.assertFalse(task.isFailure())
-        outData = task.outData
-        self.assertTrue('imageQualityIndicators' in outData)
-
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run ImageQualityIndicatorsExecTest ' +
-                     'test with default config')
-    def test_execute_pilatus6m_10images(self):
-        referenceDataPath = self.dataPath / 'pilatus6m_10images.json'
-        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        task = ImageQualityIndicatorsTask(inData=inData)
-        task.execute()
-        self.assertFalse(task.isFailure())
-        outData = task.outData
-        self.assertTrue('imageQualityIndicators' in outData)
-
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run ImageQualityIndicatorsExecTest ' +
-                     'test with default config')
-    def test_execute_pilatus6m_10images_crystfel(self):
-        referenceDataPath = self.dataPath / 'pilatus6m_10images_crystfel.json'
-        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        task = ImageQualityIndicatorsTask(inData=inData)
+        task = ImageQualityIndicators(inData=inData)
         task.execute()
         self.assertFalse(task.isFailure())
         outData = task.outData
