@@ -64,8 +64,9 @@ class ControlIndexing(AbstractTask):
         listOutDataControlDozor = self.runControlDozor(listSubWedge)
         listDozorSpotFile = []
         for outDataControlDozor in listOutDataControlDozor:
-            dozorSpotFile = outDataControlDozor["imageQualityIndicators"][0]["dozorSpotFile"]
-            listDozorSpotFile.append(dozorSpotFile)
+            if "dozorSpotFile" in outDataControlDozor["imageQualityIndicators"][0]:
+                dozorSpotFile = outDataControlDozor["imageQualityIndicators"][0]["dozorSpotFile"]
+                listDozorSpotFile.append(dozorSpotFile)
         listPermetution = self.getListPermutation(listDozorSpotFile)
         imageDict = listSubWedge[0]
         listXdsIndexingTask = []
@@ -88,12 +89,13 @@ class ControlIndexing(AbstractTask):
         counter = Counter(listSpaceGroup)
         best = counter.most_common(1)
         print([best])
-        bestSpaceGroup = best[0][0]
-        print(bestSpaceGroup)
-        for result in listResult[::-1]:
-            if result["spaceGroupNumber"] == bestSpaceGroup:
-                resultIndexing = result
-                break
+        if len(best)  > 0:
+            bestSpaceGroup = best[0][0]
+            print(bestSpaceGroup)
+            for result in listResult[::-1]:
+                if result["spaceGroupNumber"] == bestSpaceGroup:
+                    resultIndexing = result
+                    break
         resultIndexing["counterSpaceGroup"] = counter.most_common()
         outData = {
             "resultIndexing": resultIndexing,
