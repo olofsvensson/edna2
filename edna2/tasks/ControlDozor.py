@@ -693,8 +693,8 @@ class ControlDozor(AbstractTask):
                 fileName = '{0}_master.h5'.format(prefix)
                 workingDirectorySuffix = '{0}_master'.format(prefix)
             else:
-                fileName = '{0}_{1}_master.h5'.format(prefix, hdf5ImageNumber)
-                workingDirectorySuffix='{0}_{1}_master_{2}'.format(prefix, hdf5ImageNumber, imageNumber)
+                fileName = '{0}_{1}_master.h5'.format(prefix, imageNumberOrig)
+                workingDirectorySuffix='{0}_{1}_master'.format(prefix, imageNumberOrig)
             imageNumber = 1
             image = directory / fileName
         else:
