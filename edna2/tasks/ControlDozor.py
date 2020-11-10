@@ -567,7 +567,7 @@ class ControlDozor(AbstractTask):
         logger.debug("ExecDozor batch size: {0}".format(batchSize))
         if 'hdf5BatchSize' in inData:
            hdf5BatchSize = inData['hdf5BatchSize']
-        listAllBatches = self.createListOfBatches(dictImage.keys(), batchSize)
+        listAllBatches = self.createListOfBatches(dictImage.keys(), batchSize, self.hasOverlap)
         outData['imageQualityIndicators'] = []
         for listBatch in listAllBatches:
             outDataDozor, detectorType = self.runDozorTask(
@@ -733,7 +733,7 @@ class ControlDozor(AbstractTask):
         fileName = os.path.basename(subWedge['image'][0]['path'])
         if UtilsConfig.isEMBL():
             template = '{0}_?????.{1}'.format(prefix, suffix)
-        elif hasHdf5Prefix and not hasOverlap:
+        elif hasHdf5Prefix:
             template = '{0}_1_??????.{1}'.format(prefix, suffix)
         else:
             template = '{0}_????.{1}'.format(prefix, suffix)
@@ -967,7 +967,7 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
         return dictImage
 
     @classmethod
-    def createListOfBatches(cls, listImage, batchSize):
+    def createListOfBatches(cls, listImage, batchSize, overlap=False):
         # Create the list of batches containing the image no
         listAllBatches = []
         listImagesInBatch = []
@@ -997,6 +997,13 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
                 indexBatch += 1
         if listImagesInBatch:
             listAllBatches.append(listImagesInBatch)
+        if overlap:
+            # Split up batches
+            newListAllBatches = []
+            for listBatch in listAllBatches:
+                for batch in listBatch:
+                    newListAllBatches.append([batch])
+            listAllBatches = newListAllBatches
         return listAllBatches
 
     @classmethod
