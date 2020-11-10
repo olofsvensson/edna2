@@ -682,6 +682,7 @@ class ControlDozor(AbstractTask):
         prefix = UtilsImage.getPrefix(image)
         suffix = UtilsImage.getSuffix(image)
         imageNumber = UtilsImage.getImageNumber(image)
+        workingDirectorySuffixDozor='{0:04d}_{1:04d}'.format(imageNumber, imageNumber+len(listBatch)-1)
         if image.endswith('h5'):
             hasHdf5Prefix = True
             prefix = UtilsImage.getPrefix(image)
@@ -692,7 +693,8 @@ class ControlDozor(AbstractTask):
                 workingDirectorySuffix = '{0}_master'.format(prefix)
             else:
                 fileName = '{0}_{1}_master.h5'.format(prefix, hdf5ImageNumber)
-                workingDirectorySuffix='{0}_{1}_master'.format(prefix, hdf5ImageNumber)
+                workingDirectorySuffix='{0}_{1}_master_{2}'.format(prefix, hdf5ImageNumber, imageNumber)
+            imageNumber = 1
             image = directory / fileName
         else:
             workingDirectorySuffix='{0}_{1:04d}'.format(
@@ -745,7 +747,7 @@ class ControlDozor(AbstractTask):
             inDataDozor['wedgeNumber'] = inData['wedgeNumber']
         if 'radiationDamage' in inData:
             inDataDozor['radiationDamage'] = inData['radiationDamage']
-        dozor = ExecDozor(inData=inDataDozor, workingDirectorySuffix='{0:04d}_{1:04d}'.format(imageNumber, imageNumber+len(listBatch)-1))
+        dozor = ExecDozor(inData=inDataDozor, workingDirectorySuffix=workingDirectorySuffixDozor)
         dozor.execute()
         if not dozor.isFailure():
             outDataDozor = dozor.outData
