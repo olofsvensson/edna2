@@ -93,3 +93,21 @@ def getPrefixNumber(pathToImage):
     number = getImageNumber(pathToImage)
     prefixNumber = '{0}_{1:04d}'.format(prefix, number)
     return prefixNumber
+
+def getH5FilePath(filePath, batchSize=1, isFastMesh=False):
+    imageNumber = getImageNumber(filePath)
+    prefix = getPrefix(filePath)
+    if isFastMesh:
+        h5ImageNumber = int((imageNumber - 1) / 100) + 1
+        h5FileNumber = 1
+    else:
+        h5ImageNumber = 1
+        h5FileNumber = int((imageNumber - 1) / batchSize) * batchSize + 1
+    h5MasterFileName = "{prefix}_{h5FileNumber}_master.h5".format(
+        prefix=prefix, h5FileNumber=h5FileNumber)
+    h5MasterFilePath = filePath.parent / h5MasterFileName
+    h5DataFileName = \
+        "{prefix}_{h5FileNumber}_data_{h5ImageNumber:06d}.h5".format(
+            prefix=prefix, h5FileNumber=h5FileNumber, h5ImageNumber=h5ImageNumber)
+    h5DataFilePath = filePath.parent / h5DataFileName
+    return h5MasterFilePath, h5DataFilePath, h5FileNumber

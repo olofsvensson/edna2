@@ -30,6 +30,7 @@ __date__ = "21/04/2019"
 
 import os
 import h5py
+import pathlib
 
 from edna2.utils import UtilsLogging
 
@@ -73,12 +74,6 @@ class ReadImageHeader(AbstractTask):
         listImagePath = inData["imagePath"]
         listSubWedge = []
         for imagePath in listImagePath:
-            # Waiting for file
-            timedOut, finalSize = UtilsPath.waitForFile(imagePath, expectedSize=100000, timeOut=DEFAULT_TIME_OUT)
-            if timedOut:
-                errorMessage = "Timeout when waiting for image %s" % imagePath
-                logger.error(errorMessage)
-                raise BaseException(errorMessage)
             imageSuffix = os.path.splitext(imagePath)[1][1:]
             if imageSuffix == 'cbf':
                 subWedge = self.createCBFHeaderData(imagePath)
@@ -130,6 +125,12 @@ class ReadImageHeader(AbstractTask):
 
     @classmethod
     def createCBFHeaderData(cls, imagePath):
+        # Waiting for file
+        timedOut, finalSize = UtilsPath.waitForFile(imagePath, expectedSize=100000, timeOut=DEFAULT_TIME_OUT)
+        if timedOut:
+            errorMessage = "Timeout when waiting for image %s" % imagePath
+            logger.error(errorMessage)
+            raise BaseException(errorMessage)
         dictHeader = cls.readCBFHeader(imagePath)
         detector = dictHeader['Detector:']
         if 'PILATUS 3M' in detector or 'PILATUS3 2M' in detector or \
@@ -226,8 +227,15 @@ class ReadImageHeader(AbstractTask):
         return dictHeader
 
     @classmethod
-    def createHdf5HeaderData(cls, masterImagePath, skipNumberOfImages=False):
-        dictHeader = cls.readHdf5Header(masterImagePath)
+    def createHdf5HeaderData(cls, imagePath, skipNumberOfImages=False):
+        h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(pathlib.Path(imagePath))
+        # Waiting for file
+        timedOut, finalSize = UtilsPath.waitForFile(h5MasterFilePath, expectedSize=100000, timeOut=DEFAULT_TIME_OUT)
+        if timedOut:
+            errorMessage = "Timeout when waiting for image %s" % imagePath
+            logger.error(errorMessage)
+            raise BaseException(errorMessage)
+        dictHeader = cls.readHdf5Header(h5MasterFilePath)
         description = dictHeader['description']
         if 'Eiger 4M' in description:
             detectorName = 'EIGER 4M'
@@ -242,19 +250,19 @@ class ReadImageHeader(AbstractTask):
                 )
             )
         # Find out size of data set
-        prefix = masterImagePath.split('master')[0]
+        prefix = str(h5MasterFilePath).split('master')[0]
         listDataImage = []
         noImages = 0
         if not skipNumberOfImages:
             for data in dictHeader['data']:
                 dataFilePath = prefix + data + '.h5'
                 timedOut, finalSize = UtilsPath.waitForFile(
-                    dataFilePath, expectedSize=10000000, timeOut=DEFAULT_TIME_OUT)
+                    dataFilePath, expectedSize=1000000, timeOut=DEFAULT_TIME_OUT)
                 if timedOut:
                     raise RuntimeError('Timeout waiting for file {0}'.format(dataFilePath))
-                listDataImage.append({
-                    'path': dataFilePath
-                })
+                # listDataImage.append({
+                #     'path': dataFilePath
+                # })
                 f = h5py.File(dataFilePath, 'r')
                 dataShape = f['entry']['data']['data'].shape
                 noImages += dataShape[0]
@@ -290,7 +298,7 @@ class ReadImageHeader(AbstractTask):
         experimentalCondition['goniostat'] = goniostat
         # Create the image object
         masterImage = {
-            'path': masterImagePath,
+            'path': imagePath,
             'date': dictHeader['data_collection_date'],
             'number': 1
         }

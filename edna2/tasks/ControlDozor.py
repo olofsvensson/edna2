@@ -555,13 +555,15 @@ class ControlDozor(AbstractTask):
         listDozorAllFile = []
         hasHdf5Prefix = False
         detectorType = None
-        # Check overlap
-        overlap = inData.get('overlap', self.overlap)
         returnSpotList = inData.get('returnSpotList', False)
         # Check doDozorm
         doDozorm = inData.get('doDozorm', False)
         # Check if connection to ISPyB needed
         batchSize, dictImage = self.determineBatchsize(inData)
+        # Check overlap
+        overlap = inData.get('overlap', self.overlap)
+        if overlap != 0:
+            self.hasOverlap = True
         startImageNo = inData.get("startNo", sorted(dictImage.keys())[0])
         firstImagePath = dictImage[startImageNo]
         logger.debug("ExecDozor batch size: {0}".format(batchSize))
@@ -690,16 +692,16 @@ class ControlDozor(AbstractTask):
             directory = pathlib.Path(image).parent
             hdf5ImageNumber = imageNumberOrig
             if UtilsConfig.isEMBL():
-                fileName = '{0}_master.h5'.format(prefix)
+                masterFileName = '{0}_master.h5'.format(prefix)
                 workingDirectorySuffix = '{0}_master'.format(prefix)
             else:
-                fileName = '{0}_{1}_master.h5'.format(prefix, hdf5ImageNumber)
+                masterFileName = '{0}_{1}_master.h5'.format(prefix, hdf5ImageNumber)
                 workingDirectorySuffix='{0}_{1}_master_{2}'.format(prefix, hdf5ImageNumber, imageNumber)
             imageNumber = 1
-            image = directory / fileName
         else:
             workingDirectorySuffix='{0}_{1:04d}'.format(
                 prefix, UtilsImage.getImageNumber(image))
+        image = directory / image
         inDataReadHeader = {
             'imagePath': [image],
             "skipNumberOfImages": True
