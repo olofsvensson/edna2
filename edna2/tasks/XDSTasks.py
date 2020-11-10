@@ -74,6 +74,7 @@ class XDSTask(AbstractTask):
         OSCILLATION_RANGE= 0.2000
         STARTING_ANGLE= 51.2500
         DATA_RANGE= 1 920
+        INDEX_QUALITY= 0.5
 
         """
         # Take the first sub webge in input as reference
@@ -108,7 +109,8 @@ class XDSTask(AbstractTask):
             'X-RAY_WAVELENGTH={0}'.format(wavelength),
             'OSCILLATION_RANGE={0}'.format(oscRange),
             'STARTING_ANGLE={0}'.format(startAngle),
-            'DATA_RANGE={0}'.format(dataRange)
+            'DATA_RANGE={0}'.format(dataRange),
+            'INDEX_QUALITY= 0.5'
         ]
         return listXDS_INP
 
