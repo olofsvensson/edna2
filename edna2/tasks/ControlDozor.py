@@ -682,12 +682,13 @@ class ControlDozor(AbstractTask):
         prefix = UtilsImage.getPrefix(image)
         suffix = UtilsImage.getSuffix(image)
         imageNumber = UtilsImage.getImageNumber(image)
+        imageNumberOrig = imageNumber
         workingDirectorySuffixDozor='{0:04d}_{1:04d}'.format(imageNumber, imageNumber+len(listBatch)-1)
         if image.endswith('h5'):
             hasHdf5Prefix = True
             prefix = UtilsImage.getPrefix(image)
             directory = pathlib.Path(image).parent
-            hdf5ImageNumber = 1
+            hdf5ImageNumber = imageNumberOrig
             if UtilsConfig.isEMBL():
                 fileName = '{0}_master.h5'.format(prefix)
                 workingDirectorySuffix = '{0}_master'.format(prefix)
@@ -736,7 +737,7 @@ class ControlDozor(AbstractTask):
         if UtilsConfig.isEMBL():
             template = '{0}_?????.{1}'.format(prefix, suffix)
         elif hasHdf5Prefix:
-            template = '{0}_1_??????.{1}'.format(prefix, suffix)
+            template = '{0}_{1}_??????.{2}'.format(prefix, hdf5ImageNumber, suffix)
         else:
             template = '{0}_????.{1}'.format(prefix, suffix)
         inDataDozor['nameTemplateImage'] = os.path.join(
@@ -751,6 +752,9 @@ class ControlDozor(AbstractTask):
         dozor.execute()
         if not dozor.isFailure():
             outDataDozor = dozor.outData
+            if len(outDataDozor["imageDozor"]) == 1 and outDataDozor["imageDozor"][0]["image"].endswith(".h5"):
+                if outDataDozor["imageDozor"][0]["number"] != imageNumberOrig:
+                    outDataDozor["imageDozor"][0]["number"] = imageNumberOrig
         return outDataDozor, detectorType
 
     def makePlot(self, dataCollectionId, outDataImageDozor, workingDirectory):
