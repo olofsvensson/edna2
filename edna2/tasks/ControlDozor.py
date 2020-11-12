@@ -690,13 +690,9 @@ class ControlDozor(AbstractTask):
             hasHdf5Prefix = True
             prefix = UtilsImage.getPrefix(image)
             directory = pathlib.Path(image).parent
-            hdf5ImageNumber = imageNumberOrig
-            if UtilsConfig.isEMBL():
-                masterFileName = '{0}_master.h5'.format(prefix)
-                workingDirectorySuffix = '{0}_master'.format(prefix)
-            else:
-                masterFileName = '{0}_{1}_master.h5'.format(prefix, hdf5ImageNumber)
-                workingDirectorySuffix='{0}_{1}_master_{2}'.format(prefix, hdf5ImageNumber, imageNumber)
+            h5MasterFilePath, h5DataFilePath, h5FileNumber = \
+                UtilsImage.getH5FilePath(image, hasOverlap=hasOverlap)
+            workingDirectorySuffix='{0}_{1}_master_{2}'.format(prefix, h5FileNumber, imageNumber)
             imageNumber = 1
         else:
             workingDirectorySuffix='{0}_{1:04d}'.format(
@@ -738,7 +734,7 @@ class ControlDozor(AbstractTask):
         if UtilsConfig.isEMBL():
             template = '{0}_?????.{1}'.format(prefix, suffix)
         elif hasHdf5Prefix:
-            template = '{0}_{1}_??????.{2}'.format(prefix, hdf5ImageNumber, suffix)
+            template = '{0}_{1}_??????.{2}'.format(prefix, h5FileNumber, suffix)
         else:
             template = '{0}_????.{1}'.format(prefix, suffix)
         inDataDozor['nameTemplateImage'] = os.path.join(

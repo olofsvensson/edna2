@@ -63,4 +63,4 @@ class ControlIndexingExecTest(unittest.TestCase):
         )
         controlIndexing.execute()
         self.assertTrue(controlIndexing.isSuccess())
-        self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 3)
+        self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 16)

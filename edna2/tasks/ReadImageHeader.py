@@ -72,6 +72,7 @@ class ReadImageHeader(AbstractTask):
 
     def run(self, inData):
         listImagePath = inData["imagePath"]
+        isFastMesh = inData.get("isFastMesh", False)
         listSubWedge = []
         for imagePath in listImagePath:
             imageSuffix = os.path.splitext(imagePath)[1][1:]
@@ -79,7 +80,11 @@ class ReadImageHeader(AbstractTask):
                 subWedge = self.createCBFHeaderData(imagePath)
             elif imageSuffix == 'h5':
                 skipNumberOfImages = inData.get("skipNumberOfImages", False)
-                subWedge = self.createHdf5HeaderData(imagePath, skipNumberOfImages)
+                subWedge = self.createHdf5HeaderData(
+                    imagePath,
+                    skipNumberOfImages,
+                    isFastMesh=isFastMesh
+                )
             else:
                 raise RuntimeError(
                     '{0} cannot read image header from images with extension {1}'.format(
@@ -227,8 +232,11 @@ class ReadImageHeader(AbstractTask):
         return dictHeader
 
     @classmethod
-    def createHdf5HeaderData(cls, imagePath, skipNumberOfImages=False):
-        h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(pathlib.Path(imagePath))
+    def createHdf5HeaderData(cls, imagePath, skipNumberOfImages=False, isFastMesh=False):
+        h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(
+            pathlib.Path(imagePath),
+            isFastMesh=isFastMesh
+        )
         # Waiting for file
         timedOut, finalSize = UtilsPath.waitForFile(h5MasterFilePath, expectedSize=100000, timeOut=DEFAULT_TIME_OUT)
         if timedOut:

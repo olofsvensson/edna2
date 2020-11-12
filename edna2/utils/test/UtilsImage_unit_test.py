@@ -58,3 +58,19 @@ class UtilsImageUnitTest(unittest.TestCase):
         templateReference = "ref-testscale_1_????.img"
         self.assertEqual(templateReference, template)
 
+    def test_getH5FilePath_ref(self):
+        refH5Master1 = "ref-UPF2-UPF2__4_1_1_master.h5"
+        refH5Data1 = "ref-UPF2-UPF2__4_1_1_data_000001.h5"
+        file1 = "ref-UPF2-UPF2__4_1_0001.h5"
+        h5MasterFilePath, h5DataFilePath, h5FileNumber = \
+            UtilsImage.getH5FilePath(file1, hasOverlap=True)
+        self.assertEqual(refH5Master1, str(h5MasterFilePath))
+        self.assertEqual(refH5Data1, str(h5DataFilePath))
+
+        refH5Master2 = "ref-UPF2-UPF2__4_1_2_master.h5"
+        refH5Data2 = "ref-UPF2-UPF2__4_1_2_data_000001.h5"
+        file2 = "ref-UPF2-UPF2__4_1_0002.h5"
+        h5MasterFilePath, h5DataFilePath, h5FileNumber = \
+            UtilsImage.getH5FilePath(file2, hasOverlap=True)
+        self.assertEqual(refH5Master2, str(h5MasterFilePath))
+        self.assertEqual(refH5Data2, str(h5DataFilePath))

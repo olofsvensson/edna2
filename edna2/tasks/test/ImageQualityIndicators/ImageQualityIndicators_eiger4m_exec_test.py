@@ -42,6 +42,7 @@ class ImageQualityIndicatorsEiger4MExecTest(unittest.TestCase):
 
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
+        UtilsTest.loadTestImage('mesh-mx415_1_0001.h5')
         # self.dataPath = pathlib.Path(os.getcwd()) / 'data'
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',

@@ -55,7 +55,7 @@ class ImageQualityIndicatorsExecTest(unittest.TestCase):
         self.assertFalse(task.isFailure())
         outData = task.outData
         self.assertTrue('imageQualityIndicators' in outData)
-        self.assertEqual(42, len(outData['imageQualityIndicators']))
+        self.assertEqual(4, len(outData['imageQualityIndicators']))
 
 
 if __name__ == '__main__':

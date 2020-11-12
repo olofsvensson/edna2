@@ -94,10 +94,15 @@ def getPrefixNumber(pathToImage):
     prefixNumber = '{0}_{1:04d}'.format(prefix, number)
     return prefixNumber
 
-def getH5FilePath(filePath, batchSize=1, isFastMesh=False):
+def getH5FilePath(filePath, batchSize=100, hasOverlap= False, isFastMesh=False):
+    if type(filePath) == str:
+        filePath = pathlib.Path(filePath)
     imageNumber = getImageNumber(filePath)
     prefix = getPrefix(filePath)
-    if isFastMesh:
+    if hasOverlap:
+        h5ImageNumber = 1
+        h5FileNumber = imageNumber
+    elif isFastMesh or filePath.name.startswith("mesh-"):
         h5ImageNumber = int((imageNumber - 1) / 100) + 1
         h5FileNumber = 1
     else:

@@ -47,7 +47,7 @@ class ReadImageHeaderTasksUnitTest(unittest.TestCase):
     def test_readEiger4mHeader(self):
         referenceDataPath = self.dataPath / 'ReadImageHeader_Eiger4M.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(pathlib.Path(inData['imagePath'][0]))
+        h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(inData['imagePath'][0])
         dictHeader = ReadImageHeader.readHdf5Header(h5MasterFilePath)
         self.assertEqual(
             dictHeader['description'],
