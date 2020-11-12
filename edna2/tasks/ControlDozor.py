@@ -701,7 +701,6 @@ class ControlDozor(AbstractTask):
         else:
             workingDirectorySuffix='{0}_{1:04d}'.format(
                 prefix, UtilsImage.getImageNumber(image))
-        image = directory / image
         inDataReadHeader = {
             'imagePath': [image],
             "skipNumberOfImages": True
