@@ -48,7 +48,7 @@ class ImageQualityIndicatorsExecTest(unittest.TestCase):
                      'Cannot run ImageQualityIndicatorsExecTest ' +
                      'test with default config')
     def test_execute(self):
-        referenceDataPath = self.dataPath / 'id30a3.json'
+        referenceDataPath = self.dataPath / 'UPF2-UPF2__4.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         task = ImageQualityIndicators(inData=inData)
         task.execute()

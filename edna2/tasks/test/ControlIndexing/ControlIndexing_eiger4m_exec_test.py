@@ -41,13 +41,26 @@ class ControlIndexingExecTest(unittest.TestCase):
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run indexing test with default config')
-    def test_execute_ControlIndexing_opid30a1_4(self):
+    def test_execute_ControlIndexing_local_user_1(self):
         referenceDataPath = self.dataPath / 'local-user_1.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         controlIndexing = ControlIndexing(
             inData=inData,
-            workingDirectorySuffix='opid30a1_4'
+            workingDirectorySuffix='local_user_1'
         )
         controlIndexing.execute()
         self.assertTrue(controlIndexing.isSuccess())
-        self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 143)
+        self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 16)
+
+    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
+                     'Cannot run indexing test with default config')
+    def test_execute_ControlIndexing_opid30a3(self):
+        referenceDataPath = self.dataPath / 'UPF2-UPF2__4.json'
+        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+        controlIndexing = ControlIndexing(
+            inData=inData,
+            workingDirectorySuffix='UPF2-UPF2__4'
+        )
+        controlIndexing.execute()
+        self.assertTrue(controlIndexing.isSuccess())
+        self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 3)

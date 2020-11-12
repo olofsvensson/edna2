@@ -149,6 +149,7 @@ class ControlIndexing(AbstractTask):
 
     @staticmethod
     def runControlDozor(listSubWedge):
+        listControlDozor = []
         listOutDataControlDozor = []
         for subWedge in listSubWedge:
             listSubWedgeImage = subWedge['image']
@@ -161,9 +162,12 @@ class ControlIndexing(AbstractTask):
                     inData=inDataControlDozor,
                     workingDirectorySuffix=UtilsImage.getPrefixNumber(image['path'])
                 )
-                controlDozor.execute()
-                if controlDozor.isSuccess():
-                    listOutDataControlDozor.append(controlDozor.outData)
+                listControlDozor.append(controlDozor)
+                controlDozor.start()
+        for controlDozor in listControlDozor:
+            controlDozor.join()
+            if controlDozor.isSuccess():
+                listOutDataControlDozor.append(controlDozor.outData)
         return listOutDataControlDozor
 
     @staticmethod
