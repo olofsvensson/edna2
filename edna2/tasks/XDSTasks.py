@@ -110,7 +110,7 @@ class XDSTask(AbstractTask):
             'OSCILLATION_RANGE={0}'.format(oscRange),
             'STARTING_ANGLE={0}'.format(startAngle),
             'DATA_RANGE={0}'.format(dataRange),
-            'INDEX_QUALITY= 0.5'
+            'INDEX_QUALITY= 0.25'
         ]
         return listXDS_INP
 

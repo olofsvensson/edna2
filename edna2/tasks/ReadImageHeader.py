@@ -73,6 +73,7 @@ class ReadImageHeader(AbstractTask):
     def run(self, inData):
         listImagePath = inData["imagePath"]
         isFastMesh = inData.get("isFastMesh", False)
+        hasOverlap = inData.get("hasOverlap", False)
         listSubWedge = []
         for imagePath in listImagePath:
             imageSuffix = os.path.splitext(imagePath)[1][1:]
@@ -83,7 +84,8 @@ class ReadImageHeader(AbstractTask):
                 subWedge = self.createHdf5HeaderData(
                     imagePath,
                     skipNumberOfImages,
-                    isFastMesh=isFastMesh
+                    isFastMesh=isFastMesh,
+                    hasOverlap=hasOverlap
                 )
             else:
                 raise RuntimeError(
@@ -105,7 +107,7 @@ class ReadImageHeader(AbstractTask):
         """
         dictHeader = None
         with open(filePath, 'rb') as f:
-            logger.debug('Reading header from image ' + filePath)
+            logger.info('Reading header from image ' + filePath)
             f.seek(0, 0)
             doContinue = True
             iMax = 60
@@ -210,6 +212,7 @@ class ReadImageHeader(AbstractTask):
         """
         Returns an dictionary with the contents of an Eiger Hdf5 image header.
         """
+        logger.info('Reading header from image ' + str(filePath))
         f = h5py.File(filePath, 'r')
         dictHeader = {
             'wavelength': f['entry']['instrument']['beam']['incident_wavelength'][()],
@@ -232,10 +235,11 @@ class ReadImageHeader(AbstractTask):
         return dictHeader
 
     @classmethod
-    def createHdf5HeaderData(cls, imagePath, skipNumberOfImages=False, isFastMesh=False):
+    def createHdf5HeaderData(cls, imagePath, skipNumberOfImages=False, hasOverlap=False, isFastMesh=False):
         h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(
             pathlib.Path(imagePath),
-            isFastMesh=isFastMesh
+            isFastMesh=isFastMesh,
+            hasOverlap=hasOverlap
         )
         # Waiting for file
         timedOut, finalSize = UtilsPath.waitForFile(h5MasterFilePath, expectedSize=100000, timeOut=DEFAULT_TIME_OUT)

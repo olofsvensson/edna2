@@ -246,7 +246,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
             inData['oscillationRange']
         imageStep = inData.get('imageStep', DEFAULT_IMAGE_STEP)
         command += 'image_step %.3f\n' % imageStep
-        command += 'starting_angle %.3f\n' % (inData['startingAngle'] - (inData['firstImageNumber'] - 1) * inData['oscillationRange'])
+        command += 'starting_angle %.3f\n' % inData['startingAngle']
         command += 'first_image_number %d\n' % inData['firstImageNumber']
         command += 'number_images %d\n' % inData['numberImages']
         if 'wedgeNumber' in inData:
@@ -700,7 +700,8 @@ class ControlDozor(AbstractTask):
                 prefix, UtilsImage.getImageNumber(image))
         inDataReadHeader = {
             'imagePath': [image],
-            "skipNumberOfImages": True
+            "skipNumberOfImages": True,
+            "hasOverlap": hasOverlap
         }
         controlHeader = ReadImageHeader(
             inData=inDataReadHeader,
