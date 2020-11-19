@@ -693,7 +693,8 @@ class ControlDozor(AbstractTask):
             h5MasterFilePath, h5DataFilePath, h5FileNumber = \
                 UtilsImage.getH5FilePath(image, hasOverlap=hasOverlap)
             workingDirectorySuffix='{0}_{1}_master_{2}'.format(prefix, h5FileNumber, imageNumber)
-            imageNumber = 1
+            if hasOverlap:
+                imageNumber = 1
         else:
             workingDirectorySuffix='{0}_{1:04d}'.format(
                 prefix, UtilsImage.getImageNumber(image))

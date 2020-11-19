@@ -93,7 +93,7 @@ class XDSTask(AbstractTask):
         orgY = round(detector['beamPositionY'] / pixel, 3)
         distance = round(detector['distance'], 3)
         wavelength = round(beam['wavelength'], 3)
-        oscRange = round(goniostat['oscillationWidth'])
+        oscRange = goniostat['oscillationWidth']
         startAngle = goniostat['rotationAxisStart'] - int(goniostat['rotationAxisStart'])
         dataRange = '1 360'
         self.writeSPOT_XDS(listDozorSpotFile, oscRange)

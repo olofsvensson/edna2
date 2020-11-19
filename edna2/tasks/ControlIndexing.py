@@ -67,36 +67,23 @@ class ControlIndexing(AbstractTask):
             if "dozorSpotFile" in outDataControlDozor["imageQualityIndicators"][0]:
                 dozorSpotFile = outDataControlDozor["imageQualityIndicators"][0]["dozorSpotFile"]
                 listDozorSpotFile.append(dozorSpotFile)
-        listPermetution = self.getListPermutation(listDozorSpotFile)
         imageDict = listSubWedge[0]
         listXdsIndexingTask = []
         listResult = []
         listSpaceGroup = []
-        index = 1
-        for listDozorSpotFile in listPermetution:
-            # Run XDS indexing
-            imageDict["dozorSpotFile"] = listDozorSpotFile
-            listXdsIndexingTask.append(self.startXdsIndexing(imageDict, index))
-            index += 1
-        for xdsIndexingTask in listXdsIndexingTask:
-            xdsIndexingTask.join()
-            if xdsIndexingTask.isSuccess():
-                xdsIndexingOutData = xdsIndexingTask.outData
-                resultIndexing = ControlIndexing.getResultIndexingFromXds(xdsIndexingOutData)
-                if "spaceGroupNumber" in resultIndexing:
-                    listResult.append(resultIndexing)
-                    listSpaceGroup.append(resultIndexing["spaceGroupNumber"])
-        counter = Counter(listSpaceGroup)
-        best = counter.most_common(1)
-        print([best])
-        if len(best)  > 0:
-            bestSpaceGroup = best[0][0]
-            print(bestSpaceGroup)
-            for result in listResult[::-1]:
-                if result["spaceGroupNumber"] == bestSpaceGroup:
-                    resultIndexing = result
-                    break
-        resultIndexing["counterSpaceGroup"] = counter.most_common()
+        # Run XDS indexing
+        imageDict["dozorSpotFile"] = listDozorSpotFile
+        xdsIndexinInData = {
+            "image": [imageDict]
+        }
+        xdsIndexingTask = XDSIndexingTask(
+            inData=xdsIndexinInData,
+            workingDirectorySuffix=UtilsImage.getPrefix(imageDict["image"][0]["path"])
+        )
+        xdsIndexingTask.execute()
+        if xdsIndexingTask.isSuccess():
+            xdsIndexingOutData = xdsIndexingTask.outData
+            resultIndexing = ControlIndexing.getResultIndexingFromXds(xdsIndexingOutData)
         outData = {
             "resultIndexing": resultIndexing,
             "resultDozor": listOutDataControlDozor
@@ -238,14 +225,3 @@ class ControlIndexing(AbstractTask):
             resultIndexing = {}
         return resultIndexing
 
-    @staticmethod
-    def startXdsIndexing(imageDict, index):
-        xdsIndexinInData = {
-            "image": [imageDict]
-        }
-        xdsIndexingTask = XDSIndexingTask(
-            inData=xdsIndexinInData,
-            workingDirectorySuffix=UtilsImage.getPrefix(imageDict["image"][0]["path"]) + "_" + str(index)
-        )
-        xdsIndexingTask.start()
-        return xdsIndexingTask
