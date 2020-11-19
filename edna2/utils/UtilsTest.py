@@ -92,7 +92,8 @@ def loadTestImage(imageFileName):
     # Check if h5 data
     if imageFileName.endswith(".h5"):
         imagePath = imageDirPath / imageFileName
-        h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(imagePath)
+        hasOverlap = imagePath.name.startswith("ref-")
+        h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(imagePath, hasOverlap=hasOverlap)
         listImagePath = [h5MasterFilePath, h5DataFilePath]
     else:
         listImagePath = [imageDirPath / imageFileName]
