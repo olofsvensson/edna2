@@ -29,21 +29,21 @@ from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 
-from edna2.tasks.XDSTasks import XDSIndexingTask
+from edna2.tasks.XDSTasks import XDSIndexing
 
 ogger = UtilsLogging.getLogger()
 
 
-class XDSIndexingTaskExecTest(unittest.TestCase):
+class XDSIndexingExecTest(unittest.TestCase):
 
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run mosflm test with default config')
-    def test_execute_XDSIndexingTask(self):
-        referenceDataPath = self.dataPath / 'inDataXDSIndexingTask.json'
+    def test_execute_XDSIndexing(self):
+        referenceDataPath = self.dataPath / 'inDataXDSIndexing.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        xdsIndexingTask = XDSIndexingTask(inData=inData)
-        xdsIndexingTask.execute()
-        self.assertTrue(xdsIndexingTask.isSuccess())
+        xdsIndexing = XDSIndexing(inData=inData)
+        xdsIndexing.execute()
+        self.assertTrue(xdsIndexing.isSuccess())

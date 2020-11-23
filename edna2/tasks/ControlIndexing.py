@@ -32,7 +32,7 @@ import numpy as np
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.ReadImageHeader import ReadImageHeader
 from edna2.tasks.ControlDozor import ControlDozor
-from edna2.tasks.XDSTasks import XDSIndexingTask
+from edna2.tasks.XDSTasks import XDSIndexing
 
 from edna2.utils import UtilsImage
 
@@ -76,7 +76,7 @@ class ControlIndexing(AbstractTask):
         xdsIndexinInData = {
             "image": [imageDict]
         }
-        xdsIndexingTask = XDSIndexingTask(
+        xdsIndexingTask = XDSIndexing(
             inData=xdsIndexinInData,
             workingDirectorySuffix=UtilsImage.getPrefix(imageDict["image"][0]["path"])
         )
@@ -197,8 +197,8 @@ class ControlIndexing(AbstractTask):
             # mosflmUB = UBxds*xparamDict["wavelength"]
             # xparamDict["mosflmUB"] = mosflmUB.tolist()
 
-            reciprocCell = XDSIndexingTask.reciprocal(xparamDict["cell"])
-            B = XDSIndexingTask.BusingLevy(reciprocCell)
+            reciprocCell = XDSIndexing.reciprocal(xparamDict["cell"])
+            B = XDSIndexing.BusingLevy(reciprocCell)
             mosflmU = np.dot(mosflmUB, np.linalg.inv(B)) / xparamDict["wavelength"]
             # xparamDict[
 
