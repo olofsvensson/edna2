@@ -283,31 +283,69 @@ class XDSTask(AbstractTask):
         orgX = round(dictDetector['beamPositionX'] / pixel, 3)
         orgY = round(dictDetector['beamPositionY'] / pixel, 3)
         if detectorType == "pilatus2m":
-            dictXDSDetector = {
-                "name": "PILATUS",
-                "nx": nx,
-                "ny": ny,
-                "orgX": orgX,
-                "orgY": orgY,
-                "pixel": pixel,
-                "untrustedRectangle":
-                    [[487, 495, 0, 1680],
-                     [981, 989, 0, 1680],
-                     [0, 1476, 195, 213],
-                     [0, 1476, 407, 425],
-                     [0, 1476, 619, 637],
-                     [0, 1476, 831, 849],
-                     [0, 1476, 1043, 1061],
-                     [0, 1476, 1255, 1273],
-                     [0, 1476, 1467, 1485]],
-                "trustedRegion": [0.0, 1.41],
-                "trustedpixel": [7000, 30000],
-                "minimumValidPixelValue": 0,
-                "overload": 1048500,
-                "sensorThickness": 0.32
-            }
-        if dictXDSDetector is None:
+            untrustedRectangle = \
+                [[487, 495, 0, 1680],
+                 [981, 989, 0, 1680],
+                 [0, 1476, 195, 213],
+                 [0, 1476, 407, 425],
+                 [0, 1476, 619, 637],
+                 [0, 1476, 831, 849],
+                 [0, 1476, 1043, 1061],
+                 [0, 1476, 1255, 1273],
+                 [0, 1476, 1467, 1485]]
+            sensorThickness = 0.32
+        elif detectorType == "pilatus6m":
+            listUntrustedRectangle = \
+               [[ 487, 495, 0, 2528],
+                [ 981, 989, 0, 2528],
+                [1475, 1483, 0, 2528],
+                [1969, 1977, 0, 2528],
+                [   0, 2464, 195, 213],
+                [   0, 2464, 407, 425],
+                [   0, 2464, 619, 637],
+                [   0, 2464, 831, 849],
+                [   0, 2464, 1043, 1061],
+                [   0, 2464, 1255, 1273],
+                [   0, 2464, 1467, 1485],
+                [   0, 2464, 1679, 1697],
+                [   0, 2464, 1891, 1909],
+                [   0, 2464, 2103, 2121],
+                [   0, 2464, 2315, 2333]]
+            sensorThickness = 0.32
+        elif detectorType == "eiger4m":
+            untrustedRectangle = \
+                [[1029, 1040, 0, 2167],
+                 [0, 2070, 512, 550],
+                 [0, 2070, 1063, 1103],
+                 [0, 2070, 1614, 1654],
+                 ]
+            sensorThickness = 0.32
+        elif detectorType == "eiger9m":
+            untrustedRectangle = \
+                [[1029, 1040, 0, 3269],
+                 [2069, 2082, 0, 3269],
+                 [0, 3110, 513, 553],
+                 [0, 3110, 1064, 1104],
+                 [0, 3110, 1615, 1655],
+                 [0, 3110, 2166, 2206],
+                 [0, 3110, 2717, 2757],
+                 ]
+        else:
             raise RuntimeError("Unknown detector: {0}".format(detectorType))
+        dictXDSDetector = {
+            "name": "PILATUS",
+            "nx": nx,
+            "ny": ny,
+            "orgX": orgX,
+            "orgY": orgY,
+            "pixel": pixel,
+            "untrustedRectangle": untrustedRectangle,
+            "trustedRegion": [0.0, 1.41],
+            "trustedpixel": [7000, 30000],
+            "minimumValidPixelValue": 0,
+            "overload": 1048500,
+            "sensorThickness": sensorThickness
+        }
         return dictXDSDetector
 
 
