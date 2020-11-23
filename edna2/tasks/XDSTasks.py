@@ -31,6 +31,7 @@ __date__ = "20/04/2020"
 
 import os
 import math
+import shutil
 import numpy as np
 
 from edna2.tasks.AbstractTask import AbstractTask
@@ -321,6 +322,7 @@ class XDSIndexing(XDSTask):
         XDSTask.writeSPOT_XDS(listDozorSpotFile, oscRange=oscRange, workingDirectory=self.getWorkingDirectory())
         listXDS_INP = XDSTask.generateXDS_INP(inData)
         listXDS_INP.insert(0, 'JOB= IDXREF')
+        listXDS_INP.append("DATA_RANGE= 1 360")
         return listXDS_INP
 
     @staticmethod
@@ -500,4 +502,30 @@ class XDSGenerateBackground(XDSTask):
             }
         else:
             outData = {}
+        return outData
+
+
+class XDSIntegration(XDSTask):
+
+    def generateXDS_INP(self, inData):
+        # Copy XPARM.XDS, GAIN.CBF file
+        shutil.copy(inData["xparmXds"], self.getWorkingDirectory())
+        shutil.copy(inData["gainCbf"], self.getWorkingDirectory())
+        shutil.copy(inData["xCorrectionsCbf"], self.getWorkingDirectory())
+        shutil.copy(inData["yCorrectionsCbf"], self.getWorkingDirectory())
+        shutil.copy(inData["blankCbf"], self.getWorkingDirectory())
+        shutil.copy(inData["bkginitCbf"], self.getWorkingDirectory())
+        listXDS_INP = XDSTask.generateXDS_INP(inData)
+        listXDS_INP.insert(0, 'JOB= DEFPIX INTEGRATE')
+        dictImageLinks = self.generateImageLinks(
+            inData, self.getWorkingDirectory())
+        listXDS_INP.append("NAME_TEMPLATE_OF_DATA_FRAMES= {0}".format(
+            dictImageLinks["template"] ))
+        listXDS_INP.append("DATA_RANGE= {0} {1}".format(
+            dictImageLinks["dataRange"][0], dictImageLinks["dataRange"][1]))
+        return listXDS_INP
+
+    @staticmethod
+    def parseXDSOutput(workingDirectory):
+        outData = {}
         return outData
