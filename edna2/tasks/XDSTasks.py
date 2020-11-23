@@ -29,6 +29,7 @@ __date__ = "20/04/2020"
 # mxPluginExec/plugins/EDPluginGroupXDS-v1.0/plugins/EDPluginXDSv1_0.py
 # mxPluginExec/plugins/EDPluginGroupXDS-v1.0/plugins/EDPluginXDSIndexingv1_0.py
 
+import os
 import math
 import numpy as np
 
@@ -52,7 +53,6 @@ class XDSTask(AbstractTask):
     def run(self, inData):
         commandLine = 'xds_par'
         listXDS_INP = self.generateXDS_INP(inData)
-        listImageLinks = self.generateImageLinks(inData)
         self.writeXDS_INP(listXDS_INP, self.getWorkingDirectory())
         self.setLogFileName('xds.log')
         self.runCommandLine(commandLine, listCommand=[])
@@ -61,12 +61,13 @@ class XDSTask(AbstractTask):
         return outData
 
     @staticmethod
-    def generateImageLinks(inData):
+    def generateImageLinks(inData, workingDirectory=None):
+        listImageLink = []
         firstSubWedge = inData["subWedge"][0]
         firstImagePath = firstSubWedge["image"][0]["path"]
         prefix = UtilsImage.getPrefix(firstImagePath)
         suffix = UtilsImage.getSuffix(firstImagePath)
-        xdsTemplate = "%s_xdslink_?????.%s" % (prefix, suffix)
+        template = "%s_xdslink_?????.%s" % (prefix, suffix)
         xdsLowestImageNumberGlobal = 1
         # First we have to find the smallest goniostat rotation axis start:
         oscillationStartMin = None
@@ -101,17 +102,24 @@ class XDSTask(AbstractTask):
                     oscillationStart + (imageNumber - lowestImageNumber) * oscillationRange
                 xdsImageNumber = xdsLowestImageNumberGlobal + \
                                  int((imageOscillationStart - oscillationStartMin) / oscillationRange)
-                print(xdsImageNumber, imageOscillationStart, oscillationStartMin, oscillationRange)
+                # print(xdsImageNumber, imageOscillationStart, oscillationStartMin, oscillationRange)
                 sourcePath = dictImage["path"]
                 target = "%s_xdslink_%05d.%s" % (prefix, xdsImageNumber, suffix)
-                xdsImageLink = [sourcePath, target]
-                print(xdsImageLink)
-                if lowestXDSImageNumber is None or lowestXDSImageNumber > xdsImageNumber:
+                listImageLink.append([sourcePath, target])
+                if workingDirectory is not None:
+                    os.symlink(sourcePath, target)
+                if lowestXDSImageNumber is None or \
+                        lowestXDSImageNumber > xdsImageNumber:
                     lowestXDSImageNumber = xdsImageNumber
-                if highestXDSImageNumber is None or highestXDSImageNumber < xdsImageNumber:
+                if highestXDSImageNumber is None or \
+                        highestXDSImageNumber < xdsImageNumber:
                     highestXDSImageNumber = xdsImageNumber
-            xdsDataRange = [lowestXDSImageNumber, highestXDSImageNumber]
-
+        dictImageLinks = {
+            "imageLink": listImageLink,
+            "dataRange": [lowestXDSImageNumber, highestXDSImageNumber],
+            "template": template
+        }
+        return dictImageLinks
 
 
 
@@ -165,7 +173,6 @@ class XDSTask(AbstractTask):
             'X-RAY_WAVELENGTH={0}'.format(wavelength),
             'OSCILLATION_RANGE={0}'.format(oscRange),
             'STARTING_ANGLE={0}'.format(startAngle),
-            'DATA_RANGE={0}'.format(dataRange),
             'INDEX_QUALITY= 0.25'
         ]
         return listXDS_INP
@@ -476,8 +483,21 @@ class XDSGenerateBackground(XDSTask):
     def generateXDS_INP(self, inData):
         listXDS_INP = XDSTask.generateXDS_INP(inData)
         listXDS_INP.insert(0, 'JOB= XYCORR INIT COLSPOT')
+        dictImageLinks = self.generateImageLinks(
+            inData, self.getWorkingDirectory())
+        listXDS_INP.append("NAME_TEMPLATE_OF_DATA_FRAMES= {0}".format(
+            dictImageLinks["template"] ))
+        listXDS_INP.append("DATA_RANGE= {0} {1}".format(
+            dictImageLinks["dataRange"][0], dictImageLinks["dataRange"][1]))
         return listXDS_INP
 
     @staticmethod
     def parseXDSOutput(workingDirectory):
-        return {}
+        pathToBackGroundImage = workingDirectory / "BKGINIT.cbf"
+        if pathToBackGroundImage.exists():
+            outData = {
+                "backgroundImage": str(pathToBackGroundImage)
+            }
+        else:
+            outData = {}
+        return outData

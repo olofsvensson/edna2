@@ -66,8 +66,8 @@ class XDSTasksUnitTest(unittest.TestCase):
     def test_getXDSDetector(self):
         referenceDataPath = self.dataPath / 'inDataXDSIndexing.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        image = inData["image"][0]
-        dictDetector = image["experimentalCondition"]["detector"]
+        firstSubWedge = inData["subWedge"][0]
+        dictDetector = firstSubWedge["experimentalCondition"]["detector"]
         dictXDSDetector = XDSTask.getXDSDetector(dictDetector)
         # pprint.pprint(dictXDSDetector)
         self.assertTrue(dictXDSDetector["name"] == "PILATUS")
@@ -81,4 +81,4 @@ class XDSTasksUnitTest(unittest.TestCase):
     def test_generateImageLinks(self):
         referenceDataPath = self.dataPath / 'inDataXDSGenerateBackground.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        XDSTask.generateImageLinks(inData["subWedge"])
+        XDSTask.generateImageLinks(inData)
