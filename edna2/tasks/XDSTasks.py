@@ -34,6 +34,7 @@ import numpy as np
 
 from edna2.tasks.AbstractTask import AbstractTask
 
+from edna2.utils import UtilsImage
 from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 from edna2.utils import UtilsDetector
@@ -51,6 +52,7 @@ class XDSTask(AbstractTask):
     def run(self, inData):
         commandLine = 'xds_par'
         listXDS_INP = self.generateXDS_INP(inData)
+        listImageLinks = self.generateImageLinks(inData)
         self.writeXDS_INP(listXDS_INP, self.getWorkingDirectory())
         self.setLogFileName('xds.log')
         self.runCommandLine(commandLine, listCommand=[])
@@ -59,14 +61,70 @@ class XDSTask(AbstractTask):
         return outData
 
     @staticmethod
+    def generateImageLinks(inData):
+        firstSubWedge = inData["subWedge"][0]
+        firstImagePath = firstSubWedge["image"][0]["path"]
+        prefix = UtilsImage.getPrefix(firstImagePath)
+        suffix = UtilsImage.getSuffix(firstImagePath)
+        xdsTemplate = "%s_xdslink_?????.%s" % (prefix, suffix)
+        xdsLowestImageNumberGlobal = 1
+        # First we have to find the smallest goniostat rotation axis start:
+        oscillationStartMin = None
+        for subWedge in inData["subWedge"]:
+            goniostat = subWedge["experimentalCondition"]["goniostat"]
+            oscillationStart = goniostat["rotationAxisStart"]
+            if oscillationStartMin is None or \
+                oscillationStartMin > oscillationStart:
+                oscillationStartMin = oscillationStart
+
+        # Loop through the list of sub wedges
+
+        for subWedge in inData["subWedge"]:
+            imageList = subWedge["image"]
+            xsDataGoniostat = subWedge["experimentalCondition"]["goniostat"]
+            oscillationStart = xsDataGoniostat["rotationAxisStart"]
+            oscillationRange = xsDataGoniostat["oscillationWidth"]
+
+            # First find the lowest and highest image numbers
+            lowestImageNumber = None
+            for dictImage in imageList:
+                imageNumber = dictImage["number"]
+                if lowestImageNumber is None or imageNumber < lowestImageNumber:
+                    lowestImageNumber = imageNumber
+
+            # Loop through the list of images
+            lowestXDSImageNumber = None
+            highestXDSImageNumber = None
+            for dictImage in imageList:
+                imageNumber = dictImage["number"]
+                imageOscillationStart = \
+                    oscillationStart + (imageNumber - lowestImageNumber) * oscillationRange
+                xdsImageNumber = xdsLowestImageNumberGlobal + \
+                                 int((imageOscillationStart - oscillationStartMin) / oscillationRange)
+                print(xdsImageNumber, imageOscillationStart, oscillationStartMin, oscillationRange)
+                sourcePath = dictImage["path"]
+                target = "%s_xdslink_%05d.%s" % (prefix, xdsImageNumber, suffix)
+                xdsImageLink = [sourcePath, target]
+                print(xdsImageLink)
+                if lowestXDSImageNumber is None or lowestXDSImageNumber > xdsImageNumber:
+                    lowestXDSImageNumber = xdsImageNumber
+                if highestXDSImageNumber is None or highestXDSImageNumber < xdsImageNumber:
+                    highestXDSImageNumber = xdsImageNumber
+            xdsDataRange = [lowestXDSImageNumber, highestXDSImageNumber]
+
+
+
+
+    @staticmethod
     def generateXDS_INP(inData):
         """
         This method creates a list of XDS.INP commands
         """
         # Take the first sub webge in input as reference
-        listImage = inData['image']
+        firstSubwedge = inData["subWedge"][0]
+        listImage = firstSubwedge['image']
         image = listImage[0]
-        experimentalCondition = image['experimentalCondition']
+        experimentalCondition = firstSubwedge['experimentalCondition']
         detector = experimentalCondition['detector']
         dictXDSDetector = XDSTask.getXDSDetector(detector)
         beam = experimentalCondition['beam']
@@ -248,10 +306,9 @@ class XDSTask(AbstractTask):
 class XDSIndexing(XDSTask):
 
     def generateXDS_INP(self, inData):
-        listImage = inData['image']
-        image = listImage[0]
-        listDozorSpotFile = image['dozorSpotFile']
-        experimentalCondition = image['experimentalCondition']
+        firstSubWedge = inData["subWedge"][0]
+        listDozorSpotFile = inData['dozorSpotFile']
+        experimentalCondition = firstSubWedge['experimentalCondition']
         goniostat = experimentalCondition['goniostat']
         oscRange = goniostat['oscillationWidth']
         XDSTask.writeSPOT_XDS(listDozorSpotFile, oscRange=oscRange, workingDirectory=self.getWorkingDirectory())

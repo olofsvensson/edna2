@@ -72,9 +72,9 @@ class ControlIndexing(AbstractTask):
         listResult = []
         listSpaceGroup = []
         # Run XDS indexing
-        imageDict["dozorSpotFile"] = listDozorSpotFile
         xdsIndexinInData = {
-            "image": [imageDict]
+            "subWedge": listSubWedge,
+            "dozorSpotFile": listDozorSpotFile
         }
         xdsIndexingTask = XDSIndexing(
             inData=xdsIndexinInData,

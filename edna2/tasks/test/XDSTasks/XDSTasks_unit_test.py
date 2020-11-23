@@ -77,3 +77,8 @@ class XDSTasksUnitTest(unittest.TestCase):
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         listXDS_INP = XDSTask.generateXDS_INP(inData)
         pprint.pprint(listXDS_INP)
+
+    def test_generateImageLinks(self):
+        referenceDataPath = self.dataPath / 'inDataXDSGenerateBackground.json'
+        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+        XDSTask.generateImageLinks(inData["subWedge"])
