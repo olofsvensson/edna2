@@ -35,7 +35,5 @@ logger = UtilsLogging.getLogger()
 
 class ControlIndexingUnitTest(unittest.TestCase):
 
-    def test_getListPermutation(self):
-        listFile = list(range(4))
-        listPermutation = Characterisation.getListPermutation(listFile)
-        pprint.pprint(listPermutation)
+    def tes_(self):
+        pass
