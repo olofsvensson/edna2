@@ -48,5 +48,5 @@ class XDSGenerateBackgroundExecTest(unittest.TestCase):
         xdsGenerateBackground = XDSGenerateBackground(inData=inData)
         xdsGenerateBackground.execute()
         self.assertTrue(xdsGenerateBackground.isSuccess())
-        backgroundImage = xdsGenerateBackground.outData["backgroundImage"]
+        backgroundImage = xdsGenerateBackground.outData["bkginitCbf"]
         self.assertTrue(os.path.exists(backgroundImage))
