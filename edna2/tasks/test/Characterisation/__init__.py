@@ -21,35 +21,4 @@
 
 __authors__ = ["O. Svensson"]
 __license__ = "MIT"
-__date__ = "19/11/2020"
-
-import unittest
-
-from edna2.utils import UtilsTest
-from edna2.utils import UtilsConfig
-from edna2.utils import UtilsLogging
-
-from edna2.tasks.ControlIndexing import ControlIndexing
-
-logger = UtilsLogging.getLogger()
-
-
-class ControlIndexing_id23eh1_EX1_ExecTest(unittest.TestCase):
-
-    def setUp(self):
-        self.dataPath = UtilsTest.prepareTestDataPath(__file__)
-
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run indexing test with default config')
-    def tes_execute_ControlIndexing_id23eh2_Y1(self):
-        referenceDataPath = self.dataPath / 'id23eh2_Y2.json'
-        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        controlIndexing = ControlIndexing(
-            inData=inData,
-            workingDirectorySuffix='id23eh2_Y2'
-        )
-        controlIndexing.execute()
-        self.assertTrue(controlIndexing.isSuccess())
-        print(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"])
-        # self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 16)
-
+__date__ = "21/04/2019"

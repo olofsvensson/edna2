@@ -79,6 +79,10 @@ class XDSTasksUnitTest(unittest.TestCase):
         pprint.pprint(listXDS_INP)
 
     def test_generateImageLinks(self):
-        referenceDataPath = self.dataPath / 'inDataXDSGenerateBackground.json'
+        referenceDataPath = self.dataPath / 'inDataXDSIntegration.json'
+        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+        XDSTask.generateImageLinks(inData)
+        #
+        referenceDataPath = self.dataPath / 'inDataXDSIntegration_one_subWedge.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         XDSTask.generateImageLinks(inData)

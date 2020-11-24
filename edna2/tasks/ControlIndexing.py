@@ -59,7 +59,10 @@ class ControlIndexing(AbstractTask):
     def run(self, inData):
         outData = {}
         # First get the list of subWedges
-        listSubWedge = self.getListSubWedge(inData)
+        if "subWedge" in inData:
+            listSubWedge = inData["subWedge"]
+        else:
+            listSubWedge = self.getListSubWedge(inData)
         # Get list of spots from Dozor
         listOutDataControlDozor = self.runControlDozor(listSubWedge)
         listDozorSpotFile = []
@@ -81,12 +84,15 @@ class ControlIndexing(AbstractTask):
             workingDirectorySuffix=UtilsImage.getPrefix(imageDict["image"][0]["path"])
         )
         xdsIndexingTask.execute()
+        xparmXdsPath = None
         if xdsIndexingTask.isSuccess():
             xdsIndexingOutData = xdsIndexingTask.outData
+            xparmXdsPath = xdsIndexingOutData["xparmXdsPath"]
             resultIndexing = ControlIndexing.getResultIndexingFromXds(xdsIndexingOutData)
         outData = {
             "resultIndexing": resultIndexing,
-            "resultDozor": listOutDataControlDozor
+            "resultDozor": listOutDataControlDozor,
+            "xparmXdsPath": xparmXdsPath
         }
         return outData
 

@@ -21,7 +21,7 @@
 
 __authors__ = ["O. Svensson"]
 __license__ = "MIT"
-__date__ = "19/11/2020"
+__date__ = "14/04/2020"
 
 import unittest
 
@@ -29,27 +29,24 @@ from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 
-from edna2.tasks.ControlIndexing import ControlIndexing
+from edna2.tasks.Characterisation import Characterisation
 
 logger = UtilsLogging.getLogger()
 
 
-class ControlIndexing_id23eh1_EX1_ExecTest(unittest.TestCase):
+class CharacterisationExecTest(unittest.TestCase):
 
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run indexing test with default config')
-    def tes_execute_ControlIndexing_id23eh2_Y1(self):
-        referenceDataPath = self.dataPath / 'id23eh2_Y2.json'
+    def test_execute_Characterisation_opid30a1_4(self):
+        referenceDataPath = self.dataPath / 'opid30a1_4.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        controlIndexing = ControlIndexing(
+        characterisation = Characterisation(
             inData=inData,
-            workingDirectorySuffix='id23eh2_Y2'
+            workingDirectorySuffix='opid30a1_4'
         )
-        controlIndexing.execute()
-        self.assertTrue(controlIndexing.isSuccess())
-        print(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"])
-        # self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 16)
-
+        characterisation.execute()
+        self.assertTrue(characterisation.isSuccess())

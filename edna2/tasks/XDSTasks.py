@@ -71,13 +71,13 @@ class XDSTask(AbstractTask):
         template = "%s_xdslink_?????.%s" % (prefix, suffix)
         xdsLowestImageNumberGlobal = 1
         # First we have to find the smallest goniostat rotation axis start:
-        oscillationStartMin = None
-        for subWedge in inData["subWedge"]:
-            goniostat = subWedge["experimentalCondition"]["goniostat"]
-            oscillationStart = goniostat["rotationAxisStart"]
-            if oscillationStartMin is None or \
-                oscillationStartMin > oscillationStart:
-                oscillationStartMin = oscillationStart
+        oscillationStartMin = 0
+        # for subWedge in inData["subWedge"]:
+        #     goniostat = subWedge["experimentalCondition"]["goniostat"]
+        #     oscillationStart = goniostat["rotationAxisStart"]
+        #     if oscillationStartMin is None or \
+        #         oscillationStartMin > oscillationStart:
+        #         oscillationStartMin = oscillationStart
 
         # Loop through the list of sub wedges
 
@@ -101,11 +101,14 @@ class XDSTask(AbstractTask):
                 imageNumber = dictImage["number"]
                 imageOscillationStart = \
                     oscillationStart + (imageNumber - lowestImageNumber) * oscillationRange
+                # if xdsLowestImageNumberGlobal is None:
+                #     xdsLowestImageNumberGlobal = 1 + int((imageOscillationStart - oscillationStartMin) / oscillationRange)
                 xdsImageNumber = xdsLowestImageNumberGlobal + \
                                  int((imageOscillationStart - oscillationStartMin) / oscillationRange)
-                # print(xdsImageNumber, imageOscillationStart, oscillationStartMin, oscillationRange)
+                print(xdsImageNumber, imageOscillationStart, oscillationStartMin, oscillationRange)
                 sourcePath = dictImage["path"]
                 target = "%s_xdslink_%05d.%s" % (prefix, xdsImageNumber, suffix)
+                print([sourcePath, target])
                 listImageLink.append([sourcePath, target])
                 if workingDirectory is not None:
                     os.symlink(sourcePath, target)
@@ -369,7 +372,8 @@ class XDSIndexing(XDSTask):
         xparmPath = workingDirectory / 'XPARM.XDS'
         outData = {
             "idxref":  XDSIndexing.readIdxrefLp(idxrefPath),
-            "xparm":   XDSIndexing.parseXparm(xparmPath)
+            "xparm":   XDSIndexing.parseXparm(xparmPath),
+            "xparmXdsPath": xparmPath
         }
         return outData
 
@@ -533,10 +537,13 @@ class XDSGenerateBackground(XDSTask):
 
     @staticmethod
     def parseXDSOutput(workingDirectory):
-        pathToBackGroundImage = workingDirectory / "BKGINIT.cbf"
-        if pathToBackGroundImage.exists():
+        if (workingDirectory / "BKGINIT.cbf").exists():
             outData = {
-                "backgroundImage": str(pathToBackGroundImage)
+                "gainCbf": str(workingDirectory / "GAIN.cbf"),
+                "blankCbf": str(workingDirectory / "BLANK.cbf"),
+                "bkginitCbf": str(workingDirectory / "BKGINIT.cbf"),
+                "xCorrectionsCbf": str(workingDirectory / "X-CORRECTIONS.cbf"),
+                "yCorrectionsCbf": str(workingDirectory / "Y-CORRECTIONS.cbf")
             }
         else:
             outData = {}
