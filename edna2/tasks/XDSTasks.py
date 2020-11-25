@@ -561,7 +561,7 @@ class XDSIntegration(XDSTask):
         shutil.copy(inData["blankCbf"], self.getWorkingDirectory())
         shutil.copy(inData["bkginitCbf"], self.getWorkingDirectory())
         listXDS_INP = XDSTask.generateXDS_INP(inData)
-        listXDS_INP.insert(0, 'JOB= DEFPIX INTEGRATE')
+        listXDS_INP.insert(0, 'JOB= DEFPIX INTEGRATE CORRECT')
         dictImageLinks = self.generateImageLinks(
             inData, self.getWorkingDirectory())
         listXDS_INP.append("NAME_TEMPLATE_OF_DATA_FRAMES= {0}".format(
@@ -573,4 +573,10 @@ class XDSIntegration(XDSTask):
     @staticmethod
     def parseXDSOutput(workingDirectory):
         outData = {}
+        if (workingDirectory / "XDS_ASCII.HKL").exists():
+            outData = {
+                "xdsAsciiHkl": str(workingDirectory / "XDS_ASCII.HKL"),
+                "correctLp": str(workingDirectory / "CORRECT.LP"),
+                "bkgpixCbf": str(workingDirectory / "BKGPIX.cbf")
+            }
         return outData

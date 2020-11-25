@@ -26,6 +26,7 @@ __date__ = "23/11/2020"
 
 
 from edna2.tasks.AbstractTask import AbstractTask
+from edna2.tasks.Best import Best
 from edna2.tasks.ControlIndexing import ControlIndexing
 from edna2.tasks.XDSTasks import XDSGenerateBackground
 from edna2.tasks.XDSTasks import XDSIntegration
@@ -55,18 +56,26 @@ class Characterisation(AbstractTask):
 
     def run(self, inData):
         outData = {}
+        listImagePath = inData["imagePath"]
+        prefix = UtilsImage.getPrefix(listImagePath[0])
         listSubWedge = self.getListSubWedge(inData)
         # Start indexing
         inDataIndexing = {
             "subWedge": listSubWedge,
         }
-        indexingTask = ControlIndexing(inData=inDataIndexing)
+        indexingTask = ControlIndexing(
+            inData=inDataIndexing,
+            workingDirectorySuffix=prefix
+        )
         indexingTask.start()
         # Start background esitmation
         inDataGenerateBackground = {
             "subWedge": listSubWedge,
         }
-        generateBackground = XDSGenerateBackground(inData=inDataGenerateBackground)
+        generateBackground = XDSGenerateBackground(
+            inData=inDataGenerateBackground,
+            workingDirectorySuffix = prefix
+        )
         generateBackground.start()
         generateBackground.join()
         # Check indexing
@@ -77,6 +86,9 @@ class Characterisation(AbstractTask):
             xparmXdsPath = outDataIndexing["xparmXdsPath"]
             if xparmXdsPath is not None:
                 listTasks = []
+                listXdsAsciiHkl = []
+                correctLp = None
+                bkgpixCbf = None
                 for subWedge in listSubWedge:
                     inDataIntergation = {
                         "subWedge": [subWedge],
@@ -87,11 +99,28 @@ class Characterisation(AbstractTask):
                         "xCorrectionsCbf": outDataGB["xCorrectionsCbf"],
                         "yCorrectionsCbf": outDataGB["yCorrectionsCbf"]
                     }
-                    integrationTask = XDSIntegration(inData=inDataIntergation)
+                    imageNo = subWedge["image"][0]["number"]
+                    integrationTask = XDSIntegration(
+                        inData=inDataIntergation,
+                        workingDirectorySuffix=prefix + "_{0:04d}".format(imageNo)
+                    )
                     integrationTask.start()
                     listTasks.append(integrationTask)
                 for task in listTasks:
                     task.join()
+                    if "xdsAsciiHkl" in task.outData:
+                        listXdsAsciiHkl.append(task.outData["xdsAsciiHkl"])
+                    if correctLp is None:
+                        correctLp = task.outData["correctLp"]
+                        bkgpixCbf = task.outData["bkgpixCbf"]
+                inDataBest = {
+                    "subWedge": listSubWedge,
+                    "xdsAsciiHkl": listXdsAsciiHkl,
+                    "bkgpixCbf": bkgpixCbf,
+                    "correctLp": correctLp
+                }
+                bestTask = Best(inData=inDataBest)
+                bestTask.execute()
 
 
 
