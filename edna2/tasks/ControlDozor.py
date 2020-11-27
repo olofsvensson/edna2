@@ -1148,6 +1148,8 @@ class ExecDozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         commands = self.generateCommands(inData)
         with open(str(self.getWorkingDirectory() / 'dozorm.dat'), 'w') as f:
             f.write(commands)
+        commandLine = "dozorm dozorm.dat"
+        self.runCommandLine(commandLine)
         return outData
 
     def generateCommands(self, inData):
@@ -1161,7 +1163,10 @@ class ExecDozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         if inData.get('isZigZag', False):
             mesh_direct = "-h"
         else:
-            mesh_direct = "-h" 
+            mesh_direct = "-h"
+        nameTemplateScan = self.getWorkingDirectory() / "dozorm_00?"
+        os.symlink(inData["dozorAllFile"], str(self.getWorkingDirectory() / "dozorm_001"))
+        firstScanNumber = 1
         command = '!\n'
         command += 'detector {0}\n'.format(detectorType)
         command += 'nx %d\n' % nx
@@ -1182,9 +1187,9 @@ class ExecDozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         command += 'number_of_apertures {0}\n'.format(inData['number_of_apertures'])
         command += 'aperture_size {0}\n'.format(inData['aperture_size'])
         command += 'reject_level {0}\n'.format(inData['reject_level'])
-        command += 'name_template_scan {0}\n'.format(inData['name_template_scan'])
+        command += 'name_template_scan {0}\n'.format(nameTemplateScan)
         command += 'number_scans {0}\n'.format(inData['number_scans'])
-        command += 'first_scan_number {0}\n'.format(inData['first_scan_number'])
+        command += 'first_scan_number {0}\n'.format(firstScanNumber)
         command += 'end\n'
         # logger.debug('command: {0}'.format(command))
         return command
