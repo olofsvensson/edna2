@@ -1134,12 +1134,9 @@ class ExecDozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         with open(str(self.getWorkingDirectory() / 'dozorm.dat'), 'w') as f:
             f.write(commands)
         commandLine = "dozorm dozorm.dat"
-        self.runCommandLine(commandLine)
-        pathDozormMap = self.getWorkingDirectory() / "dozorm_001.map"
-        if pathDozormMap.exists():
-            outData = {
-                "dozorMap": str(pathDozormMap)
-            }
+        logPath = self.getWorkingDirectory() / 'dozorm.log'
+        self.runCommandLine(commandLine, logPath=logPath)
+        outData = self.parseOutput(self.getWorkingDirectory(), logPath)
         return outData
 
     def generateCommands(self, inData):
@@ -1183,6 +1180,62 @@ class ExecDozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         command += 'end\n'
         # logger.debug('command: {0}'.format(command))
         return command
+
+    @staticmethod
+    def parseOutput(workingDir, logPath):
+        outData = {}
+        pathDozormMap = workingDir / "dozorm_001.map"
+        if pathDozormMap.exists():
+            listPositions = ExecDozorM.parseDozormLogFile(logPath)
+            outData = {
+                "dozorMap": str(pathDozormMap),
+                "listPositions": listPositions
+            }
+        return outData
+
+    @staticmethod
+    def parseDozormLogFile(logPath):
+        listPositions = []
+        #    Total N.of crystals in Loop =  2
+        # Cryst Aperture Central  Coordinate    Int/Sig N.of Images Score  Helic   Start     Finish   Int/Sig
+        # number size     image      X    Y            All dX dY    sum           x     y     x    y   helical
+        # --------------------------------------------------------------------------------------------------
+        #     1   100.0     260    8.1   15.1  545.7  12   3   5  1242.5   NO
+        #     2   100.0      82    9.9    5.0  354.0   7   3   3   670.6   NO
+        #     3    10.0     183    2.7   10.8   31.2   3   2   2   169.1   NO
+        #     4    10.0     170   10.8    9.7   26.7   3   2   3   128.6  YES    11    10    12    11   100.7
+
+        with open(str(logPath)) as fd:
+            listLogLines = fd.readlines()
+        doParseLine = False
+        for line in listLogLines:
+            if line.startswith("------"):
+                doParseLine = True
+            elif doParseLine:
+                listValues = line.split()
+                position = {
+                    "number": int(listValues[0]),
+                    "apertureSize": float(listValues[1]),
+                    "imageNumber": int(listValues[2]),
+                    "xPosition": float(listValues[3]),
+                    "yPosition": float(listValues[4]),
+                    "iOverSigma": float(listValues[5]),
+                    "numberOfImagesTotal": int(listValues[6]),
+                    "numberOfImagesTotalX": int(listValues[7]),
+                    "numberOfImagesTotalY": int(listValues[8]),
+                    "score": float(listValues[9]),
+                    "helical": listValues[10] == 'YES'
+                }
+                if position["helical"]:
+                    position["helicalStartX"] = listValues[11]
+                    position["helicalStartY"] = listValues[12]
+                    position["helicalStopX"] = listValues[13]
+                    position["helicalStopY"] = listValues[14]
+                    position["helicalIoverSigma"] = listValues[15]
+                listPositions.append(position)
+        return listPositions
+
+
 
 #
 #    def sendMessageToMXCuBE(self, _strMessage, level="info"):

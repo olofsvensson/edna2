@@ -13,7 +13,7 @@
 	"beam_shape": "G",
 	"beam_h": 30,
 	"beam_v": 30,
-	"number_of_apertures": 5,
+	"number_apertures": 5,
 	"aperture_size": "10 20 30 50 100",
 	"reject_level": 10,
 	"dozorAllFile": "$EDNA2_TASK_DATA/dozor_all_id30a1_001",
