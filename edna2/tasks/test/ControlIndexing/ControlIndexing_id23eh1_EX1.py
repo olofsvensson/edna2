@@ -21,7 +21,7 @@
 
 __authors__ = ["O. Svensson"]
 __license__ = "MIT"
-__date__ = "20/04/2020"
+__date__ = "14/04/2020"
 
 import unittest
 
@@ -29,21 +29,26 @@ from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 
-from edna2.tasks.XDSTasks import XDSIndexingTask
+from edna2.tasks.ControlIndexing import ControlIndexing
 
-ogger = UtilsLogging.getLogger()
+logger = UtilsLogging.getLogger()
 
 
-class XDSIndexingTaskExecTest(unittest.TestCase):
+class ControlIndexing_id23eh1_EX1_ExecTest(unittest.TestCase):
 
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run mosflm test with default config')
-    def test_execute_XDSIndexingTask(self):
-        referenceDataPath = self.dataPath / 'inDataXDSIndexingTask.json'
+                     'Cannot run indexing test with default config')
+    def tes_execute_ControlIndexing_id23eh1_EX1(self):
+        referenceDataPath = self.dataPath / 'id23eh1_EX1.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        xdsIndexingTask = XDSIndexingTask(inData=inData)
-        xdsIndexingTask.execute()
-        self.assertTrue(xdsIndexingTask.isSuccess())
+        controlIndexing = ControlIndexing(
+            inData=inData,
+            workingDirectorySuffix='local_user_1'
+        )
+        controlIndexing.execute()
+        self.assertTrue(controlIndexing.isSuccess())
+        self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 16)
+

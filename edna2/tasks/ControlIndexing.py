@@ -32,7 +32,7 @@ import numpy as np
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.ReadImageHeader import ReadImageHeader
 from edna2.tasks.ControlDozor import ControlDozor
-from edna2.tasks.XDSTasks import XDSIndexingTask
+from edna2.tasks.XDSTasks import XDSIndexing
 
 from edna2.utils import UtilsImage
 
@@ -59,7 +59,10 @@ class ControlIndexing(AbstractTask):
     def run(self, inData):
         outData = {}
         # First get the list of subWedges
-        listSubWedge = self.getListSubWedge(inData)
+        if "subWedge" in inData:
+            listSubWedge = inData["subWedge"]
+        else:
+            listSubWedge = self.getListSubWedge(inData)
         # Get list of spots from Dozor
         listOutDataControlDozor = self.runControlDozor(listSubWedge)
         listDozorSpotFile = []
@@ -67,39 +70,29 @@ class ControlIndexing(AbstractTask):
             if "dozorSpotFile" in outDataControlDozor["imageQualityIndicators"][0]:
                 dozorSpotFile = outDataControlDozor["imageQualityIndicators"][0]["dozorSpotFile"]
                 listDozorSpotFile.append(dozorSpotFile)
-        listPermetution = self.getListPermutation(listDozorSpotFile)
         imageDict = listSubWedge[0]
         listXdsIndexingTask = []
         listResult = []
         listSpaceGroup = []
-        index = 1
-        for listDozorSpotFile in listPermetution:
-            # Run XDS indexing
-            imageDict["dozorSpotFile"] = listDozorSpotFile
-            listXdsIndexingTask.append(self.startXdsIndexing(imageDict, index))
-            index += 1
-        for xdsIndexingTask in listXdsIndexingTask:
-            xdsIndexingTask.join()
-            if xdsIndexingTask.isSuccess():
-                xdsIndexingOutData = xdsIndexingTask.outData
-                resultIndexing = ControlIndexing.getResultIndexingFromXds(xdsIndexingOutData)
-                if "spaceGroupNumber" in resultIndexing:
-                    listResult.append(resultIndexing)
-                    listSpaceGroup.append(resultIndexing["spaceGroupNumber"])
-        counter = Counter(listSpaceGroup)
-        best = counter.most_common(1)
-        print([best])
-        if len(best)  > 0:
-            bestSpaceGroup = best[0][0]
-            print(bestSpaceGroup)
-            for result in listResult[::-1]:
-                if result["spaceGroupNumber"] == bestSpaceGroup:
-                    resultIndexing = result
-                    break
-        resultIndexing["counterSpaceGroup"] = counter.most_common()
+        # Run XDS indexing
+        xdsIndexinInData = {
+            "subWedge": listSubWedge,
+            "dozorSpotFile": listDozorSpotFile
+        }
+        xdsIndexingTask = XDSIndexing(
+            inData=xdsIndexinInData,
+            workingDirectorySuffix=UtilsImage.getPrefix(imageDict["image"][0]["path"])
+        )
+        xdsIndexingTask.execute()
+        xparmXdsPath = None
+        if xdsIndexingTask.isSuccess():
+            xdsIndexingOutData = xdsIndexingTask.outData
+            xparmXdsPath = xdsIndexingOutData["xparmXdsPath"]
+            resultIndexing = ControlIndexing.getResultIndexingFromXds(xdsIndexingOutData)
         outData = {
             "resultIndexing": resultIndexing,
-            "resultDozor": listOutDataControlDozor
+            "resultDozor": listOutDataControlDozor,
+            "xparmXdsPath": xparmXdsPath
         }
         return outData
 
@@ -210,8 +203,8 @@ class ControlIndexing(AbstractTask):
             # mosflmUB = UBxds*xparamDict["wavelength"]
             # xparamDict["mosflmUB"] = mosflmUB.tolist()
 
-            reciprocCell = XDSIndexingTask.reciprocal(xparamDict["cell"])
-            B = XDSIndexingTask.BusingLevy(reciprocCell)
+            reciprocCell = XDSIndexing.reciprocal(xparamDict["cell"])
+            B = XDSIndexing.BusingLevy(reciprocCell)
             mosflmU = np.dot(mosflmUB, np.linalg.inv(B)) / xparamDict["wavelength"]
             # xparamDict[
 
@@ -238,14 +231,3 @@ class ControlIndexing(AbstractTask):
             resultIndexing = {}
         return resultIndexing
 
-    @staticmethod
-    def startXdsIndexing(imageDict, index):
-        xdsIndexinInData = {
-            "image": [imageDict]
-        }
-        xdsIndexingTask = XDSIndexingTask(
-            inData=xdsIndexinInData,
-            workingDirectorySuffix=UtilsImage.getPrefix(imageDict["image"][0]["path"]) + "_" + str(index)
-        )
-        xdsIndexingTask.start()
-        return xdsIndexingTask

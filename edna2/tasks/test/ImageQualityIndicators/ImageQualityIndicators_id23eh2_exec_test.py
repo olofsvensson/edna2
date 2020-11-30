@@ -47,7 +47,7 @@ class ImageQualityIndicatorsExecTest(unittest.TestCase):
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ImageQualityIndicatorsExecTest ' +
                      'test with default config')
-    def test_execute(self):
+    def tes_execute(self):
         referenceDataPath = self.dataPath / 'id23eh2.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         task = ImageQualityIndicators(inData=inData)

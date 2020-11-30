@@ -23,6 +23,7 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "20/04/2020"
 
+import pprint
 import unittest
 import tempfile
 
@@ -30,7 +31,7 @@ from edna2.utils import UtilsTest
 from edna2.utils import UtilsLogging
 
 from edna2.tasks.XDSTasks import XDSTask
-from edna2.tasks.XDSTasks import XDSIndexingTask
+from edna2.tasks.XDSTasks import XDSIndexing
 
 logger = UtilsLogging.getLogger()
 
@@ -55,9 +56,33 @@ class XDSTasksUnitTest(unittest.TestCase):
 
     def test_readIdxrefLp(self):
         idxRefLpPath = self.dataPath / 'IDXREF.LP_TRYP'
-        resultXDSIndexing = XDSIndexingTask.readIdxrefLp(idxRefLpPath)
+        resultXDSIndexing = XDSIndexing.readIdxrefLp(idxRefLpPath)
 
     def test_parseXparm(self):
         xparmPath = self.dataPath / 'XPARM.XDS'
-        xparmDict = XDSIndexingTask.parseXparm(xparmPath)
+        xparmDict = XDSIndexing.parseXparm(xparmPath)
         self.assertIsNotNone(xparmDict)
+
+    def test_getXDSDetector(self):
+        referenceDataPath = self.dataPath / 'inDataXDSIndexing.json'
+        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+        firstSubWedge = inData["subWedge"][0]
+        dictDetector = firstSubWedge["experimentalCondition"]["detector"]
+        dictXDSDetector = XDSTask.getXDSDetector(dictDetector)
+        # pprint.pprint(dictXDSDetector)
+        self.assertTrue(dictXDSDetector["name"] == "PILATUS")
+
+    def test_generateXDS_INP(self):
+        referenceDataPath = self.dataPath / 'inDataXDSIndexing.json'
+        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+        listXDS_INP = XDSTask.generateXDS_INP(inData)
+        pprint.pprint(listXDS_INP)
+
+    def test_generateImageLinks(self):
+        referenceDataPath = self.dataPath / 'inDataXDSIntegration.json'
+        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+        XDSTask.generateImageLinks(inData)
+        #
+        referenceDataPath = self.dataPath / 'inDataXDSIntegration_one_subWedge.json'
+        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+        XDSTask.generateImageLinks(inData)

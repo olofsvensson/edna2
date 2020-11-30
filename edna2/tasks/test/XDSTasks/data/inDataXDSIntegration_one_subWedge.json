@@ -1,0 +1,42 @@
+{
+    "subWedge": [
+        {
+            "experimentalCondition": {
+                "detector": {
+                    "numberPixelX": 1475,
+                    "numberPixelY": 1679,
+                    "pixelSizeX": 0.17200000000000001,
+                    "pixelSizeY": 0.17200000000000001,
+                    "beamPositionX": 128.54076,
+                    "beamPositionY": 146.46144,
+                    "distance": 236.17499999999998,
+                    "serialNumber": "PILATUS3 2M, S/N 24-0118, ESRF ID30",
+                    "name": "PILATUS2 3M",
+                    "type": "pilatus2m"
+                },
+                "beam": {
+                    "wavelength": 0.965,
+                    "exposureTime": 0.333
+                },
+                "goniostat": {
+                    "rotationAxisStart": 90.0,
+                    "rotationAxisEnd": 91.0,
+                    "oscillationWidth": 1.0
+                }
+            },
+            "image": [
+                {
+                    "path": "/mnt/multipath-shares/sware/exp/pxsoft/bes/vgit/linux-x86_64/id30a2/edna2/testdata/images/ref-opid30a1_4_0002.cbf",
+                    "date": "2014/Nov/14 16:31:10",
+                    "number": 2
+                }
+            ]
+        }
+    ],
+    "xparmXds": "/mnt/multipath-shares/sware/exp/pxsoft/bes/vgit/linux-x86_64/id30a2/edna2/testdata/rundir/20201124_112255/Characterisation_opid30a1_4/ControlIndexing_0mxq2qo5/XDSIndexing_ref-opid30a1_4/XPARM.XDS",
+    "gainCbf": "/mnt/multipath-shares/sware/exp/pxsoft/bes/vgit/linux-x86_64/id30a2/edna2/testdata/rundir/20201124_112255/Characterisation_opid30a1_4/XDSGenerateBackground_oia0ojp8/GAIN.cbf",
+    "blankCbf": "/mnt/multipath-shares/sware/exp/pxsoft/bes/vgit/linux-x86_64/id30a2/edna2/testdata/rundir/20201124_112255/Characterisation_opid30a1_4/XDSGenerateBackground_oia0ojp8/BLANK.cbf",
+    "bkginitCbf": "/mnt/multipath-shares/sware/exp/pxsoft/bes/vgit/linux-x86_64/id30a2/edna2/testdata/rundir/20201124_112255/Characterisation_opid30a1_4/XDSGenerateBackground_oia0ojp8/BKGINIT.cbf",
+    "xCorrectionsCbf": "/mnt/multipath-shares/sware/exp/pxsoft/bes/vgit/linux-x86_64/id30a2/edna2/testdata/rundir/20201124_112255/Characterisation_opid30a1_4/XDSGenerateBackground_oia0ojp8/X-CORRECTIONS.cbf",
+    "yCorrectionsCbf": "/mnt/multipath-shares/sware/exp/pxsoft/bes/vgit/linux-x86_64/id30a2/edna2/testdata/rundir/20201124_112255/Characterisation_opid30a1_4/XDSGenerateBackground_oia0ojp8/Y-CORRECTIONS.cbf"
+}
