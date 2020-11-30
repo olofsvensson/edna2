@@ -1,7 +1,7 @@
 {
 	"detectorType": "pilatus6m",
 	"beamline": "id23eh1",
-    "detectorDistance": 313.875,
+    "detector_distance": 313.875,
     "wavelength": 0.965459,
     "orgx": 700.64,
     "orgy": 851.21,

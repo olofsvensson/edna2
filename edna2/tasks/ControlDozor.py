@@ -1102,7 +1102,7 @@ class ExecDozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 "name_template_scan": {"type": "string"},
                 "detectorType": {"type": "string"},
                 "beamline": {"type": "string"},
-                "detectorDistance": {"type": "number"},
+                "detector_distance": {"type": "number"},
                 "wavelength": {"type": "number"},
                 "orgx": {"type": "number"},
                 "orgy": {"type": "number"},
@@ -1116,9 +1116,7 @@ class ExecDozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 "beam_v": {"type": "number"},
                 "number_apertures": {"type": "integer"},
                 "aperture_size": {"type": "string"},
-                "reject_level": {"type": "integer"},
-                "number_scans": {"type": "integer"},
-                "first_scan_number": {"type": "integer"},
+                "reject_level": {"type": "integer"}
             }
         }
 
@@ -1126,20 +1124,7 @@ class ExecDozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         return {
             "type": "object",
             "properties": {
-                "imageDozor": {
-                    "type": "array",
-                    "items": {
-                        "$ref": self.getSchemaUrl("imageDozor.json")
-                    }
-                },
-                "halfDoseTime": {"type": "number"},
-                "dozorPlot":  {"type": "string"},
-                "plotmtvFile":  {"type": "string"},
-                "pngPlots":  {
-                    "type": "array",
-                    "items": {"type": "string"}
-                },
-                "dozorAllFile": {"type": "string"},
+                "dozorMap": {"type": "string"}
             },
         }
 
@@ -1150,6 +1135,11 @@ class ExecDozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
             f.write(commands)
         commandLine = "dozorm dozorm.dat"
         self.runCommandLine(commandLine)
+        pathDozormMap = self.getWorkingDirectory() / "dozorm_001.map"
+        if pathDozormMap.exists():
+            outData = {
+                "dozorMap": str(pathDozormMap)
+            }
         return outData
 
     def generateCommands(self, inData):
@@ -1172,7 +1162,7 @@ class ExecDozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         command += 'nx %d\n' % nx
         command += 'ny %d\n' % ny
         command += 'pixel %f\n' % pixelSize
-        command += 'detectorDistance {0}\n'.format(inData['detectorDistance'])
+        command += 'detector_distance {0}\n'.format(inData['detector_distance'])
         command += 'X-ray_wavelength {0}\n'.format(inData['wavelength'])
         command += 'orgx {0}\n'.format(inData['orgx'])
         command += 'orgy {0}\n'.format(inData['orgy'])
@@ -1184,7 +1174,7 @@ class ExecDozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         command += 'beam_shape {0}\n'.format(inData['beam_shape'])
         command += 'beam_h {0}\n'.format(inData['beam_h'])
         command += 'beam_v {0}\n'.format(inData['beam_v'])
-        command += 'number_of_apertures {0}\n'.format(inData['number_of_apertures'])
+        command += 'number_apertures {0}\n'.format(inData['number_apertures'])
         command += 'aperture_size {0}\n'.format(inData['aperture_size'])
         command += 'reject_level {0}\n'.format(inData['reject_level'])
         command += 'name_template_scan {0}\n'.format(nameTemplateScan)
