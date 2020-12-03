@@ -26,13 +26,13 @@ __date__ = '30/11/2019'
 import os
 import unittest
 
-from edna2.tasks.ControlDozor import ExecDozorM
+from edna2.tasks.DozorM import DozorM
 
 from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig
 
 
-class ExecDozorMTest(unittest.TestCase):
+class DozorMTest(unittest.TestCase):
 
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
@@ -42,7 +42,7 @@ class ExecDozorMTest(unittest.TestCase):
     def test_execute_id23eh1_mesh1_dozorm(self):
         referenceDataPath = self.dataPath / 'opid23eh1_mesh1_dozorm.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        dozorm = ExecDozorM(inData=inData, workingDirectorySuffix="id23eh1_mesh1")
+        dozorm = DozorM(inData=inData, workingDirectorySuffix="id23eh1_mesh1")
         dozorm.execute()
         self.assertTrue(dozorm.isSuccess())
         outData = dozorm.outData
@@ -53,7 +53,7 @@ class ExecDozorMTest(unittest.TestCase):
     def test_execute_id23eh1_mesh2_dozorm(self):
         referenceDataPath = self.dataPath / 'opid23eh1_mesh2_dozorm.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        dozorm = ExecDozorM(inData=inData, workingDirectorySuffix="id23eh1_mesh2")
+        dozorm = DozorM(inData=inData, workingDirectorySuffix="id23eh1_mesh2")
         dozorm.execute()
         self.assertTrue(dozorm.isSuccess())
         outData = dozorm.outData
@@ -64,7 +64,7 @@ class ExecDozorMTest(unittest.TestCase):
     def test_execute_id23eh3_mesh1_dozorm(self):
         referenceDataPath = self.dataPath / 'opid23eh1_mesh3_dozorm.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        dozorm = ExecDozorM(inData=inData, workingDirectorySuffix="id23eh1_mesh3")
+        dozorm = DozorM(inData=inData, workingDirectorySuffix="id23eh1_mesh3")
         dozorm.execute()
         self.assertTrue(dozorm.isSuccess())
         outData = dozorm.outData

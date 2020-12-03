@@ -24,27 +24,27 @@ __license__ = 'MIT'
 __date__ = '21/04/2019'
 
 import os
-import pprint
 import unittest
 
-from edna2.tasks.ControlDozor import ExecDozorM
+from edna2.tasks.DozorM import DozorM
 
 from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig
 
 
-class ExecDozorMUnitTest(unittest.TestCase):
+class DozorMTest(unittest.TestCase):
 
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    def test_unit_DozorM(self):
-        logPath = self.dataPath / 'opid23eh1_mesh1_dozorm.log'
-        listPositions = ExecDozorM.parseDozormLogFile(logPath)
-        self.assertEqual(len(listPositions), 2)
-        logPath = self.dataPath / 'opid23eh1_mesh3_dozorm.log'
-        listPositions = ExecDozorM.parseDozormLogFile(logPath)
-        self.assertEqual(len(listPositions), 9)
-        pprint.pprint(listPositions)
-
+    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
+                     'Cannot run dozor test with default config')
+    def test_execute_DozorM(self):
+        referenceDataPath = self.dataPath / 'inDataDozorM.json'
+        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+        dozorm = DozorM(inData=inData)
+        dozorm.execute()
+        self.assertTrue(dozorm.isSuccess())
+        outData = dozorm.outData
+        # self.assertEqual(len(outData['imageDozor']), 10)
 
