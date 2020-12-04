@@ -26,6 +26,8 @@ __date__ = '21/04/2019'
 import os
 import json
 import pprint
+import shutil
+import tempfile
 import unittest
 
 from edna2.tasks.DozorM import DozorM
@@ -49,15 +51,19 @@ class DozorMUnitTest(unittest.TestCase):
         pprint.pprint(listPositions)
 
     def test_unit_DozorM_makePlots(self):
+        tmpDir = tempfile.mkdtemp(prefix="test_unit_DozorM_makePlots_")
         mapPath = self.dataPath / 'opid23eh1_mesh1_dozorm.map'
-        # heatMapPath, crystalMapPath = DozorM.makePlots(mapPath)
+        arrayScore, arrayCrystal, arrayImageNumber = DozorM.parseMap(mapPath)
+        imagePath = DozorM.makeCrystalPlot(arrayCrystal, tmpDir, debug=True)
+        self.assertTrue(os.path.exists(imagePath))
+        shutil.rmtree(tmpDir)
 
     def test_unit_DozorM_parseMap(self):
         mapPath = self.dataPath / 'opid23eh1_mesh1_dozorm.map'
-        npArrayScore, npArrayCrystal, npArrayImageNumber = DozorM.parseMap(mapPath)
-        print(npArrayScore)
-        print(npArrayCrystal)
-        print(npArrayImageNumber)
+        arrayScore, arrayCrystal, arrayImageNumber = DozorM.parseMap(mapPath)
+        print(arrayScore)
+        print(arrayCrystal)
+        print(arrayImageNumber)
 
     def test_updateMeshPositions(self):
         meshPositionPath = self.dataPath / 'opid23eh1_mesh1_meshPositions.json'

@@ -21,6 +21,9 @@
 import os
 import numpy
 import pprint
+import matplotlib
+import matplotlib.cm
+import matplotlib.pyplot as plt
 
 from edna2.tasks.AbstractTask import AbstractTask
 
@@ -137,12 +140,14 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
             listPositions = DozorM.parseDozormLogFile(logPath)
             arrayScore, arrayCrystal, arrayImageNumber = \
                 DozorM.parseMap(pathDozormMap)
+            crystalMapPath = DozorM.makeCrystalPlot(arrayCrystal, workingDir)
             outData = {
                 "dozorMap": str(pathDozormMap),
                 "listPositions": listPositions,
                 "arrayScore": arrayScore,
                 "arrayCrystal": arrayCrystal,
-                "arrayImageNumber": arrayImageNumber
+                "arrayImageNumber": arrayImageNumber,
+                "crystalMapPath": crystalMapPath
             }
         return outData
 
@@ -189,12 +194,71 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         return listPositions
 
     @staticmethod
-    def makePlots(mapPath):
-        heatMapPath = None
-        crystalMapPath = None
-        npArrayScores, npArrayCrystal = DozorM.parseMap(mapPath)
+    def makeCrystalPlot(arrayCrystal, workingDirectory, debug=False):
+        npArrayCrystal = numpy.array(arrayCrystal)
+        ySize, xSize = npArrayCrystal.shape
+        if xSize == 1:
+            # Vertical line scan - transpose the matrix
+            npArrayCrystal = numpy.transpose(npArrayCrystal)
+            ySize, xSize = npArrayCrystal.shape
+        npArrayCrystalAbs = numpy.abs(npArrayCrystal)
+        # minValue = numpy.amin(npArrayCrystal)
+        # newZeroValue = minValue - 1
+        # npArrayCrystal = numpy.where(npArrayCrystal == 0.0, newZeroValue, npArrayCrystal)
 
-        return heatMapPath, crystalMapPath
+        maxSize = max(xSize, ySize)
+        if maxSize < 10:
+            fontSize = 12
+            dpi = 100
+        elif maxSize < 50:
+            fontSize = 8
+            dpi = 150
+        else:
+            fontSize =5
+            dpi = 200
+
+        font = {'family': 'normal',
+                'weight': 'normal',
+                'size': fontSize}
+
+        matplotlib.rc('font', **font)
+
+        fig, ax = plt.subplots()
+        im = ax.imshow(npArrayCrystalAbs, cmap=matplotlib.cm.Spectral)
+
+        ax.set_xticks(numpy.arange(len(range(xSize))))
+        ax.set_yticks(numpy.arange(len(range(ySize))))
+
+        ax.set_xticklabels(list(range(1, xSize+1)))
+        ax.set_yticklabels(list(range(1, ySize+1)))
+
+        # Rotate the tick labels and set their alignment.
+        plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
+                 rotation_mode="anchor")
+
+        # Loop over data dimensions and create text annotations.
+        for i in range(ySize):
+            for j in range(xSize):
+                if abs(npArrayCrystal[i, j]) > 0.001:
+                    text = ax.text(j, i, npArrayCrystal[i, j],
+                                   ha="center", va="center", color="b")
+
+        ax.set_title("Crystal map")
+        fig.tight_layout(pad=0)
+        w, h = fig.get_size_inches()
+        x1, x2 = ax.get_xlim()
+        y1, y2 = ax.get_ylim()
+        x1 = float(x1)
+        x2 = float(x2)
+        y1 = float(y1)
+        y2 = float(y2)
+        fig.set_size_inches(w, abs(y2 - y1) / (x2 - x1) * w + 1)
+        if debug:
+            plt.show()
+        crystalMapPath = os.path.join(workingDirectory, "crystalMap.png")
+        plt.savefig(crystalMapPath, dpi=dpi)
+
+        return crystalMapPath
 
     @staticmethod
     def parseMatrix(index, listLines, isFloat=True):
