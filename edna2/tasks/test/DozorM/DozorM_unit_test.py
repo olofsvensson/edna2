@@ -24,6 +24,7 @@ __license__ = 'MIT'
 __date__ = '21/04/2019'
 
 import os
+import json
 import pprint
 import unittest
 
@@ -49,4 +50,22 @@ class DozorMUnitTest(unittest.TestCase):
 
     def test_unit_DozorM_makePlots(self):
         mapPath = self.dataPath / 'opid23eh1_mesh1_dozorm.map'
-        heatMapPath, crystalMapPath = DozorM.makePlots(mapPath)
+        # heatMapPath, crystalMapPath = DozorM.makePlots(mapPath)
+
+    def test_unit_DozorM_parseMap(self):
+        mapPath = self.dataPath / 'opid23eh1_mesh1_dozorm.map'
+        npArrayScore, npArrayCrystal, npArrayImageNumber = DozorM.parseMap(mapPath)
+        print(npArrayScore)
+        print(npArrayCrystal)
+        print(npArrayImageNumber)
+
+    def test_updateMeshPositions(self):
+        meshPositionPath = self.dataPath / 'opid23eh1_mesh1_meshPositions.json'
+        with open(str(meshPositionPath)) as fd:
+            meshPositions = json.loads(fd.read())
+        mapPath = self.dataPath / 'opid23eh1_mesh1_dozorm.map'
+        arrayScore, arrayCrystal, arrayImageNumber = DozorM.parseMap(mapPath)
+        newMeshPositions = DozorM.updateMeshPositions(
+            meshPositions=meshPositions,
+            arrayScore=arrayScore
+        )

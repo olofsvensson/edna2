@@ -19,29 +19,11 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import os
-import json
-from builtins import RuntimeError
-
 import numpy
-import shlex
-import distro
-import shutil
-import base64
-import pathlib
-import tempfile
-
-import matplotlib
-import matplotlib.pyplot as plt
+import pprint
 
 from edna2.tasks.AbstractTask import AbstractTask
-from edna2.tasks.H5ToCBFTask import H5ToCBFTask
-from edna2.tasks.ReadImageHeader import ReadImageHeader
-from edna2.tasks.ISPyBTasks import ISPyBRetrieveDataCollection
 
-from edna2.utils import UtilsPath
-from edna2.utils import UtilsImage
-from edna2.utils import UtilsIspyb
-from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 from edna2.utils import UtilsDetector
 
@@ -86,7 +68,11 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         return {
             "type": "object",
             "properties": {
-                "dozorMap": {"type": "string"}
+                "dozorMap": {"type": "string"},
+                "listPositions":  {
+                    "type": "array",
+                    "items": {"type": "object"}
+                },
             },
         }
 
@@ -149,9 +135,14 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         pathDozormMap = workingDir / "dozorm_001.map"
         if pathDozormMap.exists():
             listPositions = DozorM.parseDozormLogFile(logPath)
+            arrayScore, arrayCrystal, arrayImageNumber = \
+                DozorM.parseMap(pathDozormMap)
             outData = {
                 "dozorMap": str(pathDozormMap),
-                "listPositions": listPositions
+                "listPositions": listPositions,
+                "arrayScore": arrayScore,
+                "arrayCrystal": arrayCrystal,
+                "arrayImageNumber": arrayImageNumber
             }
         return outData
 
@@ -196,4 +187,60 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
                     position["helicalIoverSigma"] = listValues[15]
                 listPositions.append(position)
         return listPositions
+
+    @staticmethod
+    def makePlots(mapPath):
+        heatMapPath = None
+        crystalMapPath = None
+        npArrayScores, npArrayCrystal = DozorM.parseMap(mapPath)
+
+        return heatMapPath, crystalMapPath
+
+    @staticmethod
+    def parseMatrix(index, listLines, isFloat=True):
+        arrayValues = []
+        # Parse matrix - starts and ends with "---" line
+        while not listLines[index].startswith("-------"):
+            index += 1
+        index += 1
+        while not listLines[index].startswith("-------"):
+            listScores = listLines[index].split()[1:]
+            if isFloat:
+                listScores = list(map(float, listScores))
+            else:
+                listScores = list(map(int, listScores))
+            arrayValues.append(listScores)
+            index += 1
+        index += 1
+        return index, arrayValues
+
+    @staticmethod
+    def parseMap(mapPath):
+        with open(str(mapPath)) as fd:
+            listLines = fd.readlines()
+        index = 0
+        # Parse scores
+        index, arrayScore = DozorM.parseMatrix(index, listLines, isFloat=True)
+        # Parse crystals
+        index, arrayCrystal = DozorM.parseMatrix(index, listLines, isFloat=False)
+        # Parse image number
+        index, arrayImageNumber = DozorM.parseMatrix(index, listLines, isFloat=True)
+        return arrayScore, arrayCrystal, arrayImageNumber
+
+    @staticmethod
+    def updateMeshPositions(meshPositions, arrayScore):
+        newMeshPositions = []
+        for position in meshPositions:
+            # pprint.pprint(position)
+            indexY = position["indexY"]
+            indexZ = position["indexZ"]
+            # print(indexY, indexZ)
+            dozormScore = arrayScore[indexZ][indexY]
+            dozorScore = position["dozor_score"]
+            # print(dozorScore, dozormScore)
+            newPosition = dict(position)
+            newPosition["dozor_score_orig"] = dozorScore
+            newPosition["dozor_score"] = dozormScore
+            newMeshPositions.append(newPosition)
+        return newMeshPositions
 
