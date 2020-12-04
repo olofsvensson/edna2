@@ -41,13 +41,19 @@ class DozorMUnitTest(unittest.TestCase):
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    def test_unit_DozorM_parseDozormLogFile(self):
+    def test_unit_DozorM_parseDozormLogFile_1(self):
         logPath = self.dataPath / 'opid23eh1_mesh1_dozorm.log'
         listPositions = DozorM.parseDozormLogFile(logPath)
         self.assertEqual(len(listPositions), 2)
         logPath = self.dataPath / 'opid23eh1_mesh3_dozorm.log'
         listPositions = DozorM.parseDozormLogFile(logPath)
         self.assertEqual(len(listPositions), 9)
+        pprint.pprint(listPositions)
+
+    def test_unit_DozorM_parseDozormLogFile_2(self):
+        logPath = self.dataPath / 'id30a1_line1_dozorm.log'
+        listPositions = DozorM.parseDozormLogFile(logPath)
+        self.assertEqual(len(listPositions), 3)
         pprint.pprint(listPositions)
 
     def test_unit_DozorM_makePlots(self):

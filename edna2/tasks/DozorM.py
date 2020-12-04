@@ -171,13 +171,17 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 doParseLine = True
             elif doParseLine:
                 listValues = line.split()
+                try:
+                    iOverSigma = float(listValues[5])
+                except:
+                    iOverSigma = listValues[5]
                 position = {
                     "number": int(listValues[0]),
                     "apertureSize": float(listValues[1]),
                     "imageNumber": int(listValues[2]),
                     "xPosition": float(listValues[3]),
                     "yPosition": float(listValues[4]),
-                    "iOverSigma": float(listValues[5]),
+                    "iOverSigma": iOverSigma,
                     "numberOfImagesTotal": int(listValues[6]),
                     "numberOfImagesTotalX": int(listValues[7]),
                     "numberOfImagesTotalY": int(listValues[8]),
