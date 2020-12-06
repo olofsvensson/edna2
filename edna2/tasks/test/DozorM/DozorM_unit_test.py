@@ -42,6 +42,15 @@ class DozorMUnitTest(unittest.TestCase):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
     def test_unit_DozorM_parseDozormLogFile_1(self):
+        logPath = self.dataPath / 'dozorm_1D.log'
+        listPositions = DozorM.parseDozormLogFile(logPath)
+        self.assertEqual(len(listPositions), 3)
+        newListPositions = DozorM.check1Dpositions(listPositions, 1, 100)
+        # pprint.pprint(listPositions)
+        for position in newListPositions:
+            self.assertEqual(position["xPosition"], 1.0)
+
+    def test_unit_DozorM_parseDozorm_1D_1(self):
         logPath = self.dataPath / 'opid23eh1_mesh1_dozorm.log'
         listPositions = DozorM.parseDozormLogFile(logPath)
         self.assertEqual(len(listPositions), 2)
@@ -59,25 +68,25 @@ class DozorMUnitTest(unittest.TestCase):
     def test_unit_DozorM_makePlots(self):
         tmpDir = tempfile.mkdtemp(prefix="test_unit_DozorM_makePlots_")
         mapPath = self.dataPath / 'opid23eh1_mesh1_dozorm.map'
-        arrayScore, arrayCrystal, arrayImageNumber = DozorM.parseMap(mapPath)
-        imagePath = DozorM.makeCrystalPlot(arrayCrystal, tmpDir, debug=True)
+        dictMap = DozorM.parseMap(mapPath)
+        imagePath = DozorM.makeCrystalPlot(dictMap["crystal"], tmpDir, debug=True)
         self.assertTrue(os.path.exists(imagePath))
         shutil.rmtree(tmpDir)
 
     def test_unit_DozorM_parseMap(self):
         mapPath = self.dataPath / 'opid23eh1_mesh1_dozorm.map'
-        arrayScore, arrayCrystal, arrayImageNumber = DozorM.parseMap(mapPath)
-        print(arrayScore)
-        print(arrayCrystal)
-        print(arrayImageNumber)
+        dictMap = DozorM.parseMap(mapPath)
+        # pprint.pprint(dictMap)
+        self.assertEqual(dictMap["nx"], 18)
+        self.assertEqual(dictMap["ny"], 16)
 
     def test_updateMeshPositions(self):
         meshPositionPath = self.dataPath / 'opid23eh1_mesh1_meshPositions.json'
         with open(str(meshPositionPath)) as fd:
             meshPositions = json.loads(fd.read())
         mapPath = self.dataPath / 'opid23eh1_mesh1_dozorm.map'
-        arrayScore, arrayCrystal, arrayImageNumber = DozorM.parseMap(mapPath)
+        dictMap = DozorM.parseMap(mapPath)
         newMeshPositions = DozorM.updateMeshPositions(
             meshPositions=meshPositions,
-            arrayScore=arrayScore
+            arrayScore=dictMap["crystal"]
         )

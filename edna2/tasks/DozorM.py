@@ -137,16 +137,21 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         outData = {}
         pathDozormMap = workingDir / "dozorm_001.map"
         if pathDozormMap.exists():
+            dictMap = DozorM.parseMap(pathDozormMap)
+            nx = dictMap["nx"]
+            ny = dictMap["ny"]
             listPositions = DozorM.parseDozormLogFile(logPath)
-            arrayScore, arrayCrystal, arrayImageNumber = \
-                DozorM.parseMap(pathDozormMap)
-            crystalMapPath = DozorM.makeCrystalPlot(arrayCrystal, workingDir)
+            # Fix for problem with 1D scans
+            listPositions = DozorM.check1Dpositions(listPositions, nx, ny)
+            crystalMapPath = DozorM.makeCrystalPlot(dictMap["crystal"], workingDir)
             outData = {
                 "dozorMap": str(pathDozormMap),
                 "listPositions": listPositions,
-                "arrayScore": arrayScore,
-                "arrayCrystal": arrayCrystal,
-                "arrayImageNumber": arrayImageNumber,
+                "nx": nx,
+                "ny": ny,
+                "score": dictMap["score"],
+                "crystal": dictMap["crystal"],
+                "imageNumber": dictMap["imageNumber"],
                 "crystalMapPath": crystalMapPath
             }
         return outData
@@ -286,14 +291,23 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
     def parseMap(mapPath):
         with open(str(mapPath)) as fd:
             listLines = fd.readlines()
-        index = 0
+        # Parse map dimensions
+        index = 1
+        nx, ny = map(int, listLines[index].split())
         # Parse scores
         index, arrayScore = DozorM.parseMatrix(index, listLines, isFloat=True)
         # Parse crystals
         index, arrayCrystal = DozorM.parseMatrix(index, listLines, isFloat=False)
         # Parse image number
         index, arrayImageNumber = DozorM.parseMatrix(index, listLines, isFloat=True)
-        return arrayScore, arrayCrystal, arrayImageNumber
+        dictMap = {
+            "nx": nx,
+            "ny": ny,
+            "score": arrayScore,
+            "crystal": arrayCrystal,
+            "imageNumber": arrayImageNumber
+        }
+        return dictMap
 
     @staticmethod
     def updateMeshPositions(meshPositions, arrayScore):
@@ -312,3 +326,14 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
             newMeshPositions.append(newPosition)
         return newMeshPositions
 
+    @staticmethod
+    def check1Dpositions(listPositions, nx, ny):
+        newListPositions = []
+        for position in listPositions:
+            newPosition = dict(position)
+            if nx == 1:
+                newPosition["xPosition"] = 1.0
+            if ny == 1:
+                newPosition["yPosition"] = 1.0
+            newListPositions.append(newPosition)
+        return newListPositions
