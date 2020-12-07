@@ -144,7 +144,10 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
             # Fix for problem with 1D scans
             listPositions = DozorM.check1Dpositions(listPositions, nx, ny)
             crystalMapPath = DozorM.makeCrystalPlot(dictMap["crystal"], workingDir)
-            imageNumberMapPath = DozorM.makeImageNumberMap(dictMap["imageNumber"], workingDir)
+            if nx != 1 and ny != 1:
+                imageNumberMapPath = DozorM.makeImageNumberMap(dictMap["imageNumber"], workingDir)
+            else:
+                imageNumberMapPath = None
             outData = {
                 "dozorMap": str(pathDozormMap),
                 "listPositions": listPositions,
