@@ -69,9 +69,19 @@ class DozorMUnitTest(unittest.TestCase):
         tmpDir = tempfile.mkdtemp(prefix="test_unit_DozorM_makePlots_")
         mapPath = self.dataPath / 'opid23eh1_mesh1_dozorm.map'
         dictMap = DozorM.parseMap(mapPath)
-        imagePath = DozorM.makeCrystalPlot(dictMap["crystal"], tmpDir, debug=True)
+        imagePath = DozorM.makeCrystalPlot(dictMap["crystal"], tmpDir, debug=False)
+        self.assertTrue(os.path.exists(imagePath))
+        imagePath = DozorM.makeImageNumberMap(dictMap["imageNumber"], tmpDir, debug=False)
         self.assertTrue(os.path.exists(imagePath))
         shutil.rmtree(tmpDir)
+
+    def test_unit_DozorM_makePlots_id30a2(self):
+        tmpDir = tempfile.mkdtemp(prefix="test_unit_DozorM_makePlots_")
+        mapPath = self.dataPath / 'opid30a2_line_dozorm.map'
+        dictMap = DozorM.parseMap(mapPath)
+        imagePath = DozorM.makeCrystalPlot(dictMap["crystal"], tmpDir, debug=False)
+        shutil.rmtree(tmpDir)
+
 
     def test_unit_DozorM_parseMap(self):
         mapPath = self.dataPath / 'opid23eh1_mesh1_dozorm.map'

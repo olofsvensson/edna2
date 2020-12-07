@@ -144,6 +144,7 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
             # Fix for problem with 1D scans
             listPositions = DozorM.check1Dpositions(listPositions, nx, ny)
             crystalMapPath = DozorM.makeCrystalPlot(dictMap["crystal"], workingDir)
+            imageNumberMapPath = DozorM.makeImageNumberMap(dictMap["imageNumber"], workingDir)
             outData = {
                 "dozorMap": str(pathDozormMap),
                 "listPositions": listPositions,
@@ -152,7 +153,8 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 "score": dictMap["score"],
                 "crystal": dictMap["crystal"],
                 "imageNumber": dictMap["imageNumber"],
-                "crystalMapPath": crystalMapPath
+                "crystalMapPath": crystalMapPath,
+                "imageNumberMapPath": imageNumberMapPath
             }
         return outData
 
@@ -218,13 +220,13 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         maxSize = max(xSize, ySize)
         if maxSize < 10:
             fontSize = 12
-            dpi = 100
+            dpi = 75
         elif maxSize < 50:
             fontSize = 8
-            dpi = 150
+            dpi = 100
         else:
             fontSize =5
-            dpi = 200
+            dpi = 150
 
         font = {'family': 'normal',
                 'weight': 'normal',
@@ -233,7 +235,11 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         matplotlib.rc('font', **font)
 
         fig, ax = plt.subplots()
-        im = ax.imshow(npArrayCrystalAbs, cmap=matplotlib.cm.Spectral)
+
+        im = ax.imshow(
+            npArrayCrystalAbs,
+            cmap=matplotlib.cm.Spectral
+        )
 
         ax.set_xticks(numpy.arange(len(range(xSize))))
         ax.set_yticks(numpy.arange(len(range(ySize))))
@@ -253,7 +259,7 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
                                    ha="center", va="center", color="b")
 
         ax.set_title("Crystal map")
-        fig.tight_layout(pad=0)
+        fig.tight_layout(pad=2)
         w, h = fig.get_size_inches()
         x1, x2 = ax.get_xlim()
         y1, y2 = ax.get_ylim()
@@ -261,7 +267,7 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         x2 = float(x2)
         y1 = float(y1)
         y2 = float(y2)
-        fig.set_size_inches(w, abs(y2 - y1) / (x2 - x1) * w + 1)
+        fig.set_size_inches(w + 2, abs(y2 - y1) / (x2 - x1) * w + 2)
         if debug:
             plt.show()
         crystalMapPath = os.path.join(workingDirectory, "crystalMap.png")
@@ -288,6 +294,88 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         return index, arrayValues
 
     @staticmethod
+    def makeImageNumberMap(arrayImageNumber, workingDirectory, debug=False):
+        npImageNumber = numpy.array(arrayImageNumber)
+        npArrayImageNumber = numpy.zeros(npImageNumber.shape)
+        ySize, xSize = npImageNumber.shape
+
+        maxSize = max(xSize, ySize)
+        if maxSize < 10:
+            fontSize = 12
+            dpi = 75
+        elif maxSize < 50:
+            fontSize = 8
+            dpi = 100
+        else:
+            fontSize =5
+            dpi = 150
+
+        font = {'family': 'normal',
+                'weight': 'normal',
+                'size': fontSize}
+
+        matplotlib.rc('font', **font)
+
+        fig, ax = plt.subplots()
+        im = ax.imshow(
+            npArrayImageNumber,
+            cmap=matplotlib.cm.Greys
+        )
+
+        ax.set_xticks(numpy.arange(len(range(xSize))))
+        ax.set_yticks(numpy.arange(len(range(ySize))))
+
+        ax.set_xticklabels(list(range(1, xSize+1)))
+        ax.set_yticklabels(list(range(1, ySize+1)))
+
+        # Rotate the tick labels and set their alignment.
+        plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
+                 rotation_mode="anchor")
+
+        # Loop over data dimensions and create text annotations.
+        for i in range(ySize):
+            for j in range(xSize):
+                text = ax.text(j, i, arrayImageNumber[i][j],
+                               ha="center", va="center", color="b")
+
+        ax.set_title("Image numbers")
+        fig.tight_layout(pad=2)
+        w, h = fig.get_size_inches()
+        x1, x2 = ax.get_xlim()
+        y1, y2 = ax.get_ylim()
+        x1 = float(x1)
+        x2 = float(x2)
+        y1 = float(y1)
+        y2 = float(y2)
+        fig.set_size_inches(w + 2, abs(y2 - y1) / (x2 - x1) * w + 2)
+        if debug:
+            plt.show()
+        imageNumberPath = os.path.join(workingDirectory, "imageNumber.png")
+        plt.savefig(imageNumberPath, dpi=dpi)
+
+        return imageNumberPath
+
+    @staticmethod
+    def parseMatrix(index, listLines, isFloat=True):
+        arrayValues = []
+        # Parse matrix - starts and ends with "---" line
+        while not listLines[index].startswith("-------"):
+            index += 1
+        index += 1
+        while not listLines[index].startswith("-------"):
+            listScores = listLines[index].split()[1:]
+            if isFloat:
+                listScores = list(map(float, listScores))
+            else:
+                listScores = list(map(int, listScores))
+            arrayValues.append(listScores)
+            index += 1
+        index += 1
+        return index, arrayValues
+
+
+
+    @staticmethod
     def parseMap(mapPath):
         with open(str(mapPath)) as fd:
             listLines = fd.readlines()
@@ -299,7 +387,7 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         # Parse crystals
         index, arrayCrystal = DozorM.parseMatrix(index, listLines, isFloat=False)
         # Parse image number
-        index, arrayImageNumber = DozorM.parseMatrix(index, listLines, isFloat=True)
+        index, arrayImageNumber = DozorM.parseMatrix(index, listLines, isFloat=False)
         dictMap = {
             "nx": nx,
             "ny": ny,
