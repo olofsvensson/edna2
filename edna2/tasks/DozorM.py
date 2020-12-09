@@ -187,7 +187,7 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
                     iOverSigma = listValues[5]
                 position = {
                     "number": int(listValues[0]),
-                    "apertureSize": float(listValues[1]),
+                    "apertureSize": str(int(float(listValues[1]))),
                     "imageNumber": int(listValues[2]),
                     "xPosition": float(listValues[3]),
                     "yPosition": float(listValues[4]),
