@@ -21,6 +21,7 @@
 import os
 import numpy
 import pprint
+import textwrap
 import matplotlib
 import matplotlib.cm
 import matplotlib.pyplot as plt
@@ -279,24 +280,6 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         return crystalMapPath
 
     @staticmethod
-    def parseMatrix(index, listLines, isFloat=True):
-        arrayValues = []
-        # Parse matrix - starts and ends with "---" line
-        while not listLines[index].startswith("-------"):
-            index += 1
-        index += 1
-        while not listLines[index].startswith("-------"):
-            listScores = listLines[index].split()[1:]
-            if isFloat:
-                listScores = list(map(float, listScores))
-            else:
-                listScores = list(map(int, listScores))
-            arrayValues.append(listScores)
-            index += 1
-        index += 1
-        return index, arrayValues
-
-    @staticmethod
     def makeImageNumberMap(arrayImageNumber, workingDirectory, debug=False):
         npImageNumber = numpy.array(arrayImageNumber)
         npArrayImageNumber = numpy.zeros(npImageNumber.shape)
@@ -359,14 +342,14 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         return imageNumberPath
 
     @staticmethod
-    def parseMatrix(index, listLines, isFloat=True):
+    def parseMatrix(index, listLines, spacing, isFloat=True):
         arrayValues = []
         # Parse matrix - starts and ends with "---" line
         while not listLines[index].startswith("-------"):
             index += 1
         index += 1
         while not listLines[index].startswith("-------"):
-            listScores = listLines[index].split()[1:]
+            listScores = textwrap.wrap(listLines[index][5:], spacing)
             if isFloat:
                 listScores = list(map(float, listScores))
             else:
@@ -386,11 +369,11 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         index = 1
         nx, ny = map(int, listLines[index].split())
         # Parse scores
-        index, arrayScore = DozorM.parseMatrix(index, listLines, isFloat=True)
+        index, arrayScore = DozorM.parseMatrix(index, listLines, spacing=6, isFloat=True)
         # Parse crystals
-        index, arrayCrystal = DozorM.parseMatrix(index, listLines, isFloat=False)
+        index, arrayCrystal = DozorM.parseMatrix(index, listLines, spacing=4, isFloat=False)
         # Parse image number
-        index, arrayImageNumber = DozorM.parseMatrix(index, listLines, isFloat=False)
+        index, arrayImageNumber = DozorM.parseMatrix(index, listLines, spacing=5, isFloat=False)
         dictMap = {
             "nx": nx,
             "ny": ny,

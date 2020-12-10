@@ -90,6 +90,13 @@ class DozorMUnitTest(unittest.TestCase):
         self.assertEqual(dictMap["nx"], 18)
         self.assertEqual(dictMap["ny"], 16)
 
+    def test_unit_DozorM_parseMap_1(self):
+        mapPath = self.dataPath / 'id30a1_mesh1_dozorm.map'
+        dictMap = DozorM.parseMap(mapPath)
+        # pprint.pprint(dictMap)
+        self.assertEqual(dictMap["nx"], 35)
+        self.assertEqual(dictMap["ny"], 20)
+
     def test_updateMeshPositions(self):
         meshPositionPath = self.dataPath / 'opid23eh1_mesh1_meshPositions.json'
         with open(str(meshPositionPath)) as fd:
