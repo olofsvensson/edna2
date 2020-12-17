@@ -18,6 +18,11 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+__author__ = "Olof Svensson"
+__contact__ = "svensson@esrf.eu"
+__copyright__ = "ESRF"
+__updated__ = "2020-12-17"
+
 import os
 import numpy
 import pprint
@@ -64,7 +69,8 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 "beam_v": {"type": "number"},
                 "number_apertures": {"type": "integer"},
                 "aperture_size": {"type": "string"},
-                "reject_level": {"type": "integer"}
+                "reject_level": {"type": "integer"},
+                "isHorizontalScan": {"type": "boolean"}
             }
         }
 
@@ -99,13 +105,13 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         nx = UtilsDetector.getNx(detectorType)
         ny = UtilsDetector.getNy(detectorType)
         pixelSize = UtilsDetector.getPixelsize(detectorType)
-        if inData.get('isZigZag', False):
-            mesh_direct = "-h"
-        else:
-            mesh_direct = "-h"
         nameTemplateScan = self.getWorkingDirectory() / "dozorm_00?"
         os.symlink(inData["dozorAllFile"], str(self.getWorkingDirectory() / "dozorm_001"))
         firstScanNumber = 1
+        if inData.get('isHorizontalScan', True):
+            meshDirect = "-h"
+        else:
+            meshDirect = "-v"
         command = '!\n'
         command += 'detector {0}\n'.format(detectorType)
         command += 'nx %d\n' % nx
@@ -117,7 +123,7 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         command += 'orgy {0}\n'.format(inData['orgy'])
         command += 'number_row {0}\n'.format(inData['number_row'])
         command += 'number_images {0}\n'.format(inData['number_images'])
-        command += 'mesh_direct {0}\n'.format(mesh_direct)
+        command += 'mesh_direct {0}\n'.format(meshDirect)
         command += 'step_h {0}\n'.format(inData['step_h'])
         command += 'step_v {0}\n'.format(inData['step_v'])
         command += 'beam_shape {0}\n'.format(inData['beam_shape'])
