@@ -201,6 +201,7 @@ class AbstractTask(object):
             script += '#SBATCH --partition={0}\n'.format('grid')
             script += '#SBATCH --mem={0}\n'.format(mem)
             script += '#SBATCH --nodes={0}\n'.format(nodes)
+            script += '#SBATCH --nodes=1\n' # Necessary for not splitting jobs! See ATF-57
             script += '#SBATCH --cpus-per-task={0}\n'.format(core)
             script += '#SBATCH --time={0}\n'.format(time)
             script += '#SBATCH --chdir={0}\n'.format(workingDir)
