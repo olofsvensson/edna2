@@ -100,13 +100,14 @@ def getNumberOfSymmetryOperatorsFromSpaceGroupName(spaceGroupName):
     return getNumberOfSymmetryOperators(spaceGroupName, 3)
 
 
-def getNumberOfSymmetryOperators(spaceGroupIdOrName, _iIndex):
+def getNumberOfSymmetryOperators(spaceGroupIdOrName, index):
     strNumOperators = None
     for strLine in getSymOpLib().splitlines():
-        listItems = strLine.split(" ")
-        if (len(listItems) > 3 and listItems[_iIndex] == spaceGroupIdOrName):
-            strNumOperators = listItems[1]
-    return strNumOperators
+        listItems = strLine.split()
+        if (len(listItems) > 3 and listItems[index] == str(spaceGroupIdOrName)):
+            numOperators = int(listItems[1])
+            break
+    return numOperators
 
 
 def getITNumberFromSpaceGroupName(spaceGroupName):

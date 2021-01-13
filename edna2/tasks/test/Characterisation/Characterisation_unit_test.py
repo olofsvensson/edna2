@@ -43,6 +43,21 @@ class ControlIndexingUnitTest(unittest.TestCase):
         numOperators = 4
         chemicalCompositionMM = Characterisation.getDefaultChemicalComposition(cell, numOperators)
         # pprint.pprint(chemicalCompositionMM)
-        self.assertEqual(chemicalCompositionMM["solvent"]["atoms"][0]["concentration"], 314)
-        self.assertEqual(chemicalCompositionMM["structure"]["chain"]["numberOfMonomers"], 764)
-        self.assertEqual(chemicalCompositionMM["structure"]["chain"]["type"], "protein")
+        self.assertEqual(chemicalCompositionMM["solvent"]["atom"][0]["concentration"], 314)
+        self.assertEqual(chemicalCompositionMM["structure"]["chain"][0]["numberOfMonomers"], 764)
+        self.assertEqual(chemicalCompositionMM["structure"]["chain"][0]["type"], "protein")
+
+    def test_checkEstimateRadiationDamage(self):
+        inData = {}
+        listSubWedge = []
+        self.assertFalse(Characterisation.checkEstimateRadiationDamage(inData))
+        inData = {"diffractionPlan": {"estimateRadiationDamage": False}}
+        self.assertFalse(Characterisation.checkEstimateRadiationDamage(inData))
+        inData = {"diffractionPlan": {"estimateRadiationDamage": True}}
+        self.assertTrue(Characterisation.checkEstimateRadiationDamage(inData))
+        inData = {"diffractionPlan": {"strategyOption": "bla bla bla bla"}}
+        self.assertFalse(Characterisation.checkEstimateRadiationDamage(inData))
+        inData = {"diffractionPlan": {"strategyOption": "bla bla -DamPar bla bla"}}
+        self.assertTrue(Characterisation.checkEstimateRadiationDamage(inData))
+        inData = {"experimentalCondition": {"beam": {"flux": 1e12}}}
+        self.assertTrue(Characterisation.checkEstimateRadiationDamage(inData))

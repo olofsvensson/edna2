@@ -39,12 +39,12 @@ class RaddoseUnitTest(unittest.TestCase):
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    def test_execute(self):
+    def test_createCommandLine(self):
         referenceDataPath = self.dataPath / 'inDataRaddose.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         commandLine, listCommand = Raddose.createCommandLine(inData)
-        # print(commandLine)
-        # pprint.pprint(listCommand)
+        print(commandLine)
+        pprint.pprint(listCommand)
         self.assertTrue("raddose" in commandLine)
         self.assertTrue("BEAM 0.1 0.1" in listCommand)
 
@@ -63,3 +63,50 @@ class RaddoseUnitTest(unittest.TestCase):
         # pprint.pprint(outData)
         self.assertEqual(outData["absorbedDose"], 223000)
         self.assertEqual(outData["timeToReachHendersonLimit"], 89.7)
+
+    def test_mergeAtomicComposition(self):
+
+        atomicComposition1 = [
+            {
+                "symbol": "S",
+                "numberOf": 4
+            },
+            {
+                "symbol": "Se",
+                "numberOf": 3
+            }
+        ]
+
+        atomicComposition2 = [
+            {
+                "symbol": "S",
+                "numberOf": 1
+            },
+            {
+                "symbol": "Fe",
+                "numberOf": 5
+            }
+        ]
+
+        mergedAtomicComposition = Raddose.mergeAtomicComposition(
+            atomicComposition1, atomicComposition2
+        )
+
+        self.assertEqual(len(mergedAtomicComposition), 3)
+
+        for atom in mergedAtomicComposition:
+            if atom["symbol"] == "S":
+                self.assertEqual(5, atom["numberOf"])
+            if atom["symbol"] == "Se":
+                self.assertEqual(3, atom["numberOf"])
+            if atom["symbol"] == "Fe":
+                self.assertEqual(5, atom["numberOf"])
+
+        mergedAtomicComposition = Raddose.mergeAtomicComposition(
+            [], atomicComposition2)
+        self.assertEqual(len(mergedAtomicComposition), 2)
+        for atom in mergedAtomicComposition:
+            if atom["symbol"] == "S":
+                self.assertEqual(1, atom["numberOf"])
+            if atom["symbol"] == "Fe":
+                self.assertEqual(5, atom["numberOf"])

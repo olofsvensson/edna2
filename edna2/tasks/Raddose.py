@@ -59,21 +59,96 @@ class Raddose(AbstractTask):
     @staticmethod
     def createCommandLine(inData):
         commandLine = "raddose__v20090103"
+        experimentalCondition = inData["experimentalCondition"]
+        sample = inData["sample"]
+        beam = experimentalCondition["beam"]
+        # Analyse chemical composition
+        chemicalComposition = inData["chemicalComposition"]
+        # Solvent
+        totalSATM = []
+        solvent = chemicalComposition.get("solvent")
+        if solvent is not None:
+            totalSATM = solvent["atom"]
+        # Structure
+        structure = chemicalComposition.get("structure", None)
+        totalNRESInStructure = 0
+        totalNDNAInStructure = 0
+        totalNRNAInStructure = 0
+        totalPATM = []
+        if structure is not None:
+            listChain = structure["chain"]
+
+            for chain in listChain:
+                # heavy atoms of each chain to be added in the PATM
+                atomicCompositionHeavyAtoms = chain.get("heavyAtoms", None)
+                if atomicCompositionHeavyAtoms is not None:
+                    iterator = 1
+                    while iterator <= chain["numberOfCopies"]:
+                        totalPATM = Raddose.mergeAtomicComposition(totalPATM, atomicCompositionHeavyAtoms)
+                        iterator = iterator + 1
+
+                type = chain["type"]
+                numberOfMonomers = chain["numberOfMonomers"] * chain["numberOfCopies"]
+
+                if (type == "protein"):
+                    totalNRESInStructure = totalNRESInStructure + numberOfMonomers
+                elif(type == "dna"):
+                    totalNDNAInStructure = totalNDNAInStructure + numberOfMonomers
+                elif(type == "rna"):
+                    totalNRNAInStructure = totalNRNAInStructure + numberOfMonomers
+
+            # Ligands - not implemented yet
+            if "ligand" in structure:
+                raise RuntimeError("Ligand present in structure but support for ligands not yet implemented!")
+            # xsDataLigands = xsDataStructure.getLigand()
+            # for ligand in xsDataLigands:
+            #
+            #     # Light atoms to be added to the NRES
+            #     nres = ligand.getNumberOfLightAtoms().getValue() * ligand.getNumberOfCopies().getValue() / 7.85
+            #     totalNRESInStructure = totalNRESInStructure + nres
+            #
+            #     # Heavy atoms to be added to the PATM
+            #     if (ligand.getHeavyAtoms() is not None):
+            #         iterator = 1
+            #         while iterator <= ligand.getNumberOfCopies().getValue():
+            #             totalPATM = self.mergeAtomicComposition(totalPATM, ligand.getHeavyAtoms())
+            #             iterator = iterator + 1
+
         listCommand = [
-            "BEAM {beamSizeX} {beamSizeY}".format(**inData),
-            "PHOSEC {flux}".format(**inData),
-            "WAVELENGTH {wavelength}".format(**inData),
-            "CRYSTAL {crystalSizeX} {crystalSizeY} {crystalSizeZ}".format(**inData),
-            "NRES {crystalNRES}".format(**inData),
-            "NMON {crystalNMON}".format(**inData),
+            "BEAM {x} {y}".format(**beam["size"]),
+            "PHOSEC {flux}".format(**beam),
+            "WAVELENGTH {wavelength}".format(**beam),
+            "CRYSTAL {x} {y} {z}".format(**sample["size"]),
             "CELL {a} {b} {c} {alpha} {beta} {gamma}".format(**inData["cell"]),
-            "EXPOSURE {exposureTime}".format(**inData),
+            "EXPOSURE {exposureTime}".format(**beam),
             "IMAGES {numberOfImages}".format(**inData),
         ]
-        patmLine = "PATM"
-        for patm in inData["crystalPATM"]:
-            patmLine += " {symbol} {numberOf}".format(**patm)
-        listCommand.append(patmLine)
+
+        if totalNRESInStructure != 0:
+            listCommand.append("NRES {0}".format(int(round(totalNRESInStructure))))
+        if totalNDNAInStructure != 0:
+            listCommand.append("NDNA {0}".format(int(round(totalNDNAInStructure))))
+        if totalNRNAInStructure != 0:
+            listCommand.append("NRA {0}".format(int(round(totalNRNAInStructure))))
+        if len(totalPATM) != 0:
+            patmLine = "PATM"
+            for patm in totalPATM:
+                patmLine += " {symbol} {numberOf}".format(**patm)
+            listCommand.append(patmLine)
+        if len(totalSATM) != 0:
+            satmLine = "SATM"
+            for satm in totalSATM:
+                satmLine += " {symbol} {concentration}".format(**satm)
+            listCommand.append(satmLine)
+
+        #     xsDataNumberNumStructInAU = xsDataStructure.getNumberOfCopiesInAsymmetricUnit()
+        #     xsDataNumberNumStructInUC = int(xsDataNumberNumStructInAU.getValue() * _inumOperators)
+        #     xsDataRaddoseInput.setCrystalNMON(XSDataInteger(xsDataNumberNumStructInUC))
+        #
+        # patmLine = "PATM"
+        # for patm in inData["crystalPATM"]:
+        #     patmLine += " {symbol} {numberOf}".format(**patm)
+        # listCommand.append(patmLine)
         listCommand.append("END")
         return commandLine, listCommand
 
@@ -97,7 +172,7 @@ class Raddose(AbstractTask):
     def createOutData(inData, dictResults, pathToLogFile=None):
         outData = {}
         numberOfImages = inData["numberOfImages"]
-        exposureTime = inData["exposureTime"]
+        exposureTime = inData["experimentalCondition"]["beam"]["exposureTime"]
         totalExposureTime = numberOfImages * exposureTime
         if "doseInGrays" in dictResults:
             absorbedDose = dictResults["doseInGrays"]
@@ -114,3 +189,39 @@ class Raddose(AbstractTask):
             "timeToReachHendersonLimit": timeToReachHendersonLimit
         }
         return outData
+
+    @staticmethod
+    def mergeAtomicComposition(atomicComposition1, atomicComposition2):
+
+        mergedAtomicComposition = []
+        dictionary = {}
+
+        for atom2 in atomicComposition2:
+            dictionary[atom2["symbol"]] = atom2["numberOf"]
+
+        for atom1 in atomicComposition1:
+            symbol = atom1["symbol"]
+            if Raddose.exists(symbol, atomicComposition2):
+                mergedAtom = {
+                    "symbol": symbol,
+                    "numberOf": atom1["numberOf"] + dictionary[symbol]
+                }
+                mergedAtomicComposition.append(mergedAtom)
+            else:
+                mergedAtomicComposition.append(atom1)
+
+        for atom2 in atomicComposition2:
+            symbol = atom2["symbol"]
+            if not Raddose.exists(symbol, atomicComposition1):
+                mergedAtomicComposition.append(atom2)
+
+        return mergedAtomicComposition
+
+    @staticmethod
+    def exists(symbol, atomicComposition):
+        exists = False
+        for atom in atomicComposition:
+            if atom["symbol"] == symbol:
+                exists = True
+                break
+        return exists

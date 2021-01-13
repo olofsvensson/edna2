@@ -31,8 +31,10 @@ from edna2.tasks.ControlIndexing import ControlIndexing
 from edna2.tasks.XDSTasks import XDSGenerateBackground
 from edna2.tasks.XDSTasks import XDSIntegration
 from edna2.tasks.ReadImageHeader import ReadImageHeader
+from edna2.tasks.Raddose import Raddose
 
 from edna2.utils import UtilsImage
+from edna2.utils import UtilsSymmetry
 
 class Characterisation(AbstractTask):
     """
@@ -59,6 +61,79 @@ class Characterisation(AbstractTask):
         listImagePath = inData["imagePath"]
         prefix = UtilsImage.getPrefix(listImagePath[0])
         listSubWedge = self.getListSubWedge(inData)
+        # Check if flux is present
+        flux = None
+        beamSizeX = None
+        beamSizeY = None
+        experimentalCondition = inData.get("experimentalCondition", None)
+        if experimentalCondition is not None:
+            beam = experimentalCondition.get("beam", None)
+            if beam is not None:
+                flux = beam.get("flux", None)
+                # if not "size" in beam:
+                #     beam["size"] = listSubWedge[0]["experimentalCondition"]["beam"]["size"]
+                beam["exposureTime"] = listSubWedge[0]["experimentalCondition"]["beam"]["exposureTime"]
+                beam["wavelength"] = listSubWedge[0]["experimentalCondition"]["beam"]["wavelength"]
+        # Start indexing
+        outDataIndexing, outDataGB = self.indexing(prefix, listSubWedge)
+        if outDataIndexing is not None and outDataGB is not None:
+            listXdsAsciiHkl, correctLp, bkgpixCbf = self.integration(
+                prefix, listSubWedge, outDataIndexing, outDataGB)
+            if listXdsAsciiHkl is not None:
+                # Check if Raddose should be run
+                estimateRadiationDamage = self.checkEstimateRadiationDamage(inData, flux)
+                if estimateRadiationDamage:
+                    # Check if forced space group
+                    forcedSpaceGroup = None
+                    numOperators = None
+                    cell = None
+                    if "diffractionPlan" in inData and "forcedSpaceGroup" in inData["diffractionPlan"]:
+                        forcedSpaceGroup = inData["diffractionPlan"]["forcedSpaceGroup"]
+                        if forcedSpaceGroup != "":
+                            forcedSpaceGroup = forcedSpaceGroup.replace(" ", "")
+                            numOperators = UtilsSymmetry.getNumberOfSymmetryOperatorsFromSpaceGroupName(forcedSpaceGroup)
+                    if forcedSpaceGroup is None:
+                        # Get indexing space group IT number
+                        if "resultIndexing" in outDataIndexing:
+                            resultIndexing = outDataIndexing["resultIndexing"]
+                            cell = resultIndexing["cell"]
+                            if "spaceGroupNumber" in resultIndexing:
+                                spaceGroupNumber = resultIndexing["spaceGroupNumber"]
+                                numOperators = UtilsSymmetry.getNumberOfSymmetryOperatorsFromSpaceGroupITNumber(spaceGroupNumber)
+                    if numOperators is None:
+                        raise RuntimeError("Error when trying to determine number of symmetry operators!")
+                    chemicalComposition = self.getDefaultChemicalComposition(cell, numOperators)
+                    numberOfImages = self.getNumberOfImages(listSubWedge)
+                    sample = inData["sample"]
+                    inDataRaddose = {
+                        "experimentalCondition": experimentalCondition,
+                        "chemicalComposition": chemicalComposition,
+                        "sample": sample,
+                        "cell": cell,
+                        "numberOfImages": numberOfImages
+                    }
+                    import pprint
+                    pprint.pprint(inDataRaddose)
+                    raddose = Raddose(
+                        inData=inDataRaddose,
+                        workingDirectorySuffix=prefix)
+                    raddose.execute()
+                inDataBest = {
+                    "subWedge": listSubWedge,
+                    "xdsAsciiHkl": listXdsAsciiHkl,
+                    "bkgpixCbf": bkgpixCbf,
+                    "correctLp": correctLp
+                }
+                bestTask = Best(
+                    inData=inDataBest,
+                    workingDirectorySuffix=prefix
+                )
+                bestTask.execute()
+
+    @staticmethod
+    def indexing(prefix, listSubWedge):
+        outDataIndexing = None
+        outDataGB = None
         # Start indexing
         inDataIndexing = {
             "subWedge": listSubWedge,
@@ -82,54 +157,47 @@ class Characterisation(AbstractTask):
         indexingTask.join()
         if indexingTask.isSuccess():
             outDataIndexing = indexingTask.outData
-            resultIndexing = outDataIndexing["resultIndexing"]
             outDataGB = generateBackground.outData
-            xparmXdsPath = outDataIndexing["xparmXdsPath"]
-            if xparmXdsPath is not None:
-                listTasks = []
-                listXdsAsciiHkl = []
-                correctLp = None
-                bkgpixCbf = None
-                for subWedge in listSubWedge:
-                    inDataIntergation = {
-                        "subWedge": [subWedge],
-                        "xparmXds": xparmXdsPath,
-                        "spaceGroupNumber": resultIndexing["spaceGroupNumber"],
-                        "cell": resultIndexing["cell"],
-                        "gainCbf": outDataGB["gainCbf"],
-                        "blankCbf": outDataGB["blankCbf"],
-                        "bkginitCbf": outDataGB["bkginitCbf"],
-                        "xCorrectionsCbf": outDataGB["xCorrectionsCbf"],
-                        "yCorrectionsCbf": outDataGB["yCorrectionsCbf"]
-                    }
-                    imageNo = subWedge["image"][0]["number"]
-                    integrationTask = XDSIntegration(
-                        inData=inDataIntergation,
-                        workingDirectorySuffix=prefix + "_{0:04d}".format(imageNo)
-                    )
-                    integrationTask.start()
-                    listTasks.append(integrationTask)
-                for task in listTasks:
-                    task.join()
-                    if "xdsAsciiHkl" in task.outData:
-                        listXdsAsciiHkl.append(task.outData["xdsAsciiHkl"])
-                    if correctLp is None:
-                        correctLp = task.outData["correctLp"]
-                        bkgpixCbf = task.outData["bkgpixCbf"]
-                inDataBest = {
-                    "subWedge": listSubWedge,
-                    "xdsAsciiHkl": listXdsAsciiHkl,
-                    "bkgpixCbf": bkgpixCbf,
-                    "correctLp": correctLp
+        return outDataIndexing, outDataGB
+
+
+    @staticmethod
+    def integration(prefix, listSubWedge, outDataIndexing, outDataGB):
+        listXdsAsciiHkl = None
+        correctLp = None
+        bkgpixCbf = None
+        resultIndexing = outDataIndexing["resultIndexing"]
+        xparmXdsPath = outDataIndexing["xparmXdsPath"]
+        if xparmXdsPath is not None:
+            listTasks = []
+            listXdsAsciiHkl = []
+            for subWedge in listSubWedge:
+                inDataIntergation = {
+                    "subWedge": [subWedge],
+                    "xparmXds": xparmXdsPath,
+                    "spaceGroupNumber": resultIndexing["spaceGroupNumber"],
+                    "cell": resultIndexing["cell"],
+                    "gainCbf": outDataGB["gainCbf"],
+                    "blankCbf": outDataGB["blankCbf"],
+                    "bkginitCbf": outDataGB["bkginitCbf"],
+                    "xCorrectionsCbf": outDataGB["xCorrectionsCbf"],
+                    "yCorrectionsCbf": outDataGB["yCorrectionsCbf"]
                 }
-                bestTask = Best(
-                    inData=inDataBest,
-                    workingDirectorySuffix=prefix
+                imageNo = subWedge["image"][0]["number"]
+                integrationTask = XDSIntegration(
+                    inData=inDataIntergation,
+                    workingDirectorySuffix=prefix + "_{0:04d}".format(imageNo)
                 )
-                bestTask.execute()
-
-
-
+                integrationTask.start()
+                listTasks.append(integrationTask)
+            for task in listTasks:
+                task.join()
+                if "xdsAsciiHkl" in task.outData:
+                    listXdsAsciiHkl.append(task.outData["xdsAsciiHkl"])
+                if correctLp is None:
+                    correctLp = task.outData["correctLp"]
+                    bkgpixCbf = task.outData["bkgpixCbf"]
+        return listXdsAsciiHkl, correctLp, bkgpixCbf
 
     @staticmethod
     def getListSubWedge(inData):
@@ -188,7 +256,7 @@ class Characterisation(AbstractTask):
 
         chemicalCompositionMM = {
             "solvent": {
-                "atoms": [
+                "atom": [
                     {
                         "symbol": "S",
                         "concentration": averageSulfurConcentration,
@@ -196,16 +264,62 @@ class Characterisation(AbstractTask):
                 ]
             },
             "structure": {
-                "chain": {
-                    "type": "protein",
-                    "numberOfMonomers": numberOfMonomersPerAsymmetricUnit,
-                    "heavyAtoms": {
-                        "symbol": "S",
-                        "numberOf": numberOfSulfurAtom
+                "chain": [
+                    {
+                        "type": "protein",
+                        "numberOfCopies": 1,
+                        "numberOfMonomers": numberOfMonomersPerAsymmetricUnit,
+                        "heavyAtoms": [
+                            {
+                                "symbol": "S",
+                                "numberOf": numberOfSulfurAtom
+                            }
+                        ]
                     }
-                },
+                ],
                 "numberOfCopiesInAsymmetricUnit": 1
             }
         }
 
         return chemicalCompositionMM
+
+    @staticmethod
+    def checkEstimateRadiationDamage(inData, flux=None):
+        estimateRadiationDamage = None
+        # Check if radiation damage estimation is required or not in the diffraction plan
+        diffractionPlan = inData.get("diffractionPlan", None)
+        if diffractionPlan is not None:
+            if "estimateRadiationDamage" in diffractionPlan:
+                # Estimate radiation damage is explicitly set in the diffraction plan
+                estimateRadiationDamage = diffractionPlan["estimateRadiationDamage"]
+            else:
+                strategyOption = diffractionPlan.get("strategyOption", None)
+                if strategyOption is not None and "-DamPar" in strategyOption:
+                    # The "-DamPar" option requires estimation of radiation damage
+                    estimateRadiationDamage = True
+
+        # Check if not set by the diffraction plan
+        if estimateRadiationDamage is None:
+            experimentalCondition = inData.get("experimentalCondition", None)
+            if experimentalCondition is not None:
+                beam = experimentalCondition.get("beam", None)
+                if beam is not None:
+                    flux = beam.get("flux")
+                    if flux is not None:
+                        estimateRadiationDamage = True
+
+        if estimateRadiationDamage is None:
+            estimateRadiationDamage = False
+
+        return estimateRadiationDamage
+
+    @staticmethod
+    def getNumberOfImages(listSubwedge):
+        noImages = 0
+        for subWedge in listSubwedge:
+            goniostat = subWedge["experimentalCondition"]["goniostat"]
+            oscStart = goniostat["rotationAxisStart"]
+            oscEnd = goniostat["rotationAxisEnd"]
+            oscWidth = goniostat["oscillationWidth"]
+            noImages += int(round((oscEnd - oscStart) / oscWidth, 0))
+        return noImages

@@ -1,9 +1,15 @@
 {
-    "exposureTime": 1.0,
-    "flux": 1000000000000.0,
-    "beamSizeX": 0.1,
-    "beamSizeY": 0.1,
-    "wavelength": 2.41,
+    "experimentalCondition": {
+        "beam": {
+            "exposureTime": 1.0,
+            "flux": 1000000000000.0,
+            "size": {
+                "x": 0.1,
+                "y": 0.1
+            },
+            "wavelength": 1.0
+        }
+    },
     "cell": {
         "a": 78.9,
         "b": 95.162,
@@ -12,20 +18,38 @@
         "beta": 90.0,
         "gamma": 90.0
     },
-    "crystalNMON": 8,
-    "crystalNRES": 295,
-    "crystalPATM": [
-        {
-            "numberOf": 4,
-            "symbol": "S"
+    "chemicalComposition": {
+        "solvent": {
+            "atom": [
+                {
+                    "concentration": 314,
+                    "symbol": "S"
+                }
+            ]
         },
-        {
-            "numberOf": 4,
-            "symbol": "Se"
+        "structure": {
+            "chain": [
+                {
+                    "heavyAtoms": [
+                        {
+                            "numberOf": 38,
+                            "symbol": "S"
+                        }
+                    ],
+                    "numberOfCopies": 1,
+                    "numberOfMonomers": 764,
+                    "type": "protein"
+                }
+            ],
+            "numberOfCopiesInAsymmetricUnit": 1
         }
-    ],
-    "crystalSizeX": 0.1,
-    "crystalSizeY": 0.1,
-    "crystalSizeZ": 0.1,
+    },
+    "sample": {
+        "size": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 0.1
+        }
+    },
     "numberOfImages": 1
 }

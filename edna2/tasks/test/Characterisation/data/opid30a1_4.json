@@ -1,4 +1,20 @@
 {
+	"experimentalCondition": {
+		"beam": {
+			"flux": 1e12,
+			"size": {
+				"x": 0.1,
+				"y": 0.1
+			}
+		}
+	},
+	"sample": {
+        "size": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 0.1
+        }
+    },
 	"imagePath": [
 		"$EDNA2_TESTDATA_IMAGES/ref-opid30a1_4_0001.cbf",
 		"$EDNA2_TESTDATA_IMAGES/ref-opid30a1_4_0002.cbf",
