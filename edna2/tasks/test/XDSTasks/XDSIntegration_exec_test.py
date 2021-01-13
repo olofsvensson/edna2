@@ -35,7 +35,7 @@ from edna2.tasks.XDSTasks import XDSIntegration
 logger = UtilsLogging.getLogger()
 
 
-class XDSGenerateBackgroundExecTest(unittest.TestCase):
+class XDSItegrationExecTest(unittest.TestCase):
 
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)

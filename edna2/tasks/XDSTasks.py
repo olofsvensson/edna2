@@ -179,6 +179,14 @@ class XDSTask(AbstractTask):
             'STARTING_ANGLE={0}'.format(startAngle),
             'INDEX_QUALITY= 0.25'
         ]
+        if "spaceGroupNumber" in inData:
+            spaceGroupNumber = inData["spaceGroupNumber"]
+            cell = inData["cell"]
+            unitCellConstants = "{a} {b} {c} {alpha} {beta} {gamma}".format(**cell)
+            listXDS_INP += [
+                'SPACE_GROUP_NUMBER={0}'.format(spaceGroupNumber),
+                'UNIT_CELL_CONSTANTS={0}'.format(unitCellConstants)
+            ]
         return listXDS_INP
 
     @staticmethod

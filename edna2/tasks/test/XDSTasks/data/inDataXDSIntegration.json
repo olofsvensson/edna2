@@ -5,6 +5,21 @@
     "yCorrectionsCbf": "$EDNA2_TESTDATA_IMAGES/Y-CORRECTIONS.cbf",
     "blankCbf": "$EDNA2_TESTDATA_IMAGES/BLANK.cbf",
     "bkginitCbf": "$EDNA2_TESTDATA_IMAGES/BKGINIT.cbf",
+    "idxref": {
+        "mosaicity": 0.2,
+        "xBeam": 851.35,
+        "yBeam": 747.74,
+        "distance": 236.18,
+        "latticeCharacter": 12,
+        "spaceGroupNumber": 143,
+        "qualityOfFit": 0.8,
+        "a": 92.6,
+        "b": 92.6,
+        "c": 128.5,
+        "alpha": 90.0,
+        "beta": 90.0,
+        "gamma": 120.0
+    },
     "subWedge": [
         {
             "experimentalCondition": {
