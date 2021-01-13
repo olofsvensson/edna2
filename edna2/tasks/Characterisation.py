@@ -23,7 +23,7 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "23/11/2020"
 
-
+import math
 
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.Best import Best
@@ -153,3 +153,53 @@ class Characterisation(AbstractTask):
         listSubWedge = readImageHeader.outData["subWedge"]
         return listSubWedge
 
+    @staticmethod
+    def getDefaultChemicalComposition(cell, numOperators):
+
+        # For default chemical composition
+        averageAminoAcidVolume = 135.49
+        averageCrystalSolventContent = 0.47
+        averageSulfurContentPerAminoacid = 0.05
+        averageSulfurConcentration = 314
+
+        a = cell["a"]
+        b = cell["b"]
+        c = cell["c"]
+        alpha = math.radians(cell["alpha"])
+        beta = math.radians(cell["beta"])
+        gamma = math.radians(cell["gamma"])
+
+        unitCellVolume = a * b * c * (
+            math.sqrt(1 - math.cos(alpha) * math.cos(alpha) -
+            math.cos(beta) * math.cos(beta) -
+            math.cos(gamma) * math.cos(gamma) +
+            2 * math.cos(alpha) * math.cos(beta) * math.cos(gamma))
+        )
+        polymerVolume = unitCellVolume * (1 - averageCrystalSolventContent)
+        numberOfMonomersPerUnitCell = round(polymerVolume / averageAminoAcidVolume)
+        numberOfMonomersPerAsymmetricUnit = round(numberOfMonomersPerUnitCell / numOperators)
+        numberOfSulfurAtom = int(round(numberOfMonomersPerAsymmetricUnit * averageSulfurContentPerAminoacid))
+
+        chemicalCompositionMM = {
+            "solvent": {
+                "atoms": [
+                    {
+                        "symbol": "S",
+                        "concentration": averageSulfurConcentration,
+                    }
+                ]
+            },
+            "structure": {
+                "chain": {
+                    "type": "protein",
+                    "numberOfMonomers": numberOfMonomersPerAsymmetricUnit,
+                    "heavyAtoms": {
+                        "symbol": "S",
+                        "numberOf": numberOfSulfurAtom
+                    }
+                },
+                "numberOfCopiesInAsymmetricUnit": 1
+            }
+        }
+
+        return chemicalCompositionMM

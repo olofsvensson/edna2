@@ -35,5 +35,14 @@ logger = UtilsLogging.getLogger()
 
 class ControlIndexingUnitTest(unittest.TestCase):
 
-    def tes_(self):
-        pass
+    def test_getDefaultChemicalComposition(self):
+        cell = {
+            "a": 78.9, "b": 95.162, "c": 104.087,
+            "alpha": 90, "beta": 90, "gamma": 90
+        }
+        numOperators = 4
+        chemicalCompositionMM = Characterisation.getDefaultChemicalComposition(cell, numOperators)
+        # pprint.pprint(chemicalCompositionMM)
+        self.assertEqual(chemicalCompositionMM["solvent"]["atoms"][0]["concentration"], 314)
+        self.assertEqual(chemicalCompositionMM["structure"]["chain"]["numberOfMonomers"], 764)
+        self.assertEqual(chemicalCompositionMM["structure"]["chain"]["type"], "protein")
