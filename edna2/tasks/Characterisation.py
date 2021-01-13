@@ -82,6 +82,7 @@ class Characterisation(AbstractTask):
         indexingTask.join()
         if indexingTask.isSuccess():
             outDataIndexing = indexingTask.outData
+            resultIndexing = outDataIndexing["resultIndexing"]
             outDataGB = generateBackground.outData
             xparmXdsPath = outDataIndexing["xparmXdsPath"]
             if xparmXdsPath is not None:
@@ -93,6 +94,8 @@ class Characterisation(AbstractTask):
                     inDataIntergation = {
                         "subWedge": [subWedge],
                         "xparmXds": xparmXdsPath,
+                        "spaceGroupNumber": resultIndexing["spaceGroupNumber"],
+                        "cell": resultIndexing["cell"],
                         "gainCbf": outDataGB["gainCbf"],
                         "blankCbf": outDataGB["blankCbf"],
                         "bkginitCbf": outDataGB["bkginitCbf"],
@@ -119,7 +122,10 @@ class Characterisation(AbstractTask):
                     "bkgpixCbf": bkgpixCbf,
                     "correctLp": correctLp
                 }
-                bestTask = Best(inData=inDataBest)
+                bestTask = Best(
+                    inData=inDataBest,
+                    workingDirectorySuffix=prefix
+                )
                 bestTask.execute()
 
 

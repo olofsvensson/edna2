@@ -125,7 +125,7 @@ class Best(AbstractTask):
         experimentalCondition = firstSubWedge["experimentalCondition"]
         detector = experimentalCondition["detector"]
         beam = experimentalCondition["beam"]
-        commandLine = "best"
+        commandLine = "best__v4.1.1_test_20201220"
         # Detector
         detectorType = detector["type"]
         commandLine += " -f " + detectorType
@@ -135,8 +135,7 @@ class Best(AbstractTask):
         # Integration data
         # commandLine += " -xds " + inData["bkgpixCbf"]
         # commandLine += " " + inData["correctLp"]
-        commandLine += " -xds " + inData["correctLp"]
-        commandLine += " " + inData["bkgpixCbf"]
+        commandLine += " -xds " + inData["bkgpixCbf"]
         for xdsAsciiHklPath in inData["xdsAsciiHkl"]:
             commandLine += " " + xdsAsciiHklPath
         # fExposureTime = self.dataInput.beamExposureTime.value
