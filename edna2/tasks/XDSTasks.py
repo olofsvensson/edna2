@@ -167,11 +167,11 @@ class XDSTask(AbstractTask):
                 dictXDSDetector["trustedRegion"][0],
                 dictXDSDetector["trustedRegion"][1]
             )]
-        for trustedRegion in dictXDSDetector["untrustedRectangle"]:
-            listXDS_INP.append('UNTRUSTED_RECTANGLE={0} {1} {2} {3}'.format(
-                trustedRegion[0], trustedRegion[1],
-                trustedRegion[2],trustedRegion[3]
-            ))
+        # for trustedRegion in dictXDSDetector["untrustedRectangle"]:
+        #     listXDS_INP.append('UNTRUSTED_RECTANGLE={0} {1} {2} {3}'.format(
+        #         trustedRegion[0], trustedRegion[1],
+        #         trustedRegion[2],trustedRegion[3]
+        #     ))
         listXDS_INP += [
             'DETECTOR_DISTANCE={0}'.format(distance),
             'X-RAY_WAVELENGTH={0}'.format(wavelength),
@@ -350,7 +350,7 @@ class XDSTask(AbstractTask):
             "orgX": orgX,
             "orgY": orgY,
             "pixel": pixel,
-            "untrustedRectangle": untrustedRectangle,
+            # "untrustedRectangle": untrustedRectangle,
             "trustedRegion": [0.0, 1.41],
             "trustedpixel": [7000, 30000],
             "minimumValidPixelValue": 0,

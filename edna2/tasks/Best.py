@@ -132,16 +132,12 @@ class Best(AbstractTask):
         # Exposure time
         exposureTime = beam["exposureTime"]
         commandLine += " -t " + str(exposureTime)
+        # AbsorbedDoseRate
+        commandLine += Best.addOption(inData, "crystalAbsorbedDoseRate", "-GpS")
         # Integration data
-        # commandLine += " -xds " + inData["bkgpixCbf"]
-        # commandLine += " " + inData["correctLp"]
         commandLine += " -xds " + inData["bkgpixCbf"]
         for xdsAsciiHklPath in inData["xdsAsciiHkl"]:
             commandLine += " " + xdsAsciiHklPath
-        # fExposureTime = self.dataInput.beamExposureTime.value
-        # fMaxExposureTime = self.dataInput.beamMaxExposureTime.value
-        #
-        # self.strCommandBest = "-f " + strDetectorName + " " + "-t " + str(fExposureTime) + " "
         #
         # # Add output of gle files only if version is 4.1.0 (or higher)
         # if self.bVersionHigherThan4_0:
@@ -180,10 +176,6 @@ class Best(AbstractTask):
         # if self.dataInput.aimedIOverSigma is not None:
         #     strAimedIOverSigma = str(self.dataInput.aimedIOverSigma.value)
         #     self.strCommandBest = self.strCommandBest + "-i2s " + strAimedIOverSigma + " "
-        #
-        # if self.dataInput.crystalAbsorbedDoseRate is not None:
-        #     strCrystalAbsorbedDoseRate = str(self.dataInput.crystalAbsorbedDoseRate.value)
-        #     self.strCommandBest = self.strCommandBest + "-GpS " + strCrystalAbsorbedDoseRate + " "
         #
         # if self.dataInput.crystalShape is not None:
         #     strCrystalShape = str(self.dataInput.crystalShape.value)
@@ -260,3 +252,11 @@ class Best(AbstractTask):
         #
         # self.setScriptCommandline(self.strCommandBest)
         return commandLine
+
+    @staticmethod
+    def addOption(inData, name, option):
+        returnValue = ""
+        value = inData.get(name)
+        if value is not None:
+            returnValue = " {0} {1}".format(option, value)
+        return returnValue

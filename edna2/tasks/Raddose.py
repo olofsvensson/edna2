@@ -62,6 +62,7 @@ class Raddose(AbstractTask):
         experimentalCondition = inData["experimentalCondition"]
         sample = inData["sample"]
         beam = experimentalCondition["beam"]
+        numOperators = inData["numOperators"]
         # Analyse chemical composition
         chemicalComposition = inData["chemicalComposition"]
         # Solvent
@@ -97,6 +98,9 @@ class Raddose(AbstractTask):
                 elif(type == "rna"):
                     totalNRNAInStructure = totalNRNAInStructure + numberOfMonomers
 
+            numStructInAU = structure["numberOfCopiesInAsymmetricUnit"]
+            numStructInUC = int(numStructInAU * numOperators)
+
             # Ligands - not implemented yet
             if "ligand" in structure:
                 raise RuntimeError("Ligand present in structure but support for ligands not yet implemented!")
@@ -118,10 +122,11 @@ class Raddose(AbstractTask):
             "BEAM {x} {y}".format(**beam["size"]),
             "PHOSEC {flux}".format(**beam),
             "WAVELENGTH {wavelength}".format(**beam),
-            "CRYSTAL {x} {y} {z}".format(**sample["size"]),
+            # "CRYSTAL {x} {y} {z}".format(**sample["size"]),
             "CELL {a} {b} {c} {alpha} {beta} {gamma}".format(**inData["cell"]),
             "EXPOSURE {exposureTime}".format(**beam),
             "IMAGES {numberOfImages}".format(**inData),
+            "NMON {0}".format(numStructInUC)
         ]
 
         if totalNRESInStructure != 0:
@@ -141,9 +146,6 @@ class Raddose(AbstractTask):
                 satmLine += " {symbol} {concentration}".format(**satm)
             listCommand.append(satmLine)
 
-        #     xsDataNumberNumStructInAU = xsDataStructure.getNumberOfCopiesInAsymmetricUnit()
-        #     xsDataNumberNumStructInUC = int(xsDataNumberNumStructInAU.getValue() * _inumOperators)
-        #     xsDataRaddoseInput.setCrystalNMON(XSDataInteger(xsDataNumberNumStructInUC))
         #
         # patmLine = "PATM"
         # for patm in inData["crystalPATM"]:
@@ -161,11 +163,11 @@ class Raddose(AbstractTask):
         content = content[0:len(content) - 150]
         for line in content.decode('utf-8').split("\n"):
             if "Dose in Grays" in line:
-                dictResults["doseInGrays"] = float(line.split()[-1])
+                dictResults["doseInGrays"] = round(float(line.split()[-1]), 1)
             elif "Total absorbed dose (Gy)" in line:
-                dictResults["totalAbsorbedDose"] = float(line.split()[-1])
+                dictResults["totalAbsorbedDose"] = round(float(line.split()[-1]), 1)
             elif "Solvent Content (%)" in line:
-                dictResults["solventContent"] = float(line.split()[-1])
+                dictResults["solventContent"] = round(float(line.split()[-1]), 1)
         return dictResults
 
     @staticmethod

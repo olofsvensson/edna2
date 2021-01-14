@@ -63,8 +63,7 @@ class Characterisation(AbstractTask):
         listSubWedge = self.getListSubWedge(inData)
         # Check if flux is present
         flux = None
-        beamSizeX = None
-        beamSizeY = None
+        absorbedDoseRate = None
         experimentalCondition = inData.get("experimentalCondition", None)
         if experimentalCondition is not None:
             beam = experimentalCondition.get("beam", None)
@@ -110,19 +109,23 @@ class Characterisation(AbstractTask):
                         "chemicalComposition": chemicalComposition,
                         "sample": sample,
                         "cell": cell,
-                        "numberOfImages": numberOfImages
+                        "numberOfImages": numberOfImages,
+                        "numOperators": numOperators
                     }
-                    import pprint
-                    pprint.pprint(inDataRaddose)
+                    # import pprint
+                    # pprint.pprint(inDataRaddose)
                     raddose = Raddose(
                         inData=inDataRaddose,
                         workingDirectorySuffix=prefix)
                     raddose.execute()
+                    if raddose.isSuccess():
+                        absorbedDoseRate = raddose.outData["absorbedDoseRate"]
                 inDataBest = {
                     "subWedge": listSubWedge,
                     "xdsAsciiHkl": listXdsAsciiHkl,
                     "bkgpixCbf": bkgpixCbf,
-                    "correctLp": correctLp
+                    "correctLp": correctLp,
+                    "crystalAbsorbedDoseRate": absorbedDoseRate
                 }
                 bestTask = Best(
                     inData=inDataBest,
