@@ -49,6 +49,6 @@ class RaddoseExecTest(unittest.TestCase):
         raddoseTask.execute()
         self.assertTrue(raddoseTask.isSuccess())
         outData = raddoseTask.outData
-        self.assertEqual(outData["absorbedDose"], 223000)
-        self.assertEqual(outData["timeToReachHendersonLimit"], 89.7)
+        self.assertEqual(outData["absorbedDose"], 42300.0)
+        self.assertEqual(outData["timeToReachHendersonLimit"], 472.8)
 

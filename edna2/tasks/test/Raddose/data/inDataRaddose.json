@@ -51,5 +51,6 @@
             "z": 0.1
         }
     },
-    "numberOfImages": 1
+    "numberOfImages": 1,
+    "numOperators": 3
 }
