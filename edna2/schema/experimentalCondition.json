@@ -1,0 +1,75 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "http://github.com/olofsvensson/edna2/edna2/schema/experimentalCondition.json#",
+    "type": "object",
+    "properties": {
+        "beam": {
+            "type": "object",
+            "properties": {
+                "exposureTime": {"type": "number"},
+                "flux": {"type": "number"},
+                "minExposureTimePerImage": {"type": "number"},
+                "size": {
+                    "type": "object",
+                    "properties": {
+                        "x": {"type": "number"},
+                        "y": {"type": "number"}
+                    }
+                },
+                "transmission": {"type": "number"},
+                "wavelength": {"type": "number"},
+                "apertureSize": {"type": "number"}
+            }
+        },
+        "detector": {
+            "type": "object",
+            "properties": {
+                "beamPositionX": {"type": "number"},
+                "beamPositionY": {"type": "number"},
+                "bin": {"type": "string"},
+                "byteOrder": {"type": "string"},
+                "dataType": {"type": "string"},
+                "distance": {"type": "number"},
+                "gain": {"type": "number"},
+                "imageSaturation": {"type": "integer"},
+                "name": {"type": "string"},
+                "numberBytesInHeader": {"type": "integer"},
+                "numberPixelX": {"type": "integer"},
+                "numberPixelY": {"type": "integer"},
+                "pixelSizeX": {"type": "number"},
+                "pixelSizeY": {"type": "number"},
+                "serialNumber": {"type": "string"},
+                "twoTheta": {"type": "number"},
+                "type": {"type": "string"}
+            }
+        },
+        "goniostat": {
+            "type": "object",
+            "properties": {
+                "maxOscillationSpeed": {"type": "number"},
+                "minOscillationWidth": {"type": "number"},
+                "oscillationWidth": {"type": "number"},
+                "overlap": {"type": "number"},
+                "rotationAxis": {"type": "number"},
+                "rotationAxisEnd": {"type": "number"},
+                "rotationAxisStart": {"type": "number"},
+                "samplePosition": {
+                    "type": "object",
+                    "properties": {
+                        "v1": {
+                            "type": "number"
+                        },
+                        "v2": {
+                            "type": "number"
+                        },
+                        "v3": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "kappa": {"type": "number"},
+                "phi": {"type": "number"}
+            }
+        }
+    }
+}

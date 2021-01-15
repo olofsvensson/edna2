@@ -74,35 +74,17 @@ class Best(AbstractTask):
         return {
             "type": "object",
             "properties": {
-                "aimedCompleteness": { "type": "number" },
-                "aimedIOverSigma": { "type": "number" },
-                "aimedRedundancy": { "type": "number" },
-                "aimedResolution": { "type": "number" },
-                "anomalousData": { "type": "number" },
-                "beamExposureTime": { "type": "number" },
-                "beamMaxExposureTime": { "type": "number" },
-                "beamMinExposureTime": { "type": "number" },
-                "complexity": { "type": "string" },
-                "crystalAbsorbedDoseRate": { "type": "number" },
-                "crystalShape": { "type": "number" },
-                "crystalSusceptibility": { "type": "number" },
-                "detectorDistanceMax": { "type": "number" },
-                "detectorDistanceMin": { "type": "number" },
-                "detectorType": { "type": "string" },
-                "doseLimit": { "type": "number" },
-                "goniostatMaxRotationSpeed": { "type": "number" },
-                "goniostatMinRotationWidth": { "type": "number" },
-                "minTransmission": { "type": "number" },
-                "numberOfCrystalPositions": { "type": "integer" },
-                "radiationDamageModelBeta": { "type": "number" },
-                "radiationDamageModelGamma": { "type": "number" },
-                "rFriedel": { "type": "number" },
-                "strategyOption": { "type": "string" },
-                "transmission": { "type": "number" },
-                "userDefinedRotationRange": { "type": "number" },
-                "userDefinedRotationStart": { "type": "number" },
+                "diffractionPlan" : {
+                    "$ref": self.getSchemaUrl("ispybDiffractionPlan.json")
+                },
+                "subWedge" : {
+                    "type": "array",
+                    "items": {
+                        "$ref": self.getSchemaUrl("subWedge.json")
+                    }
+                },
                 "xdsBackgroundImage": { "type": "string" },
-                "xdsCorrectLp": { "type": "string" },
+                "correctLp": { "type": "string" },
                 "xdsBkgpixCbf": { "type": "string" },
                 "xdsAsciiHkl": {
                     "type": "array",
@@ -121,136 +103,56 @@ class Best(AbstractTask):
 
     @staticmethod
     def createBestCommandLine(inData):
+        diffractionPlan = inData.get("diffractionPlan", {})
         firstSubWedge = inData["subWedge"][0]
         experimentalCondition = firstSubWedge["experimentalCondition"]
         detector = experimentalCondition["detector"]
         beam = experimentalCondition["beam"]
         commandLine = "best__v4.1.1_test_20201220"
-        # Detector
-        detectorType = detector["type"]
-        commandLine += " -f " + detectorType
-        # Exposure time
-        exposureTime = beam["exposureTime"]
-        commandLine += " -t " + str(exposureTime)
-        # AbsorbedDoseRate
+        commandLine += Best.addOption(detector, "type", "-f")
+        commandLine += Best.addOption(beam, "exposureTime", "-t")
         commandLine += Best.addOption(inData, "crystalAbsorbedDoseRate", "-GpS")
+        commandLine += Best.addOption(diffractionPlan, "aimedCompleteness", "-C")
+        commandLine += Best.addOption(diffractionPlan, "aimedIOverSigma", "-i2s")
+        commandLine += Best.addOption(diffractionPlan, "aimedRedundancy", "-R")
+        commandLine += Best.addOption(diffractionPlan, "aimedResolution", "-r")
+        if diffractionPlan.get("anomalousData", False):
+            if "numberOfCrystalPositions" in diffractionPlan:
+                commandLine += " -a -p 0 360"
+            elif "absorbedDoseRate" in inData:
+                commandLine += " -asad"
+            else:
+                commandLine += " -a"
+        commandLine += Best.addOption(diffractionPlan, "complexity", "-e")
+        commandLine += Best.addOption(inData, "crystalShape", "-sh")
+        commandLine += Best.addOption(diffractionPlan, "crystalSusceptibility", "-su")
+        commandLine += Best.addOption(diffractionPlan, "detectorDistanceMax", "-DIS_MAX")
+        commandLine += Best.addOption(diffractionPlan, "detectorDistanceMin", "-DIS_MIN")
+        commandLine += Best.addOption(diffractionPlan, "doseLimit", "-DMAX")
+        commandLine += Best.addOption(diffractionPlan, "goniostatMaxRotationSpeed", "-S")
+        commandLine += Best.addOption(diffractionPlan, "goniostatMinRotationWidth", "-w")
+        commandLine += Best.addOption(diffractionPlan, "maxExposureTimePerDataCollection", "-T")
+        commandLine += Best.addOption(diffractionPlan, "minExposureTimePerImage", "-M")
+        commandLine += Best.addOption(diffractionPlan, "minTransmission", "-TRmin")
+        commandLine += Best.addOption(diffractionPlan, "numberOfCrystalPositions", "-Npos")
+        commandLine += Best.addOption(diffractionPlan, "radiationDamageModelBeta", "-beta")
+        commandLine += Best.addOption(diffractionPlan, "radiationDamageModelGamma", "-gama")
+        commandLine += Best.addOption(diffractionPlan, "rFriedel", "-Rf")
+        commandLine += Best.addOption(diffractionPlan, "strategyOption", "")
+        commandLine += Best.addOption(diffractionPlan, "transmission", "-Trans")
+        if "userDefinedRotationRange" in diffractionPlan and \
+                "userDefinedRotationStart" in diffractionPlan:
+            commandLine += " -phi {userDefinedRotationStart} {userDefinedRotationRange}".format(
+                **diffractionPlan
+            )
+            # if self.dataInput.aimedRedundancy is not None:
+            #     self.warning("Aimed redundancy of {0} igored as the oscillation range has been specified.".format(self.dataInput.aimedRedundancy.value))
+        # Output of GLE files and plotmtv files
+        commandLine += " -g -o plot.mtv"
         # Integration data
         commandLine += " -xds " + inData["bkgpixCbf"]
         for xdsAsciiHklPath in inData["xdsAsciiHkl"]:
             commandLine += " " + xdsAsciiHklPath
-        #
-        # # Add output of gle files only if version is 4.1.0 (or higher)
-        # if self.bVersionHigherThan4_0:
-        #     self.strCommandBest = self.strCommandBest + "-g "
-        #
-        # if self.dataInput.beamMinExposureTime is not None:
-        #     strBeamMinExposureTime = str(self.dataInput.beamMinExposureTime.value)
-        #     self.strCommandBest = self.strCommandBest + "-M " + strBeamMinExposureTime + " "
-        #
-        # if self.dataInput.goniostatMaxRotationSpeed is not None:
-        #     strGoniostatMaxRotationSpeed = str(self.dataInput.goniostatMaxRotationSpeed.value)
-        #     self.strCommandBest = self.strCommandBest + "-S " + strGoniostatMaxRotationSpeed + " "
-        #
-        # if self.dataInput.goniostatMinRotationWidth is not None:
-        #     strGoniostatMinRotationWidth = str(self.dataInput.goniostatMinRotationWidth.value)
-        #     self.strCommandBest = self.strCommandBest + "-w " + strGoniostatMinRotationWidth + " "
-        #
-        # if self.dataInput.aimedResolution is not None:
-        #     strAimedResolution = str(self.dataInput.aimedResolution.value)
-        #     self.strCommandBest = self.strCommandBest + "-r " + strAimedResolution + " "
-        #
-        # if (self.dataInput.userDefinedRotationStart is not None) and \
-        #    (self.dataInput.userDefinedRotationRange is not None):
-        #     self.strCommandBest += " -phi {0} {1} ".format(self.dataInput.userDefinedRotationStart.value,
-        #                                                   self.dataInput.userDefinedRotationRange.value)
-        #     if self.dataInput.aimedRedundancy is not None:
-        #         self.warning("Aimed redundancy of {0} igored as the oscillation range has been specified.".format(self.dataInput.aimedRedundancy.value))
-        # elif self.dataInput.aimedRedundancy is not None:
-        #     strAimedRedundancy = str(self.dataInput.aimedRedundancy.value)
-        #     self.strCommandBest = self.strCommandBest + "-R " + strAimedRedundancy + " "
-        #
-        # if self.dataInput.aimedCompleteness is not None:
-        #     strAimedCompleteness = str(self.dataInput.aimedCompleteness.value)
-        #     self.strCommandBest = self.strCommandBest + "-C " + strAimedCompleteness + " "
-        #
-        # if self.dataInput.aimedIOverSigma is not None:
-        #     strAimedIOverSigma = str(self.dataInput.aimedIOverSigma.value)
-        #     self.strCommandBest = self.strCommandBest + "-i2s " + strAimedIOverSigma + " "
-        #
-        # if self.dataInput.crystalShape is not None:
-        #     strCrystalShape = str(self.dataInput.crystalShape.value)
-        #     self.strCommandBest = self.strCommandBest + "-sh " + strCrystalShape + " "
-        #
-        # if self.dataInput.crystalSusceptibility is not None:
-        #     strCrystalSusceptibility = str(self.dataInput.crystalSusceptibility.value)
-        #     self.strCommandBest = self.strCommandBest + "-su " + strCrystalSusceptibility + " "
-        #
-        # if self.dataInput.transmission is not None:
-        #     strTransmission = str(self.dataInput.transmission.value)
-        #     self.strCommandBest = self.strCommandBest + "-Trans " + strTransmission + " "
-        #
-        # if self.dataInput.minTransmission is not None:
-        #     strMinTransmission = str(self.dataInput.minTransmission.value)
-        #     self.strCommandBest = self.strCommandBest + "-TRmin " + strMinTransmission + " "
-        #
-        # if self.dataInput.numberOfCrystalPositions is not None:
-        #     iNumberOfCrystalPositions = str(self.dataInput.numberOfCrystalPositions.value)
-        #     self.strCommandBest = self.strCommandBest + "-Npos " + iNumberOfCrystalPositions + " "
-        #
-        #
-        # if self.dataInput.detectorDistanceMin is not None:
-        #     fDetectorDistanceMin = str(self.dataInput.detectorDistanceMin.value)
-        #     self.strCommandBest = self.strCommandBest + "-DIS_MIN " + fDetectorDistanceMin + " "
-        #
-        #
-        # if self.dataInput.detectorDistanceMax is not None:
-        #     fDetectorDistanceMax = str(self.dataInput.detectorDistanceMax.value)
-        #     self.strCommandBest = self.strCommandBest + "-DIS_MAX " + fDetectorDistanceMax + " "
-        #
-        #
-        # if self.dataInput.anomalousData is not None:
-        #     bAnomalousData = self.dataInput.anomalousData.value
-        #     if bAnomalousData:
-        #         if self.dataInput.numberOfCrystalPositions is not None:
-        #             self.strCommandBest = self.strCommandBest + "-a -p 0 360 "
-        #         elif self.dataInput.crystalAbsorbedDoseRate is not None:
-        #             self.strCommandBest = self.strCommandBest + "-asad "
-        #         else:
-        #             self.strCommandBest = self.strCommandBest + "-a "
-        #
-        # strStrategyOption = self.dataInput.strategyOption
-        # if strStrategyOption is not None:
-        #     self.strCommandBest = self.strCommandBest + "%s " % strStrategyOption.value
-        #
-        # if self.dataInput.getRadiationDamageModelBeta() is not None:
-        #     fRadiationDamageModelBeta = str(self.dataInput.getRadiationDamageModelBeta().value)
-        #     self.strCommandBest = self.strCommandBest + "-beta " + fRadiationDamageModelBeta + " "
-        #
-        # if self.dataInput.getRadiationDamageModelGamma() is not None:
-        #     fRadiationDamageModelGamma = str(self.dataInput.getRadiationDamageModelGamma().value)
-        #     self.strCommandBest = self.strCommandBest + "-gama " + fRadiationDamageModelGamma + " "
-        #
-        # if self.dataInput.doseLimit is not None:
-        #     self.strCommandBest += " -DMAX {0} ".format(self.dataInput.doseLimit.value)
-        #
-        # if self.dataInput.rFriedel is not None:
-        #     self.strCommandBest += " -Rf {0} ".format(self.dataInput.rFriedel.value)
-        #
-        # self.strCommandBest = self.strCommandBest + "-T " + str(fMaxExposureTime) + " " + \
-        #                              "-dna " + self.getScriptBaseName() + "_dnaTables.xml" + " " + \
-        #                              "-o " + os.path.join(self.getWorkingDirectory(), self.getScriptBaseName() + "_plots.mtv ") + \
-        #                              "-e " + self.strComplexity + " "
-        #
-        # if self.dataInput.xdsBackgroundImage is not None:
-        #     strPathToXdsBackgroundImage = self.dataInput.getXdsBackgroundImage().getPath().value
-        #     self.strCommandBest = self.strCommandBest + "-MXDS " + self.getFileBestPar() + " " + strPathToXdsBackgroundImage + " " + listFileBestHKLCommand
-        # elif self.dataInput.bestFileContentPar is not None:
-        #     self.strCommandBest = self.strCommandBest + "-mos " + self.getFileBestDat() + " " + self.getFileBestPar() + " " + listFileBestHKLCommand
-        # elif self.dataInput.xdsCorrectLp is not None:
-        #     self.strCommandBest = self.strCommandBest + "-xds " + self.strPathToCorrectLp + " " + self.strPathToBkgpixCbf + " " + self.strListFileXdsAsciiHkl
-        #
-        #
-        # self.setScriptCommandline(self.strCommandBest)
         return commandLine
 
     @staticmethod
