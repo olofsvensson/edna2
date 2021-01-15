@@ -47,12 +47,22 @@ class Characterisation(AbstractTask):
             "type": "object",
             "properties": {
                 "dataCollectionId": { "type": "integer" },
+                "diffractionPlan" : {
+                    "$ref": self.getSchemaUrl("ispybDiffractionPlan.json")
+                },
+                "experimentalCondition" : {
+                    "$ref": self.getSchemaUrl("experimentalCondition.json")
+                },
                 "imagePath": {
                     "type": "array",
                     "items": {
                         "type": "string",
                     }
-                }
+                },
+                "sample": {
+                    "$ref": self.getSchemaUrl("sample.json")
+                },
+                "token": {"type": "string"},
             }
         }
 
@@ -61,6 +71,8 @@ class Characterisation(AbstractTask):
         listImagePath = inData["imagePath"]
         prefix = UtilsImage.getPrefix(listImagePath[0])
         listSubWedge = self.getListSubWedge(inData)
+        diffractionPlan = inData.get("diffractionPlan", {})
+        sample = inData.get("sample", {})
         # Check if flux is present
         flux = None
         absorbedDoseRate = None
@@ -91,6 +103,8 @@ class Characterisation(AbstractTask):
                         if forcedSpaceGroup != "":
                             forcedSpaceGroup = forcedSpaceGroup.replace(" ", "")
                             numOperators = UtilsSymmetry.getNumberOfSymmetryOperatorsFromSpaceGroupName(forcedSpaceGroup)
+                        else:
+                            forcedSpaceGroup = None
                     if forcedSpaceGroup is None:
                         # Get indexing space group IT number
                         if "resultIndexing" in outDataIndexing:
@@ -121,6 +135,8 @@ class Characterisation(AbstractTask):
                     if raddose.isSuccess():
                         absorbedDoseRate = raddose.outData["absorbedDoseRate"]
                 inDataBest = {
+                    "diffractionPlan": diffractionPlan,
+                    "sample": sample,
                     "subWedge": listSubWedge,
                     "xdsAsciiHkl": listXdsAsciiHkl,
                     "bkgpixCbf": bkgpixCbf,

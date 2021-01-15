@@ -182,7 +182,7 @@ class Raddose(AbstractTask):
             absorbedDose = dictResults["totalAbsorbedDose"]
         else:
             raise RuntimeError["Neither doseInGrays nor totalAbsorbedDose in results!"]
-        absorbedDoseRate = absorbedDose / totalExposureTime
+        absorbedDoseRate = round(absorbedDose / totalExposureTime, 1)
         timeToReachHendersonLimit = round(Raddose.HENDERSON_LIMIT / absorbedDoseRate, 1)
         outData = {
             "absorbedDose": absorbedDose,
