@@ -62,7 +62,12 @@ class Characterisation(AbstractTask):
                 "sample": {
                     "$ref": self.getSchemaUrl("sample.json")
                 },
-                "token": {"type": "string"},
+                "token": {
+                    "anyOf": [
+                        {"type": "string"},
+                        {"type": "null"}
+                    ]
+                }
             }
         }
 
@@ -100,11 +105,12 @@ class Characterisation(AbstractTask):
                     cell = None
                     if "diffractionPlan" in inData and "forcedSpaceGroup" in inData["diffractionPlan"]:
                         forcedSpaceGroup = inData["diffractionPlan"]["forcedSpaceGroup"]
-                        if forcedSpaceGroup != "":
-                            forcedSpaceGroup = forcedSpaceGroup.replace(" ", "")
-                            numOperators = UtilsSymmetry.getNumberOfSymmetryOperatorsFromSpaceGroupName(forcedSpaceGroup)
-                        else:
-                            forcedSpaceGroup = None
+                        if forcedSpaceGroup is not None:
+                            if forcedSpaceGroup != "":
+                                forcedSpaceGroup = forcedSpaceGroup.replace(" ", "")
+                                numOperators = UtilsSymmetry.getNumberOfSymmetryOperatorsFromSpaceGroupName(forcedSpaceGroup)
+                            else:
+                                forcedSpaceGroup = None
                     if forcedSpaceGroup is None:
                         # Get indexing space group IT number
                         if "resultIndexing" in outDataIndexing:

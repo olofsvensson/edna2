@@ -21,7 +21,16 @@
         "aimedResolution" : {"type": "number"},
         "complexity" : {"type": "string"},
         "estimateRadiationDamage" : {"type": "boolean"},
-        "forcedSpaceGroup" : {"type": "string"},
+        "forcedSpaceGroup" : {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
         "requiredCompleteness" : {"type": "number"},
         "requiredMultiplicity" : {"type": "number"},
         "requiredResolution" : {"type": "number"},
