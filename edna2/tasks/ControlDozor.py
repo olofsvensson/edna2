@@ -150,8 +150,10 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
             executable = "export PATH={0}:$PATH".format(path)
             executable += ";export LD_LIBRARY_PATH={0}:$LD_LIBRARY_PATH".format(path)
             executable += ";{0}/".format(path) + UtilsConfig.get(self, 'slurm_executable', 'dozor')
+            partition = UtilsConfig.get(self, 'slurm_partition', None)
         else:
             executable = UtilsConfig.get(self, 'executable', 'dozor')
+            partition = None
         commandLine = executable + ' -pall'
         if doDozorm:
             commandLine += ' -mesh'
@@ -160,7 +162,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         else:
             commandLine += ' -p dozor.dat'
         self.setLogFileName('dozor.log')
-        self.runCommandLine(commandLine, doSubmit=doSubmit)
+        self.runCommandLine(commandLine, doSubmit=doSubmit, partition=partition)
         log = self.getLog()
         outData = self.parseOutput(inData, log, doDozorm=doDozorm,
                                    workingDir=self.getWorkingDirectory())
