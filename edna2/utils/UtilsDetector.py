@@ -73,6 +73,14 @@ DETECTOR_PARAMS = {
              [0, 2070, 1063, 1103],
              [0, 2070, 1614, 1654],
              ]
+    },
+    'eiger16m': {
+        'nx': 4148,
+        'ny': 4362,
+        'pixel': 0.075,
+        'sensorThickness': 0.45,
+        'xdsUntrustedRectangle':
+            []
     }
 }
 
@@ -82,7 +90,7 @@ def __getDetectorValue(detectorType, key):
         p = DETECTOR_PARAMS[detectorType]
         return p[key]
     else:
-        raise RuntimeError('Detector type "{0}" not defined in UtilsDetector.py!')
+        raise RuntimeError('Detector type "{0}" not defined in UtilsDetector.py!'.format(detectorType))
 
 
 def getNx(detectorType):
