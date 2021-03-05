@@ -53,3 +53,15 @@ class ReadImageHeaderTasksUnitTest(unittest.TestCase):
             dictHeader['description'],
             'Dectris Eiger 4M'
         )
+
+    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
+                     'Cannot run dozor test_readEiger16mHeader with default config')
+    def test_readEiger16mHeader(self):
+        referenceDataPath = self.dataPath / 'ReadImageHeader_Eiger16M.json'
+        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+        h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(inData['imagePath'][0])
+        dictHeader = ReadImageHeader.readHdf5Header(h5MasterFilePath)
+        self.assertEqual(
+            dictHeader['description'],
+            'Dectris EIGER2 CdTe 16M'
+        )
