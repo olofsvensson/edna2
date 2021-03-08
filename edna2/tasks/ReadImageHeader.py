@@ -220,24 +220,16 @@ class ReadImageHeader(AbstractTask):
             'beam_center_y': f['entry']['instrument']['detector']['beam_center_y'][()],
             'count_time':  f['entry']['instrument']['detector']['count_time'][()],
             'detector_distance': f['entry']['instrument']['detector']['detector_distance'][()],
-            # 'orientation': list(f['entry']['instrument']['detector']['geometry']['orientation']['value']),
             'translation': list(f['entry']['instrument']['detector']['geometry']['translation']['distances']),
             'x_pixel_size': f['entry']['instrument']['detector']['x_pixel_size'][()],
             'y_pixel_size': f['entry']['instrument']['detector']['y_pixel_size'][()],
-            # 'omega_start': f['entry']['sample']['goniometer']['omega_start'][()],
+            'omega_start': f['entry']['sample']['goniometer']['omega'][()][0],
             'omega_range_average': f['entry']['sample']['goniometer']['omega_range_average'][()],
             'detector_number': f['entry']['instrument']['detector']['detector_number'][()].decode('utf-8'),
             'description': f['entry']['instrument']['detector']['description'][()].decode('utf-8'),
             'data_collection_date': f['entry']['instrument']['detector']['detectorSpecific']['data_collection_date'][()].decode('utf-8'),
             'data': list(f['entry']['data'])
         }
-        # Temporary workaround for Eiger16M data
-        if dictHeader["description"] != 'Dectris EIGER2 CdTe 16M':
-            dictHeader['orientation'] = list(f['entry']['instrument']['detector']['geometry']['orientation']['value'])
-            dictHeader['omega_start'] = f['entry']['sample']['goniometer']['omega_start'][()]
-        else:
-            dictHeader['orientation'] = []
-            dictHeader['omega_start'] = '0.0'
         f.close()
         return dictHeader
 
