@@ -30,6 +30,7 @@ __date__ = "21/04/2019"
 
 import os
 import h5py
+import numpy
 import pathlib
 
 from edna2.utils import UtilsLogging
@@ -223,13 +224,18 @@ class ReadImageHeader(AbstractTask):
             'translation': list(f['entry']['instrument']['detector']['geometry']['translation']['distances']),
             'x_pixel_size': f['entry']['instrument']['detector']['x_pixel_size'][()],
             'y_pixel_size': f['entry']['instrument']['detector']['y_pixel_size'][()],
-            'omega_start': f['entry']['sample']['goniometer']['omega'][()][0],
             'omega_range_average': f['entry']['sample']['goniometer']['omega_range_average'][()],
             'detector_number': f['entry']['instrument']['detector']['detector_number'][()].decode('utf-8'),
             'description': f['entry']['instrument']['detector']['description'][()].decode('utf-8'),
             'data_collection_date': f['entry']['instrument']['detector']['detectorSpecific']['data_collection_date'][()].decode('utf-8'),
             'data': list(f['entry']['data'])
         }
+        # 'Old' Eiger files have just one entry for 'omega'
+        omega = f['entry']['sample']['goniometer']['omega'][()]
+        if type(omega) == numpy.float32:
+            dictHeader['omega_start'] = float(omega)
+        else:
+            dictHeader['omega_start'] = float(omega[0])
         f.close()
         return dictHeader
 
