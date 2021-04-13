@@ -10,5 +10,7 @@ h5py
 fabio
 requests
 distro
+numpy
+scipy
 
 
