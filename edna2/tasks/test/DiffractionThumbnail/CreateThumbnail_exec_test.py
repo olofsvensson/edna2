@@ -26,6 +26,7 @@ __date__ = "21/04/2019"
 import unittest
 
 from edna2.utils import UtilsTest
+from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 
 from edna2.tasks.DiffractionThumbnail import CreateThumbnail
@@ -38,6 +39,8 @@ class CreateThumbnailExecTest(unittest.TestCase):
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
+    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
+                     'Cannot run dozor test with default config')
     def test_execute(self):
         referenceDataPath = self.dataPath / 'createThumbnail.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)

@@ -27,6 +27,7 @@ import unittest
 import tempfile
 
 from edna2.utils import UtilsTest
+from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 
 from edna2.tasks.DiffractionThumbnail import CreateThumbnail
@@ -39,6 +40,8 @@ class CreateThumbnailUnitTest(unittest.TestCase):
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
+    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
+                     'Cannot run dozor test with default config')
     def test_createThumbnail_cbf(self):
         referenceDataPath = self.dataPath / 'diffractionThumbnail.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
@@ -46,6 +49,8 @@ class CreateThumbnailUnitTest(unittest.TestCase):
         workingDir = tempfile.mkdtemp(prefix="diffractionThumbnail_", dir="/tmp")
         resultPath = CreateThumbnail.createThumbnail(image, workingDirectory=workingDir)
 
+    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
+                     'Cannot run dozor test with default config')
     def test_createThumbnail_eiger4m(self):
         referenceDataPath = self.dataPath / 'diffractionThumbnail_eiger4m.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
