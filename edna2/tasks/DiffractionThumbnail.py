@@ -31,10 +31,13 @@ import shutil
 import scipy.ndimage
 
 from PIL import Image
-from PIL import ImageFile
 from PIL import ImageOps
+from PIL import ImageFile
+from PIL import ImageDraw
+from PIL import ImageFont
 
 from edna2.tasks.AbstractTask import AbstractTask
+from edna2.tasks.ReadImageHeader import ReadImageHeader
 
 from edna2.utils import UtilsPath
 from edna2.utils import UtilsImage
@@ -99,12 +102,30 @@ class DiffractionThumbnail(AbstractTask):
             if hasTimedOut:
                 raise RuntimeError("Waiting for file {0} timed out!".format(imagePath))
             outputFileName = imageFileName + ".jpeg"
-            # Create JPEG
+            # Create JPEG with resolution rings
+            inDataReadHeader = {
+                'imagePath': [imagePath],
+            }
+            readHeader = ReadImageHeader(
+                inData=inDataReadHeader,
+                workingDirectorySuffix=imageFileName
+            )
+            readHeader.execute()
+            experimentalCondition = readHeader.outData["subWedge"][0]["experimentalCondition"]
+            detector = experimentalCondition["detector"]
+            beam = experimentalCondition["beam"]
             inDataCreateJPEG = {
                 "image": imagePath,
                 "height": 1024,
                 "width": 1024,
-                "outputFileName": outputFileName
+                "outputFileName": outputFileName,
+                "doResolutionRings": True,
+                "pixelSizeX": detector["pixelSizeX"],
+                "pixelSizeY": detector["pixelSizeY"],
+                "beamPositionX": detector["beamPositionX"],
+                "beamPositionY": detector["beamPositionY"],
+                "distance": detector["distance"],
+                "wavelength": beam["wavelength"],
             }
             createJPEG = CreateThumbnail(
                 inData=inDataCreateJPEG,
@@ -118,7 +139,14 @@ class DiffractionThumbnail(AbstractTask):
                 "image": imagePath,
                 "height": 256,
                 "width": 256,
-                "outputFileName": outputFileName
+                "outputFileName": outputFileName,
+                "doResolutionRings": True,
+                "pixelSizeX": detector["pixelSizeX"],
+                "pixelSizeY": detector["pixelSizeY"],
+                "beamPositionX": detector["beamPositionX"],
+                "beamPositionY": detector["beamPositionY"],
+                "distance": detector["distance"],
+                "wavelength": beam["wavelength"],
             }
             createThumb = CreateThumbnail(
                 inData=inDataCreateThumb,
@@ -178,7 +206,14 @@ class CreateThumbnail(AbstractTask):
                 "width": {"type": "number"},
                 "outputPath": {"type": "string"},
                 "outputFileName": {"type": "string"},
-                "format": {"type": "string"}
+                "format": {"type": "string"},
+                "doResolutionRings": {"type": "boolean"},
+                "pixelSizeX": {"type": "number"},
+                "pixelSizeY": {"type": "number"},
+                "beamPositionX": {"type": "number"},
+                "beamPositionY": {"type": "number"},
+                "distance": {"type": "number"},
+                "wavelength": {"type": "number"}
             }
         }
 
@@ -198,6 +233,13 @@ class CreateThumbnail(AbstractTask):
         width = inData.get("width", 512)
         outputPath = inData.get("outputPath", None)
         outputFileName = inData.get("outputFileName", None)
+        doResolutionRings = inData.get("doResolutionRings", False)
+        pixelSizeX = inData.get("pixelSizeX", False)
+        pixelSizeY = inData.get("pixelSizeY", False)
+        beamPositionX = inData.get("beamPositionX", False)
+        beamPositionY = inData.get("beamPositionY", False)
+        distance = inData.get("distance", False)
+        wavelength = inData.get("wavelength", False)
         thumbNail = self.createThumbnail(
             image=image,
             format=format,
@@ -205,7 +247,14 @@ class CreateThumbnail(AbstractTask):
             width=width,
             outputPath=outputPath,
             workingDirectory=self.getWorkingDirectory(),
-            outputFileName=outputFileName
+            outputFileName=outputFileName,
+            doResolutionRings=doResolutionRings,
+            pixelSizeX=pixelSizeX,
+            pixelSizeY=pixelSizeY,
+            beamPositionX=beamPositionX,
+            beamPositionY=beamPositionY,
+            distance=distance,
+            wavelength=wavelength
         )
         outData = {
             "thumbNail": thumbNail
@@ -216,10 +265,15 @@ class CreateThumbnail(AbstractTask):
     @staticmethod
     def createThumbnail(image, format="jpg", height=512, width=512,
                         outputPath=None, minLevel=0, maxLevel=99.95,
-                        dilatation=4, workingDirectory=None, outputFileName=None):
+                        dilatation=4, workingDirectory=None,
+                        outputFileName=None, doResolutionRings=False,
+                        pixelSizeX=None, pixelSizeY=None,
+                        beamPositionX=None, beamPositionY=None,
+                        distance=None, wavelength=None,
+                        ):
         imageFileName = os.path.basename(image)
         imagePath = image
-        imageSuffix = os.path.splitext(imageFileName)[1]
+        imageNameWithoutSuffix, imageSuffix = os.path.splitext(imageFileName)
         if imageSuffix == ".h5":
             imageNumber = UtilsImage.getImageNumber(image)
             h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(image)
@@ -249,14 +303,42 @@ class CreateThumbnail(AbstractTask):
         sortedArray.sort()
         numpyImage = numpy.maximum(numpyImage, int(minLevel) * numpy.ones_like(numpyImage))
         maxLevel = sortedArray[int(round(float(maxLevel) * sortedArray.size / 100.0))]
+        if maxLevel < 25:
+            maxLevel = 25
         numpyImage = numpy.minimum(numpyImage, maxLevel * numpy.ones_like(numpyImage))
         numpyImage = scipy.ndimage.morphology.grey_dilation(numpyImage, (dilatation, dilatation))
         mumpyImageFloat = (numpyImage.astype(numpy.float32)) / float(maxLevel)
         numpyImageInt = ( mumpyImageFloat * 255.0 ).astype(numpy.uint8)
+        # Check if we should do resolution rings
+        listResolution = []
+        if doResolutionRings:
+            delta = (height+width) / 2000
+            if delta < 1.0:
+                delta = 1.0
+            centreX = beamPositionX / pixelSizeX
+            centreY = beamPositionY / pixelSizeY
+            sizeY, sizeX = numpyImageInt.shape
+            averageSize = (sizeX + sizeY) / 2.0
+            yy, xx = numpy.mgrid[:sizeY, :sizeX]
+            circle = (xx - centreX) ** 2 + (yy - centreY) ** 2
+            for resolution in [1.0, 1.1, 1.2, 1.5, 2.0, 3.0, 4.0]:
+                import math
+                theta = math.asin(wavelength/(2*resolution))
+                radius = math.tan(2*theta)* distance / pixelSizeX
+                listResolution.append((resolution, radius / averageSize ))
+                numpyImageInt = numpy.where(numpy.logical_and(circle < (radius+delta)**2, circle > (radius-delta)**2), 254, numpyImageInt)
         pilOutputImage = ImageOps.invert(Image.fromarray(numpyImageInt, 'L'))
         if height is not None and width is not None:
             pilOutputImage = pilOutputImage.resize((width, height), Image.ANTIALIAS)
         width, height = pilOutputImage.size
+        for resolution, distance in listResolution:
+            centreX = width / 2
+            centreY = height / 2
+            textfont = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", int(height/30), encoding="unic")
+            resolutionText = "{0} Å".format(resolution)
+            imageEditable = ImageDraw.Draw(pilOutputImage)
+            newDistance = distance  * (height + width) / 2.0 / math.sqrt(2)
+            imageEditable.text((centreX + newDistance - width/20, centreY + newDistance -height/20), resolutionText, 0, font=textfont)
         if width * height > ImageFile.MAXBLOCK:
             ImageFile.MAXBLOCK = width * height
         if outputPath is None:

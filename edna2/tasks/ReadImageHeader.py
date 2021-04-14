@@ -152,6 +152,11 @@ class ReadImageHeader(AbstractTask):
             detectorType = 'pilatus6m'
             numberPixelX = 2463
             numberPixelY = 2527
+        elif 'eiger2' in detector.lower() and '16m' in detector.lower():
+            detectorName = 'EIGER2 16M'
+            detectorType = 'eiger16m'
+            numberPixelX = 4148
+            numberPixelY = 4362
         else:
             raise RuntimeError(
                 '{0} cannot read image header from images with dector type {1}'.format(
