@@ -205,7 +205,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
             ixMax = IX_MAX_EIGER_4M
             iyMin = IY_MIN_EIGER_4M
             iyMax = IY_MAX_EIGER_4M
-        if detectorType.startswith('eiger'):
+        if inData['nameTemplateImage'].endswith("h5"):
             library = self.getLibrary('hdf5', doSubmit=doSubmit)
         else:
             library =  self.getLibrary('cbf', doSubmit=doSubmit)

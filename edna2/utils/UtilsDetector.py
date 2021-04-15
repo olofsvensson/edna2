@@ -78,7 +78,7 @@ DETECTOR_PARAMS = {
         'nx': 4148,
         'ny': 4362,
         'pixel': 0.075,
-        'sensorThickness': 0.45,
+        'sensorThickness': 0.75,
         'xdsUntrustedRectangle':
             []
     }
