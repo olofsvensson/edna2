@@ -104,7 +104,8 @@ class DiffractionThumbnail(AbstractTask):
             outputFileName = imageFileName + ".jpeg"
             # Create JPEG with resolution rings
             inDataReadHeader = {
-                'imagePath': [imagePath],
+                "imagePath": [imagePath],
+                "skipNumberOfImages": True
             }
             readHeader = ReadImageHeader(
                 inData=inDataReadHeader,
