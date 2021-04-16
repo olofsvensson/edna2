@@ -31,6 +31,7 @@ __date__ = "21/04/2019"
 import os
 import h5py
 import numpy
+import time
 import pathlib
 
 from edna2.utils import UtilsLogging
@@ -252,11 +253,12 @@ class ReadImageHeader(AbstractTask):
             hasOverlap=hasOverlap
         )
         # Waiting for file
-        timedOut, finalSize = UtilsPath.waitForFile(h5MasterFilePath, expectedSize=100000, timeOut=DEFAULT_TIME_OUT)
+        timedOut, finalSize = UtilsPath.waitForFile(h5MasterFilePath, expectedSize=2000000, timeOut=DEFAULT_TIME_OUT)
         if timedOut:
             errorMessage = "Timeout when waiting for image %s" % imagePath
             logger.error(errorMessage)
             raise BaseException(errorMessage)
+        time.sleep(1)
         dictHeader = cls.readHdf5Header(h5MasterFilePath)
         description = dictHeader['description']
         if 'Eiger 4M' in description:
