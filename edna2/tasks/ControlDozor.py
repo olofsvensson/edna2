@@ -493,7 +493,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
             libraryName += version
         library = UtilsConfig.get(self, libraryName)
         if library is None:
-            raise RuntimeError('ExecDozor: library configuration {0} not found')
+            raise RuntimeError('ExecDozor: library configuration {0} not found'.format(libraryType))
         return library
 
 
