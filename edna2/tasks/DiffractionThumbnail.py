@@ -84,9 +84,18 @@ class DiffractionThumbnail(AbstractTask):
         }
 
     def run(self, inData):
+        # Format suffix
+        format = inData.get("format", "jpeg")
+        if format == "jpeg":
+            thumbSuffix = ".jpeg"
+        elif format == "jpg":
+            thumbSuffix = ".jpg"
+        else:
+            raise RuntimeError("Unsupported format: {0}".format(format))
         # Loop through all images
         listJPEGTask = []
         listThumbTask = []
+        forcedOutputDirectory = inData.get("forcedOutputDirectory", None)
         for imagePath in inData["image"]:
             # Check image file extension
             imageFileName, suffix = os.path.splitext(os.path.basename(imagePath))
@@ -103,7 +112,11 @@ class DiffractionThumbnail(AbstractTask):
                 waitFilePath, expectedSize=expectedSize, timeOut=600)
             if hasTimedOut:
                 raise RuntimeError("Waiting for file {0} timed out!".format(imagePath))
-            outputFileName = imageFileName + ".jpeg"
+            outputFileName = imageFileName + thumbSuffix
+            if forcedOutputDirectory is not None:
+                outputPath = os.path.join(forcedOutputDirectory, outputFileName)
+            else:
+                outputPath = None
             # Create JPEG with resolution rings
             inDataReadHeader = {
                 "imagePath": [imagePath],
@@ -122,6 +135,7 @@ class DiffractionThumbnail(AbstractTask):
                 "height": 1024,
                 "width": 1024,
                 "outputFileName": outputFileName,
+                "outputPath": outputPath,
                 "doResolutionRings": True,
                 "pixelSizeX": detector["pixelSizeX"],
                 "pixelSizeY": detector["pixelSizeY"],
@@ -137,12 +151,17 @@ class DiffractionThumbnail(AbstractTask):
             createJPEG.start()
             listJPEGTask.append(createJPEG)
             # Create thumbnail
-            outputFileName = imageFileName + ".thumb.jpeg"
+            outputFileName = imageFileName + ".thumb" + thumbSuffix
+            if forcedOutputDirectory is not None:
+                outputPath = os.path.join(forcedOutputDirectory, outputFileName)
+            else:
+                outputPath = None
             inDataCreateThumb = {
                 "image": imagePath,
                 "height": 256,
                 "width": 256,
                 "outputFileName": outputFileName,
+                "outputPath": outputPath,
                 "doResolutionRings": True,
                 "pixelSizeX": detector["pixelSizeX"],
                 "pixelSizeY": detector["pixelSizeY"],
@@ -163,12 +182,18 @@ class DiffractionThumbnail(AbstractTask):
         }
         for task in listJPEGTask:
             task.join()
-            pyarchPath = self.copyThumbnailToPyarch(task)
-            outData["pathToJPEGImage"].append(pyarchPath)
+            if forcedOutputDirectory:
+                outData["pathToJPEGImage"].append(task.outData["thumbNail"])
+            else:
+                pyarchPath = self.copyThumbnailToPyarch(task)
+                outData["pathToJPEGImage"].append(pyarchPath)
         for task in listThumbTask:
             task.join()
-            pyarchPath = self.copyThumbnailToPyarch(task)
-            outData["pathToThumbImage"].append(pyarchPath)
+            if forcedOutputDirectory:
+                outData["pathToThumbImage"].append(task.outData["thumbNail"])
+            else:
+                pyarchPath = self.copyThumbnailToPyarch(task)
+                outData["pathToThumbImage"].append(pyarchPath)
         return outData
 
     def getExpectedSize(self, imagePath):
@@ -207,7 +232,6 @@ class CreateThumbnail(AbstractTask):
                 "image": {"type": "string"},
                 "height": {"type": "number"},
                 "width": {"type": "number"},
-                "outputPath": {"type": "string"},
                 "outputFileName": {"type": "string"},
                 "format": {"type": "string"},
                 "doResolutionRings": {"type": "boolean"},
