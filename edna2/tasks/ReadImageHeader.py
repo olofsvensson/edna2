@@ -258,8 +258,19 @@ class ReadImageHeader(AbstractTask):
             errorMessage = "Timeout when waiting for image %s" % imagePath
             logger.error(errorMessage)
             raise BaseException(errorMessage)
-        time.sleep(1)
-        dictHeader = cls.readHdf5Header(h5MasterFilePath)
+        logger.info("Final size for {0}: {1}".format(h5MasterFilePath, finalSize))
+        noTrialsLeft = 5
+        dictHeader = None
+        while noTrialsLeft > 0:
+            try:
+                dictHeader = cls.readHdf5Header(h5MasterFilePath)
+                noTrialsLeft = 0
+            except Exception as e:
+                logger.warning("Cannot read header from {0}, no trials left: {1}".format(h5MasterFilePath, noTrialsLeft))
+                time.sleep(5)
+                noTrialsLeft -= 1
+        if dictHeader is None:
+            raise RuntimeError("Cannot read header from {0}!".format(h5MasterFilePath))
         description = dictHeader['description']
         if 'Eiger 4M' in description:
             detectorName = 'EIGER 4M'

@@ -27,6 +27,7 @@ __date__ = "12/04/2021"
 import os
 import fabio
 import numpy
+import time
 import shutil
 import scipy.ndimage
 
@@ -98,7 +99,8 @@ class DiffractionThumbnail(AbstractTask):
             else:
                 waitFilePath = imagePath
             expectedSize = self.getExpectedSize(imagePath)
-            hasTimedOut, finalSize = UtilsPath.waitForFile(waitFilePath, expectedSize=expectedSize)
+            hasTimedOut, finalSize = UtilsPath.waitForFile(
+                waitFilePath, expectedSize=expectedSize, timeOut=600)
             if hasTimedOut:
                 raise RuntimeError("Waiting for file {0} timed out!".format(imagePath))
             outputFileName = imageFileName + ".jpeg"
@@ -279,7 +281,20 @@ class CreateThumbnail(AbstractTask):
             imageNumber = UtilsImage.getImageNumber(image)
             h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(image)
             fabioImage = fabio.openimage.openimage(h5MasterFilePath)
-            print("No frames: {0}".format(fabioImage.nframes))
+            noTrials = 5
+            fabioImage = None
+            while noTrials > 0:
+                try:
+                    fabioImage = fabio.openimage.openimage(h5MasterFilePath)
+                    noTrials = 0
+                except Exception as e:
+                    logger.debug("Error when trying to open {0}: {1}".format(h5MasterFilePath, e))
+                    logger.debug("Sleeping 5s and trying again, {0} trials left".format(noTrials))
+                    noTrials -= 1
+                    time.sleep(5)
+            if fabioImage is None:
+                raise RuntimeError("Cannot open file {0} with fabio".format(h5MasterFilePath))
+            logger.debug("No frames: {0}".format(fabioImage.nframes))
             if imageNumber < fabioImage.nframes:
                 numpyImage = fabioImage.getframe(imageNumber).data
             else:
