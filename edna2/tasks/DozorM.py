@@ -109,9 +109,9 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         os.symlink(inData["dozorAllFile"], str(self.getWorkingDirectory() / "dozorm_001"))
         firstScanNumber = 1
         if inData.get('isHorizontalScan', True):
-            meshDirect = "-h zig-zag"
+            meshDirect = "-h"
         else:
-            meshDirect = "-v zig-zag"
+            meshDirect = "-v"
         command = '!\n'
         command += 'detector {0}\n'.format(detectorType)
         command += 'nx %d\n' % nx
