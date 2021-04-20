@@ -103,7 +103,7 @@ class DiffractionThumbnail(AbstractTask):
                 raise RuntimeError("Unknown image file name extension for pyarch thumbnail generator: %s" % imagePath)
             # Wait for image file
             if suffix == ".h5":
-                h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(imagePath)
+                h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(imagePath, isFastMesh=True)
                 waitFilePath = h5DataFilePath
             else:
                 waitFilePath = imagePath
@@ -120,11 +120,12 @@ class DiffractionThumbnail(AbstractTask):
             # Create JPEG with resolution rings
             inDataReadHeader = {
                 "imagePath": [imagePath],
-                "skipNumberOfImages": True
+                "skipNumberOfImages": True,
+                "isFastMesh": True
             }
             readHeader = ReadImageHeader(
                 inData=inDataReadHeader,
-                workingDirectorySuffix=imageFileName
+                workingDirectorySuffix=imageFileName,
             )
             readHeader.execute()
             experimentalCondition = readHeader.outData["subWedge"][0]["experimentalCondition"]
@@ -303,7 +304,7 @@ class CreateThumbnail(AbstractTask):
         imageNameWithoutSuffix, imageSuffix = os.path.splitext(imageFileName)
         if imageSuffix == ".h5":
             imageNumber = UtilsImage.getImageNumber(image)
-            h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(image)
+            h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(image, isFastMesh=True)
             fabioImage = fabio.openimage.openimage(h5MasterFilePath)
             noTrials = 5
             fabioImage = None
