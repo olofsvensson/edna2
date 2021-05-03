@@ -305,7 +305,6 @@ class CreateThumbnail(AbstractTask):
         if imageSuffix == ".h5":
             imageNumber = UtilsImage.getImageNumber(image)
             h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(image, isFastMesh=True)
-            fabioImage = fabio.openimage.openimage(h5MasterFilePath)
             noTrials = 5
             fabioImage = None
             while noTrials > 0:
