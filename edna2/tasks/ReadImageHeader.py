@@ -153,6 +153,11 @@ class ReadImageHeader(AbstractTask):
             detectorType = 'pilatus6m'
             numberPixelX = 2463
             numberPixelY = 2527
+        elif 'eiger' in detector.lower() and '4m' in detector.lower():
+            detectorName = 'EIGER 4M'
+            detectorType = 'eiger4m'
+            numberPixelX = 2070
+            numberPixelY = 2167
         elif 'eiger2' in detector.lower() and '16m' in detector.lower():
             detectorName = 'EIGER2 16M'
             detectorType = 'eiger16m'
