@@ -297,7 +297,7 @@ class ReadImageHeader(AbstractTask):
             for data in dictHeader['data']:
                 dataFilePath = prefix + data + '.h5'
                 timedOut, finalSize = UtilsPath.waitForFile(
-                    dataFilePath, expectedSize=1000000, timeOut=DEFAULT_TIME_OUT)
+                    dataFilePath, expectedSize=100000, timeOut=DEFAULT_TIME_OUT)
                 if timedOut:
                     raise RuntimeError('Timeout waiting for file {0}'.format(dataFilePath))
                 # listDataImage.append({
