@@ -1,0 +1,64 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "http://github.com/olofsvensson/edna2/edna2/schema/ispybDiffractionPlan.json#",
+    "type": "object",
+    "properties": {
+        "experimentKind": {"type": "string"},
+        "observedResolution" : {"type": "number"},
+        "minimalResolution" : {"type": "number"},
+        "exposureTime" : {"type": "number"},
+        "oscillationRange" : {"type": "number"},
+        "maximalResolution" : {"type": "number"},
+        "screeningResolution" : {"type": "number"},
+        "anomalousScatterer" : {"type": "string"},
+        "preferredBeamSizeX" : {"type": "number"},
+        "preferredBeamSizeY" : {"type": "number"},
+        "preferredBeamDiameter" : {"type": "number"},
+        "comments" : {"type": "string"},
+        "aimedCompleteness" : {"type": "number"},
+        "aimedIOverSigmaAtHighestRes" : {"type": "number"},
+        "aimedMultiplicity" : {"type": "number"},
+        "aimedResolution" : {"type": "number"},
+        "complexity" : {"type": "string"},
+        "estimateRadiationDamage" : {"type": "boolean"},
+        "forcedSpaceGroup" : {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "requiredCompleteness" : {"type": "number"},
+        "requiredMultiplicity" : {"type": "number"},
+        "requiredResolution" : {"type": "number"},
+        "strategyOption" : {"type": "string"},
+        "kappaStrategyOption" : {"type": "string"},
+        "numberOfPositions" : {"type": "integer"},
+        "minDimAccrossSpindleAxis" : {"type": "number"},
+        "maxDimAccrossSpindleAxis" : {"type": "number"},
+        "radiationSensitivityBeta" : {"type": "number"},
+        "radiationSensitivityGamma" : {"type": "number"},
+        "minOscWidth" : {"type": "number"},
+        "diffractionPlanUUID" : {"type": "string"},
+        "dataCollectionPlanGroupId" : {"type": "integer"},
+        "detectorId" : {"type": "integer"},
+        "distance" : {"type": "number"},
+        "orientation" : {"type": "number"},
+        "monoBandwidth" : {"type": "number"},
+        "monochromator" : {"type": "string"},
+        "energy" : {"type": "number"},
+        "transmission" : {"type": "number"},
+        "boxSizeX" : {"type": "number"},
+        "boxSizeY" : {"type": "number"},
+        "kappaStart" : {"type": "number"},
+        "axisStart" : {"type": "number"},
+        "axisRange" : {"type": "number"},
+        "numberOfImages" : {"type": "integer"},
+        "presetForProposalId" : {"type": "integer"},
+        "beamLineName" : {"type": "string"},
+        "userPath" : {"type": "string"}
+    }
+}

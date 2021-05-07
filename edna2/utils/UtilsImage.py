@@ -111,7 +111,7 @@ def getH5FilePath(filePath, batchSize=100, hasOverlap= False, isFastMesh=False):
         filePath = pathlib.Path(filePath)
     imageNumber = getImageNumber(filePath)
     prefix = getPrefix(filePath)
-    if hasOverlap:
+    if hasOverlap or filePath.name.startswith("ref-"):
         h5ImageNumber = 1
         h5FileNumber = imageNumber
     elif isFastMesh or filePath.name.startswith("mesh-"):

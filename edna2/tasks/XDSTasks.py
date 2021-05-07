@@ -29,11 +29,14 @@ __date__ = "20/04/2020"
 # mxPluginExec/plugins/EDPluginGroupXDS-v1.0/plugins/EDPluginXDSv1_0.py
 # mxPluginExec/plugins/EDPluginGroupXDS-v1.0/plugins/EDPluginXDSIndexingv1_0.py
 
+import os
 import math
+import shutil
 import numpy as np
 
 from edna2.tasks.AbstractTask import AbstractTask
 
+from edna2.utils import UtilsImage
 from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 from edna2.utils import UtilsDetector
@@ -58,60 +61,132 @@ class XDSTask(AbstractTask):
         outData = self.parseXDSOutput(self.getWorkingDirectory())
         return outData
 
-    def generateXDS_INP(self, inData):
+    @staticmethod
+    def generateImageLinks(inData, workingDirectory=None):
+        listImageLink = []
+        firstSubWedge = inData["subWedge"][0]
+        firstImagePath = firstSubWedge["image"][0]["path"]
+        prefix = UtilsImage.getPrefix(firstImagePath)
+        suffix = UtilsImage.getSuffix(firstImagePath)
+        template = "%s_xdslink_?????.%s" % (prefix, suffix)
+        xdsLowestImageNumberGlobal = 1
+        # First we have to find the smallest goniostat rotation axis start:
+        oscillationStartMin = 0
+        # for subWedge in inData["subWedge"]:
+        #     goniostat = subWedge["experimentalCondition"]["goniostat"]
+        #     oscillationStart = goniostat["rotationAxisStart"]
+        #     if oscillationStartMin is None or \
+        #         oscillationStartMin > oscillationStart:
+        #         oscillationStartMin = oscillationStart
+
+        # Loop through the list of sub wedges
+
+        for subWedge in inData["subWedge"]:
+            imageList = subWedge["image"]
+            xsDataGoniostat = subWedge["experimentalCondition"]["goniostat"]
+            oscillationStart = xsDataGoniostat["rotationAxisStart"]
+            oscillationRange = xsDataGoniostat["oscillationWidth"]
+
+            # First find the lowest and highest image numbers
+            lowestImageNumber = None
+            for dictImage in imageList:
+                imageNumber = dictImage["number"]
+                if lowestImageNumber is None or imageNumber < lowestImageNumber:
+                    lowestImageNumber = imageNumber
+
+            # Loop through the list of images
+            lowestXDSImageNumber = None
+            highestXDSImageNumber = None
+            for dictImage in imageList:
+                imageNumber = dictImage["number"]
+                imageOscillationStart = \
+                    oscillationStart + (imageNumber - lowestImageNumber) * oscillationRange
+                # if xdsLowestImageNumberGlobal is None:
+                #     xdsLowestImageNumberGlobal = 1 + int((imageOscillationStart - oscillationStartMin) / oscillationRange)
+                xdsImageNumber = xdsLowestImageNumberGlobal + \
+                                 int((imageOscillationStart - oscillationStartMin) / oscillationRange)
+                print(xdsImageNumber, imageOscillationStart, oscillationStartMin, oscillationRange)
+                sourcePath = dictImage["path"]
+                target = "%s_xdslink_%05d.%s" % (prefix, xdsImageNumber, suffix)
+                print([sourcePath, target])
+                listImageLink.append([sourcePath, target])
+                if workingDirectory is not None:
+                    os.symlink(sourcePath, target)
+                if lowestXDSImageNumber is None or \
+                        lowestXDSImageNumber > xdsImageNumber:
+                    lowestXDSImageNumber = xdsImageNumber
+                if highestXDSImageNumber is None or \
+                        highestXDSImageNumber < xdsImageNumber:
+                    highestXDSImageNumber = xdsImageNumber
+        dictImageLinks = {
+            "imageLink": listImageLink,
+            "dataRange": [lowestXDSImageNumber, highestXDSImageNumber],
+            "template": template
+        }
+        return dictImageLinks
+
+
+
+    @staticmethod
+    def generateXDS_INP(inData):
         """
-        This method creates a list of XDS commands,e.g.:
-
-        OVERLOAD=10048500 ! number not relevant, but needed
-        DIRECTION_OF_DETECTOR_X-AXIS= 1.0 0.0 0.0
-        DIRECTION_OF_DETECTOR_Y-AXIS= 0.0 1.0 0.0
-        ROTATION_AXIS= 0.0 -1.0 0.0
-        INCIDENT_BEAM_DIRECTION=0.0 0.0 1.0
-        NX=4150 NY=4371 QX=0.075 QY=0.075
-        ORGX=2091.8997 ORGY=2182.7866
-        DETECTOR_DISTANCE= 321.616
-        X-RAY_WAVELENGTH= 0.9763
-        OSCILLATION_RANGE= 0.2000
-        STARTING_ANGLE= 51.2500
-        DATA_RANGE= 1 920
-        INDEX_QUALITY= 0.5
-
+        This method creates a list of XDS.INP commands
         """
         # Take the first sub webge in input as reference
-        listImage = inData['image']
+        firstSubwedge = inData["subWedge"][0]
+        listImage = firstSubwedge['image']
         image = listImage[0]
-        listDozorSpotFile = image['dozorSpotFile']
-        experimentalCondition = image['experimentalCondition']
+        experimentalCondition = firstSubwedge['experimentalCondition']
         detector = experimentalCondition['detector']
+        dictXDSDetector = XDSTask.getXDSDetector(detector)
         beam = experimentalCondition['beam']
         goniostat = experimentalCondition['goniostat']
-        detecorType = detector['type']
-        nx = UtilsDetector.getNx(detecorType)
-        ny = UtilsDetector.getNy(detecorType)
-        pixel = UtilsDetector.getPixelsize(detecorType)
-        orgX = round(detector['beamPositionX'] / pixel, 3)
-        orgY = round(detector['beamPositionY'] / pixel, 3)
         distance = round(detector['distance'], 3)
         wavelength = round(beam['wavelength'], 3)
         oscRange = goniostat['oscillationWidth']
         startAngle = goniostat['rotationAxisStart'] - int(goniostat['rotationAxisStart'])
         dataRange = '1 360'
-        self.writeSPOT_XDS(listDozorSpotFile, oscRange)
         listXDS_INP = [
             'OVERLOAD=10048500',
             'DIRECTION_OF_DETECTOR_X-AXIS={0}'.format(UtilsConfig.get('XDSTask', 'DIRECTION_OF_DETECTOR_X-AXIS')),
             'DIRECTION_OF_DETECTOR_Y-AXIS={0}'.format(UtilsConfig.get('XDSTask', 'DIRECTION_OF_DETECTOR_Y-AXIS')),
             'ROTATION_AXIS={0}'.format(UtilsConfig.get('XDSTask', 'ROTATION_AXIS')),
             'INCIDENT_BEAM_DIRECTION={0}'.format(UtilsConfig.get('XDSTask', 'INCIDENT_BEAM_DIRECTION')),
-            'NX={0} NY={1} QX={2} QY={2}'.format(nx, ny, pixel),
-            'ORGX={0} ORGY={1}'.format(orgX, orgY),
+            'NX={0} NY={1} QX={2} QY={2}'.format(
+                dictXDSDetector["nx"], dictXDSDetector["ny"], dictXDSDetector["pixel"]),
+            'ORGX={0} ORGY={1}'.format(
+                dictXDSDetector["orgX"], dictXDSDetector["orgY"]),
+            'DETECTOR={0}  MINIMUM_VALID_PIXEL_VALUE={1}  OVERLOAD={2}'.format(
+                dictXDSDetector["name"],
+                dictXDSDetector["minimumValidPixelValue"],
+                dictXDSDetector["overload"]
+            ),
+            'SENSOR_THICKNESS={0}'.format(
+                dictXDSDetector["sensorThickness"]),
+            'TRUSTED_REGION={0} {1}'.format(
+                dictXDSDetector["trustedRegion"][0],
+                dictXDSDetector["trustedRegion"][1]
+            )]
+        # for trustedRegion in dictXDSDetector["untrustedRectangle"]:
+        #     listXDS_INP.append('UNTRUSTED_RECTANGLE={0} {1} {2} {3}'.format(
+        #         trustedRegion[0], trustedRegion[1],
+        #         trustedRegion[2],trustedRegion[3]
+        #     ))
+        listXDS_INP += [
             'DETECTOR_DISTANCE={0}'.format(distance),
             'X-RAY_WAVELENGTH={0}'.format(wavelength),
             'OSCILLATION_RANGE={0}'.format(oscRange),
             'STARTING_ANGLE={0}'.format(startAngle),
-            'DATA_RANGE={0}'.format(dataRange),
             'INDEX_QUALITY= 0.25'
         ]
+        if "spaceGroupNumber" in inData:
+            spaceGroupNumber = inData["spaceGroupNumber"]
+            cell = inData["cell"]
+            unitCellConstants = "{a} {b} {c} {alpha} {beta} {gamma}".format(**cell)
+            listXDS_INP += [
+                'SPACE_GROUP_NUMBER={0}'.format(spaceGroupNumber),
+                'UNIT_CELL_CONSTANTS={0}'.format(unitCellConstants)
+            ]
         return listXDS_INP
 
     @staticmethod
@@ -195,9 +270,10 @@ class XDSTask(AbstractTask):
             strSpotXds += '{0:13.6f}{1:17.6f}{2:17.8f}{3:17.6f}    \n'.format(*spotXds)
         return strSpotXds
 
-    def writeSPOT_XDS(self, listDozorSpotFile, oscRange):
-        spotXds = self.createSPOT_XDS(listDozorSpotFile, oscRange)
-        filePath = self.getWorkingDirectory() / 'SPOT.XDS'
+    @staticmethod
+    def writeSPOT_XDS(listDozorSpotFile, oscRange, workingDirectory):
+        spotXds = XDSTask.createSPOT_XDS(listDozorSpotFile, oscRange)
+        filePath = workingDirectory / 'SPOT.XDS'
         with open(str(filePath), 'w') as f:
             f.write(spotXds)
 
@@ -208,12 +284,94 @@ class XDSTask(AbstractTask):
             for line in listXDS_INP:
                 f.write(line + '\n')
 
+    @staticmethod
+    def getXDSDetector(dictDetector):
+        dictXDSDetector = None
+        detectorType = dictDetector["type"]
+        nx = UtilsDetector.getNx(detectorType)
+        ny = UtilsDetector.getNy(detectorType)
+        pixel = UtilsDetector.getPixelsize(detectorType)
+        orgX = round(dictDetector['beamPositionX'] / pixel, 3)
+        orgY = round(dictDetector['beamPositionY'] / pixel, 3)
+        if detectorType == "pilatus2m":
+            untrustedRectangle = \
+                [[487, 495, 0, 1680],
+                 [981, 989, 0, 1680],
+                 [0, 1476, 195, 213],
+                 [0, 1476, 407, 425],
+                 [0, 1476, 619, 637],
+                 [0, 1476, 831, 849],
+                 [0, 1476, 1043, 1061],
+                 [0, 1476, 1255, 1273],
+                 [0, 1476, 1467, 1485]]
+            sensorThickness = 0.32
+        elif detectorType == "pilatus6m":
+            listUntrustedRectangle = \
+               [[ 487, 495, 0, 2528],
+                [ 981, 989, 0, 2528],
+                [1475, 1483, 0, 2528],
+                [1969, 1977, 0, 2528],
+                [   0, 2464, 195, 213],
+                [   0, 2464, 407, 425],
+                [   0, 2464, 619, 637],
+                [   0, 2464, 831, 849],
+                [   0, 2464, 1043, 1061],
+                [   0, 2464, 1255, 1273],
+                [   0, 2464, 1467, 1485],
+                [   0, 2464, 1679, 1697],
+                [   0, 2464, 1891, 1909],
+                [   0, 2464, 2103, 2121],
+                [   0, 2464, 2315, 2333]]
+            sensorThickness = 0.32
+        elif detectorType == "eiger4m":
+            untrustedRectangle = \
+                [[1029, 1040, 0, 2167],
+                 [0, 2070, 512, 550],
+                 [0, 2070, 1063, 1103],
+                 [0, 2070, 1614, 1654],
+                 ]
+            sensorThickness = 0.32
+        elif detectorType == "eiger9m":
+            untrustedRectangle = \
+                [[1029, 1040, 0, 3269],
+                 [2069, 2082, 0, 3269],
+                 [0, 3110, 513, 553],
+                 [0, 3110, 1064, 1104],
+                 [0, 3110, 1615, 1655],
+                 [0, 3110, 2166, 2206],
+                 [0, 3110, 2717, 2757],
+                 ]
+        else:
+            raise RuntimeError("Unknown detector: {0}".format(detectorType))
+        dictXDSDetector = {
+            "name": "PILATUS",
+            "nx": nx,
+            "ny": ny,
+            "orgX": orgX,
+            "orgY": orgY,
+            "pixel": pixel,
+            # "untrustedRectangle": untrustedRectangle,
+            "trustedRegion": [0.0, 1.41],
+            "trustedpixel": [7000, 30000],
+            "minimumValidPixelValue": 0,
+            "overload": 1048500,
+            "sensorThickness": sensorThickness
+        }
+        return dictXDSDetector
 
-class XDSIndexingTask(XDSTask):
+
+class XDSIndexing(XDSTask):
 
     def generateXDS_INP(self, inData):
-        listXDS_INP = XDSTask.generateXDS_INP(self, inData)
+        firstSubWedge = inData["subWedge"][0]
+        listDozorSpotFile = inData['dozorSpotFile']
+        experimentalCondition = firstSubWedge['experimentalCondition']
+        goniostat = experimentalCondition['goniostat']
+        oscRange = goniostat['oscillationWidth']
+        XDSTask.writeSPOT_XDS(listDozorSpotFile, oscRange=oscRange, workingDirectory=self.getWorkingDirectory())
+        listXDS_INP = XDSTask.generateXDS_INP(inData)
         listXDS_INP.insert(0, 'JOB= IDXREF')
+        listXDS_INP.append("DATA_RANGE= 1 360")
         return listXDS_INP
 
     @staticmethod
@@ -221,8 +379,9 @@ class XDSIndexingTask(XDSTask):
         idxrefPath = workingDirectory / 'IDXREF.LP'
         xparmPath = workingDirectory / 'XPARM.XDS'
         outData = {
-            "idxref":  XDSIndexingTask.readIdxrefLp(idxrefPath),
-            "xparm":   XDSIndexingTask.parseXparm(xparmPath)
+            "idxref":  XDSIndexing.readIdxrefLp(idxrefPath),
+            "xparm":   XDSIndexing.parseXparm(xparmPath),
+            "xparmXdsPath": xparmPath
         }
         return outData
 
@@ -307,7 +466,7 @@ class XDSIndexingTask(XDSTask):
         sind = lambda a: math.sin(a / r2d)
         sa, sb, sg = map(sind, cell[3:6])
         ca, cb, cg = map(cosd, cell[3:6])
-        v = XDSIndexingTask.volum(cell)
+        v = XDSIndexing.volum(cell)
         rc = (cell[1] * cell[2] * sa / v,
               cell[2] * cell[0] * sb / v,
               cell[0] * cell[1] * sg / v,
@@ -329,7 +488,7 @@ class XDSIndexingTask(XDSTask):
         sind = lambda a: math.sin(a / r2d)
         cosr = list(map(cosd, rcell[3:6]))
         sinr = list(map(sind, rcell[3:6]))
-        Vr = XDSIndexingTask.volum(rcell)
+        Vr = XDSIndexing.volum(rcell)
         BX = ex * rcell[0]
         BY = rcell[1] * (ex * cosr[2] + ey * sinr[2])
         c = rcell[0] * rcell[1] * sinr[2] / Vr
@@ -370,3 +529,62 @@ class XDSIndexingTask(XDSTask):
             xparamDict = {}
         return xparamDict
 
+
+class XDSGenerateBackground(XDSTask):
+
+    def generateXDS_INP(self, inData):
+        listXDS_INP = XDSTask.generateXDS_INP(inData)
+        listXDS_INP.insert(0, 'JOB= XYCORR INIT COLSPOT')
+        dictImageLinks = self.generateImageLinks(
+            inData, self.getWorkingDirectory())
+        listXDS_INP.append("NAME_TEMPLATE_OF_DATA_FRAMES= {0}".format(
+            dictImageLinks["template"] ))
+        listXDS_INP.append("DATA_RANGE= {0} {1}".format(
+            dictImageLinks["dataRange"][0], dictImageLinks["dataRange"][1]))
+        return listXDS_INP
+
+    @staticmethod
+    def parseXDSOutput(workingDirectory):
+        if (workingDirectory / "BKGINIT.cbf").exists():
+            outData = {
+                "gainCbf": str(workingDirectory / "GAIN.cbf"),
+                "blankCbf": str(workingDirectory / "BLANK.cbf"),
+                "bkginitCbf": str(workingDirectory / "BKGINIT.cbf"),
+                "xCorrectionsCbf": str(workingDirectory / "X-CORRECTIONS.cbf"),
+                "yCorrectionsCbf": str(workingDirectory / "Y-CORRECTIONS.cbf")
+            }
+        else:
+            outData = {}
+        return outData
+
+
+class XDSIntegration(XDSTask):
+
+    def generateXDS_INP(self, inData):
+        # Copy XPARM.XDS, GAIN.CBF file
+        shutil.copy(inData["xparmXds"], self.getWorkingDirectory())
+        shutil.copy(inData["gainCbf"], self.getWorkingDirectory())
+        shutil.copy(inData["xCorrectionsCbf"], self.getWorkingDirectory())
+        shutil.copy(inData["yCorrectionsCbf"], self.getWorkingDirectory())
+        shutil.copy(inData["blankCbf"], self.getWorkingDirectory())
+        shutil.copy(inData["bkginitCbf"], self.getWorkingDirectory())
+        listXDS_INP = XDSTask.generateXDS_INP(inData)
+        listXDS_INP.insert(0, 'JOB= DEFPIX INTEGRATE CORRECT')
+        dictImageLinks = self.generateImageLinks(
+            inData, self.getWorkingDirectory())
+        listXDS_INP.append("NAME_TEMPLATE_OF_DATA_FRAMES= {0}".format(
+            dictImageLinks["template"] ))
+        listXDS_INP.append("DATA_RANGE= {0} {1}".format(
+            dictImageLinks["dataRange"][0], dictImageLinks["dataRange"][1]))
+        return listXDS_INP
+
+    @staticmethod
+    def parseXDSOutput(workingDirectory):
+        outData = {}
+        if (workingDirectory / "XDS_ASCII.HKL").exists():
+            outData = {
+                "xdsAsciiHkl": str(workingDirectory / "XDS_ASCII.HKL"),
+                "correctLp": str(workingDirectory / "CORRECT.LP"),
+                "bkgpixCbf": str(workingDirectory / "BKGPIX.cbf")
+            }
+        return outData

@@ -1,0 +1,10 @@
+ Program dozorM /A.Popov,G.Bourenkov & I.Melnikov /
+ Version 1.0.3 //  02.12.2020
+ Copyright 2020 by Alexander Popov and Gleb Bourenkov
+
+   Total N.of crystals in Loop =  2
+Cryst Aperture Central  Coordinate    Int/Sig N.of Images Score  Helic   Start     Finish   Int/Sig
+number size     image      X    Y            All dX dY    sum           x     y     x    y   helical
+--------------------------------------------------------------------------------------------------
+    1   100.0     260    8.1   15.1  544.4  12   3   5   957.3   NO
+    2    30.0      82    9.8    4.8  213.5   7   3   3   224.7  YES    10     4    10     6   653.4

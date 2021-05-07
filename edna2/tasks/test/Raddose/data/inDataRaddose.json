@@ -1,0 +1,56 @@
+{
+    "experimentalCondition": {
+        "beam": {
+            "exposureTime": 1.0,
+            "flux": 1000000000000.0,
+            "size": {
+                "x": 0.1,
+                "y": 0.1
+            },
+            "wavelength": 1.0
+        }
+    },
+    "cell": {
+        "a": 78.9,
+        "b": 95.162,
+        "c": 104.087,
+        "alpha": 90.0,
+        "beta": 90.0,
+        "gamma": 90.0
+    },
+    "chemicalComposition": {
+        "solvent": {
+            "atom": [
+                {
+                    "concentration": 314,
+                    "symbol": "S"
+                }
+            ]
+        },
+        "structure": {
+            "chain": [
+                {
+                    "heavyAtoms": [
+                        {
+                            "numberOf": 38,
+                            "symbol": "S"
+                        }
+                    ],
+                    "numberOfCopies": 1,
+                    "numberOfMonomers": 764,
+                    "type": "protein"
+                }
+            ],
+            "numberOfCopiesInAsymmetricUnit": 1
+        }
+    },
+    "sample": {
+        "size": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 0.1
+        }
+    },
+    "numberOfImages": 1,
+    "numOperators": 3
+}

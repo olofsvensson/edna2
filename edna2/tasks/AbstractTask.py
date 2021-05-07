@@ -171,7 +171,7 @@ class AbstractTask(object):
         return log
 
     def runCommandLine(self, commandLine, logPath=None, listCommand=None,
-                       ignoreErrors=False, doSubmit=False):
+                       ignoreErrors=False, doSubmit=False, partition=None):
         if logPath is None:
             logPath = self.getLogPath()
         logFileName = os.path.basename(logPath)
@@ -198,9 +198,11 @@ class AbstractTask(object):
             mem = 4000  # 4 Gb memory by default
             script = '#!/bin/bash\n'
             script += '#SBATCH --job-name="{0}"\n'.format(jobName)
-            script += '#SBATCH --partition={0}\n'.format('grid')
+            if partition is not None:
+                script += '#SBATCH --partition={0}\n'.format(partition)
             script += '#SBATCH --mem={0}\n'.format(mem)
             script += '#SBATCH --nodes={0}\n'.format(nodes)
+            script += '#SBATCH --nodes=1\n' # Necessary for not splitting jobs! See ATF-57
             script += '#SBATCH --cpus-per-task={0}\n'.format(core)
             script += '#SBATCH --time={0}\n'.format(time)
             script += '#SBATCH --chdir={0}\n'.format(workingDir)

@@ -150,8 +150,10 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
             executable = "export PATH={0}:$PATH".format(path)
             executable += ";export LD_LIBRARY_PATH={0}:$LD_LIBRARY_PATH".format(path)
             executable += ";{0}/".format(path) + UtilsConfig.get(self, 'slurm_executable', 'dozor')
+            partition = UtilsConfig.get(self, 'slurm_partition', None)
         else:
             executable = UtilsConfig.get(self, 'executable', 'dozor')
+            partition = None
         commandLine = executable + ' -pall'
         if doDozorm:
             commandLine += ' -mesh'
@@ -160,7 +162,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         else:
             commandLine += ' -p dozor.dat'
         self.setLogFileName('dozor.log')
-        self.runCommandLine(commandLine, doSubmit=doSubmit)
+        self.runCommandLine(commandLine, doSubmit=doSubmit, partition=partition)
         log = self.getLog()
         outData = self.parseOutput(inData, log, doDozorm=doDozorm,
                                    workingDir=self.getWorkingDirectory())
@@ -203,7 +205,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
             ixMax = IX_MAX_EIGER_4M
             iyMin = IY_MIN_EIGER_4M
             iyMax = IY_MAX_EIGER_4M
-        if detectorType.startswith('eiger'):
+        if inData['nameTemplateImage'].endswith("h5"):
             library = self.getLibrary('hdf5', doSubmit=doSubmit)
         else:
             library =  self.getLibrary('cbf', doSubmit=doSubmit)
@@ -491,7 +493,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
             libraryName += version
         library = UtilsConfig.get(self, libraryName)
         if library is None:
-            raise RuntimeError('ExecDozor: library configuration {0} not found')
+            raise RuntimeError('ExecDozor: library configuration {0} not found'.format(libraryType))
         return library
 
 
@@ -1086,108 +1088,7 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
         return newDict, hasHdf5Prefix
 
 
-class ExecDozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
-    """
-    The ExecDozorM is responsible for executing the 'dozorm' program.
-    """
 
-    def getInDataSchema(self):
-        return {
-            "type": "object",
-            "properties": {
-                # "listDozorAllFile": {
-                #     "type": "array",
-                #     "items": {"type": "string"},
-                # },
-                "name_template_scan": {"type": "string"},
-                "detectorType": {"type": "string"},
-                "beamline": {"type": "string"},
-                "detectorDistance": {"type": "number"},
-                "wavelength": {"type": "number"},
-                "orgx": {"type": "number"},
-                "orgy": {"type": "number"},
-                "number_row": {"type": "number"},
-                "number_images": {"type": "number"},
-                "isZigZag": {"type": "boolean"},
-                "step_h": {"type": "number"},
-                "step_v": {"type": "number"},
-                "beam_shape": {"type": "string"},
-                "beam_h": {"type": "number"},
-                "beam_v": {"type": "number"},
-                "number_apertures": {"type": "integer"},
-                "aperture_size": {"type": "string"},
-                "reject_level": {"type": "integer"},
-                "number_scans": {"type": "integer"},
-                "first_scan_number": {"type": "integer"},
-            }
-        }
-
-    def getOutDataSchema(self):
-        return {
-            "type": "object",
-            "properties": {
-                "imageDozor": {
-                    "type": "array",
-                    "items": {
-                        "$ref": self.getSchemaUrl("imageDozor.json")
-                    }
-                },
-                "halfDoseTime": {"type": "number"},
-                "dozorPlot":  {"type": "string"},
-                "plotmtvFile":  {"type": "string"},
-                "pngPlots":  {
-                    "type": "array",
-                    "items": {"type": "string"}
-                },
-                "dozorAllFile": {"type": "string"},
-            },
-        }
-
-    def run(self, inData):
-        outData = {}
-        commands = self.generateCommands(inData)
-        with open(str(self.getWorkingDirectory() / 'dozorm.dat'), 'w') as f:
-            f.write(commands)
-        return outData
-
-    def generateCommands(self, inData):
-        """
-        This method creates the input file for dozorm
-        """
-        detectorType = inData['detectorType']
-        nx = UtilsDetector.getNx(detectorType)
-        ny = UtilsDetector.getNy(detectorType)
-        pixelSize = UtilsDetector.getPixelsize(detectorType)
-        if inData.get('isZigZag', False):
-            mesh_direct = "-h"
-        else:
-            mesh_direct = "-h" 
-        command = '!\n'
-        command += 'detector {0}\n'.format(detectorType)
-        command += 'nx %d\n' % nx
-        command += 'ny %d\n' % ny
-        command += 'pixel %f\n' % pixelSize
-        command += 'detectorDistance {0}\n'.format(inData['detectorDistance'])
-        command += 'X-ray_wavelength {0}\n'.format(inData['wavelength'])
-        command += 'orgx {0}\n'.format(inData['orgx'])
-        command += 'orgy {0}\n'.format(inData['orgy'])
-        command += 'number_row {0}\n'.format(inData['number_row'])
-        command += 'number_images {0}\n'.format(inData['number_images'])
-        command += 'mesh_direct {0}\n'.format(mesh_direct)
-        command += 'step_h {0}\n'.format(inData['step_h'])
-        command += 'step_v {0}\n'.format(inData['step_v'])
-        command += 'beam_shape {0}\n'.format(inData['beam_shape'])
-        command += 'beam_h {0}\n'.format(inData['beam_h'])
-        command += 'beam_v {0}\n'.format(inData['beam_v'])
-        command += 'number_of_apertures {0}\n'.format(inData['number_of_apertures'])
-        command += 'aperture_size {0}\n'.format(inData['aperture_size'])
-        command += 'reject_level {0}\n'.format(inData['reject_level'])
-        command += 'name_template_scan {0}\n'.format(inData['name_template_scan'])
-        command += 'number_scans {0}\n'.format(inData['number_scans'])
-        command += 'first_scan_number {0}\n'.format(inData['first_scan_number'])
-        command += 'end\n'
-        # logger.debug('command: {0}'.format(command))
-        return command
 
 #
 #    def sendMessageToMXCuBE(self, _strMessage, level="info"):

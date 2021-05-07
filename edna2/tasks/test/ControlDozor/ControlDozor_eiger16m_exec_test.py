@@ -21,29 +21,34 @@
 
 __authors__ = ["O. Svensson"]
 __license__ = "MIT"
-__date__ = "20/04/2020"
+__date__ = "21/04/2019"
 
+
+import os
 import unittest
 
-from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig
+from edna2.utils import UtilsTest
 from edna2.utils import UtilsLogging
 
-from edna2.tasks.XDSTasks import XDSIndexingTask
+from edna2.tasks.ControlDozor import ControlDozor
 
-ogger = UtilsLogging.getLogger()
+logger = UtilsLogging.getLogger()
 
 
-class XDSIndexingTaskExecTest(unittest.TestCase):
+class ControlDozorExecTest(unittest.TestCase):
 
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run mosflm test with default config')
-    def test_execute_XDSIndexingTask(self):
-        referenceDataPath = self.dataPath / 'inDataXDSIndexingTask.json'
-        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        xdsIndexingTask = XDSIndexingTask(inData=inData)
-        xdsIndexingTask.execute()
-        self.assertTrue(xdsIndexingTask.isSuccess())
+                     'Cannot run control dozor test with default config')
+    def test_execute_ControlDozor_eiger16m(self):
+        referenceDataPath = self.dataPath / 'ControlDozor_eiger16m.json'
+        self.inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+        controlDozor = ControlDozor(inData=self.inData)
+        controlDozor.execute()
+        self.assertTrue(controlDozor.isSuccess())
+        outData = controlDozor.outData
+        self.assertEqual(len(outData['imageQualityIndicators']), 4)
+

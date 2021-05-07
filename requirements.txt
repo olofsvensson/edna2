@@ -12,5 +12,7 @@ cctbx
 fabio
 requests
 distro
+numpy
+scipy
 
 
