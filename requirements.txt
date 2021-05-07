@@ -7,6 +7,8 @@ xmltodict
 jsonschema
 graypy
 h5py
+numpy
+cctbx
 fabio
 requests
 distro
