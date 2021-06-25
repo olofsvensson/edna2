@@ -114,7 +114,7 @@ def getH5FilePath(filePath, batchSize=100, hasOverlap= False, isFastMesh=False):
     if hasOverlap or filePath.name.startswith("ref-"):
         h5ImageNumber = 1
         h5FileNumber = imageNumber
-    elif isFastMesh or filePath.name.startswith("mesh-"):
+    elif isFastMesh or filePath.name.startswith("mesh-") or filePath.name.startswith("line-"):
         h5ImageNumber = int((imageNumber - 1) / 100) + 1
         h5FileNumber = 1
     else:
