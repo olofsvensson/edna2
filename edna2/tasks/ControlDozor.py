@@ -693,7 +693,7 @@ class ControlDozor(AbstractTask):
             prefix = UtilsImage.getPrefix(image)
             directory = pathlib.Path(image).parent
             h5MasterFilePath, h5DataFilePath, h5FileNumber = \
-                UtilsImage.getH5FilePath(image, hasOverlap=hasOverlap)
+                UtilsImage.getH5FilePath(image, hasOverlap=hasOverlap, isFastMesh=True)
             workingDirectorySuffix='{0}_{1}_master_{2}'.format(prefix, h5FileNumber, imageNumber)
             if hasOverlap:
                 imageNumber = 1
@@ -703,7 +703,8 @@ class ControlDozor(AbstractTask):
         inDataReadHeader = {
             'imagePath': [image],
             "skipNumberOfImages": True,
-            "hasOverlap": hasOverlap
+            "hasOverlap": hasOverlap,
+            "isFastMesh": True
         }
         controlHeader = ReadImageHeader(
             inData=inDataReadHeader,
