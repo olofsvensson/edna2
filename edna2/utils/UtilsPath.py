@@ -52,7 +52,7 @@ def getWorkingDirectory(task, inData, workingDirectorySuffix=None):
             dir=parentDirectory)
         workingDirectory = pathlib.Path(workingDirectory)
     else:
-        # Here we asume that the user knows what he is doing and there's no
+        # Here we assume that the user knows what he is doing and there's no
         # race condition for creating the working directory!
         workingDirectoryName = task.__class__.__name__ + '_' + workingDirectorySuffix
         workingDirectory = parentDirectory / workingDirectoryName
