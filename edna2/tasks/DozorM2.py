@@ -21,11 +21,10 @@
 __author__ = "Olof Svensson"
 __contact__ = "svensson@esrf.eu"
 __copyright__ = "ESRF"
-__updated__ = "2020-12-17"
+__updated__ = "2021-07-20"
 
 import os
 import numpy
-import pprint
 import textwrap
 import matplotlib
 import matplotlib.cm
@@ -39,19 +38,19 @@ from edna2.utils import UtilsDetector
 
 logger = UtilsLogging.getLogger()
 
-class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
+class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
     """
-    The DozorM is responsible for executing the 'dozorm' program.
+    The DozorM2 is responsible for executing the 'dozorm2' program.
     """
 
     def getInDataSchema(self):
         return {
             "type": "object",
             "properties": {
-                # "listDozorAllFile": {
-                #     "type": "array",
-                #     "items": {"type": "string"},
-                # },
+                "list_dozor_all": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
                 "name_template_scan": {"type": "string"},
                 "detectorType": {"type": "string"},
                 "beamline": {"type": "string"},
@@ -71,7 +70,13 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 "aperture_size": {"type": "string"},
                 "reject_level": {"type": "integer"},
                 "isHorizontalScan": {"type": "boolean"},
-                "number_scans": {"type": "integer"}
+                "number_scans": {"type": "integer"},
+                "grid_x0": {"type": "number"},
+                "grid_x1": {"type": "number"},
+                "phi_values": {
+                    "type": "array",
+                    "items": {"type": "number"}
+                },
             }
         }
 
@@ -89,16 +94,18 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
 
     def run(self, inData):
         outData = {}
-        commands = self.generateCommands(inData)
-        with open(str(self.getWorkingDirectory() / 'dozorm.dat'), 'w') as f:
+        commands = self.generateCommands(inData, self.getWorkingDirectory())
+        with open(str(self.getWorkingDirectory() / 'dozorm2.dat'), 'w') as f:
             f.write(commands)
-        commandLine = "dozorm dozorm.dat"
-        logPath = self.getWorkingDirectory() / 'dozorm.log'
+        commandLine = "dozorm2 -cr dozorm2.dat"
+        logPath = self.getWorkingDirectory() / 'dozorm2.log'
         self.runCommandLine(commandLine, logPath=logPath)
-        outData = self.parseOutput(self.getWorkingDirectory(), logPath)
+        # outData = self.parseOutput(self.getWorkingDirectory(), logPath)
+        outData = {}
         return outData
 
-    def generateCommands(self, inData):
+    @staticmethod
+    def generateCommands(inData, workingDirectory):
         """
         This method creates the input file for dozorm
         """
@@ -106,9 +113,9 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         nx = UtilsDetector.getNx(detectorType)
         ny = UtilsDetector.getNy(detectorType)
         pixelSize = UtilsDetector.getPixelsize(detectorType)
-        nameTemplateScan = self.getWorkingDirectory() / "dozorm_00?"
-        os.symlink(inData["dozorAllFile"], str(self.getWorkingDirectory() / "dozorm_001"))
-        firstScanNumber = 1
+        for index, dozor_all_file in enumerate(inData["list_dozor_all"]):
+            os.symlink(dozor_all_file, str(workingDirectory / "d_00{0}".format(index+1)))
+        nameTemplateScan = "d_00?"
         if inData.get('isHorizontalScan', True):
             meshDirect = "-h"
         else:
@@ -135,7 +142,10 @@ class DozorM(AbstractTask):  # pylint: disable=too-many-instance-attributes
         command += 'reject_level {0}\n'.format(inData['reject_level'])
         command += 'name_template_scan {0}\n'.format(nameTemplateScan)
         command += 'number_scans {0}\n'.format(inData['number_scans'])
-        command += 'first_scan_number {0}\n'.format(firstScanNumber)
+        command += 'first_scan_number 1\n'
+        for index, phi_value in enumerate(inData['phi_values']):
+            command += 'phi{0} {1}\n'.format(index+1, phi_value)
+        command += 'axis_zero {0} {1}\n'.format(inData["grid_x0"], inData["grid_y0"])
         command += 'end\n'
         # logger.debug('command: {0}'.format(command))
         return command

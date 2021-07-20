@@ -1,0 +1,27 @@
+{
+	"list_dozor_all": [
+		"$EDNA2_TESTDATA_IMAGES/d_001",
+		"$EDNA2_TESTDATA_IMAGES/d_002"
+	],
+	"detectorType": "eiger16m",
+	"beamline": "id23eh1",
+    "detector_distance": 263.938,
+	"wavelength": 0.7749,
+    "orgx": 2049.97,
+    "orgy": 2228.04,
+	"number_row": 21,
+	"number_images": 714,
+	"isZigZag": true,
+	"step_h": 19.0,
+	"step_v": 19.4,
+	"beam_shape": "G",
+	"beam_h": 35,
+	"beam_v": 30,
+	"number_apertures": 4,
+	"aperture_size": "10 20 30 50",
+	"reject_level": 50,
+	"number_scans": 2,
+	"phi_values": [0, 90],
+	"grid_x0": 11.0,
+	"grid_y0": 15.5
+}
