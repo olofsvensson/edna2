@@ -84,11 +84,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         return {
             "type": "object",
             "properties": {
-                "dozorMap": {"type": "string"},
-                "listPositions":  {
-                    "type": "array",
-                    "items": {"type": "object"}
-                },
+                "logPath": {"type": "string"},
             },
         }
 
@@ -101,7 +97,9 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         logPath = self.getWorkingDirectory() / 'dozorm2.log'
         self.runCommandLine(commandLine, logPath=logPath)
         # outData = self.parseOutput(self.getWorkingDirectory(), logPath)
-        outData = {}
+        outData = {
+            "logPath": str(logPath)
+        }
         return outData
 
     @staticmethod
