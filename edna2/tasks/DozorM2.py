@@ -77,6 +77,9 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
                     "type": "array",
                     "items": {"type": "number"}
                 },
+                "sampx": {"type": "number"},
+                "sampy": {"type": "number"},
+                "phiy": {"type": "number"},
             }
         }
 
@@ -144,6 +147,12 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         for index, phi_value in enumerate(inData['phi_values']):
             command += 'phi{0} {1}\n'.format(index+1, phi_value)
         command += 'axis_zero {0} {1}\n'.format(inData["grid_x0"], inData["grid_y0"])
+        if "sampx" in inData:
+            command += 'sampx {0}\n'.format(inData["sampx"])
+        if "sampy" in inData:
+            command += 'sampy {0}\n'.format(inData["sampy"])
+        if "phiy" in inData:
+            command += 'phiy {0}\n'.format(inData["phiy"])
         command += 'end\n'
         # logger.debug('command: {0}'.format(command))
         return command
