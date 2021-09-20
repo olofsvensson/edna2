@@ -230,7 +230,6 @@ class AutoCrystFEL(object):
         return
 
     @staticmethod
-<<<<<<< HEAD
     def slurm_submit(shellFile, workingDir, crystfel_cmd):
         # workingDir = str(self.getOutputDirectory())
         if workingDir.startswith("/mntdirect/_users"):
