@@ -147,9 +147,15 @@ def substitute(data, searchString, substituteString):
 def getSearchStringFileNames(searchString, data):
     listFileNames = []
     dataString = json.dumps(data)
+    # With suffix
     expression = "\"\{0}/([\w-]+\.\w+)\"".format(searchString)
     for match in re.findall(expression, dataString):
         listFileNames.append(match)
+    if len(listFileNames) == 0:
+        # Try without suffix
+        expression = "\"\{0}/([\w-]+)\"".format(searchString)
+        for match in re.findall(expression, dataString):
+            listFileNames.append(match)
     return listFileNames
 
 

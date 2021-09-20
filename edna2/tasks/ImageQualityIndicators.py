@@ -68,7 +68,7 @@ class ImageQualityIndicators(AbstractTask):
             "type": "object",
             "properties": {
                 "beamline": {"type": "string"},
-                "doDozorm": {"type": "boolean"},
+                "doDozorM": {"type": "boolean"},
                 "doDistlSignalStrength": {"type": "boolean"},
                 "doIndexing": {"type": "boolean"},
                 "doCrystfel": {"type": "boolean"},
@@ -107,7 +107,7 @@ class ImageQualityIndicators(AbstractTask):
     def run(self, inData):
         beamline = inData.get('beamline', None)
         doSubmit = inData.get('doSubmit', False)
-        doDozorm = inData.get('doDozorm', False)
+        doDozorM = inData.get('doDozorM', False)
         batchSize = inData.get('batchSize', 1)
         doDistlSignalStrength = inData.get('doDistlSignalStrength', False)
         doIndexing = inData.get('doIndexing', False)
@@ -199,7 +199,7 @@ class ImageQualityIndicators(AbstractTask):
                     'endNo': batchEndNo,
                     'batchSize': batchSize,
                     'doSubmit': doSubmit,
-                    'doDozorm': doDozorm
+                    'doDozorM': doDozorM
                 }
                 if beamline is not None:
                     inDataControlDozor["beamline"] = beamline
@@ -261,7 +261,7 @@ class ImageQualityIndicators(AbstractTask):
                 else:
                     listImageQualityIndicators += listOutDataControlDozor
                 # Check if dozorm
-                if doDozorm:
+                if doDozorM:
                     listControlDozorAllFile.append(controlDozor.outData['dozorAllFile'])
 
         if not self.isFailure() and doCrystfel:
@@ -312,7 +312,7 @@ class ImageQualityIndicators(AbstractTask):
             else:
                 logger.error("CrystFEL did not run properly")
         # Assemble all controlDozorAllFiles into one
-        if doDozorm:
+        if doDozorM:
             imageQualityIndicatorsDozorAllFile = str(self.getWorkingDirectory() / "dozor_all")
             os.system('touch {0}'.format(imageQualityIndicatorsDozorAllFile))
             for controlDozorAllFile in listControlDozorAllFile:

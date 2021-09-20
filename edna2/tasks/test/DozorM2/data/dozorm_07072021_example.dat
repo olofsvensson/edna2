@@ -1,0 +1,42 @@
+!
+detector eiger16m
+nx 4148
+ny 4362
+pixel 0.075000
+detector_distance 263.938
+X-ray_wavelength 0.7749
+orgx 2049.97
+orgy 2228.04
+!
+!mesh parameters
+!
+number_images 714
+number_row 21
+! v - vertical scan, h - horizontal scan; -h OR -v zig-zag 
+mesh_direct -h
+! mesh steps horizontal and vertical [micron]
+step_h 19.0
+step_v 19.4
+!beam_shape distribution: F -flat_top, G - gaussian , E - empirical
+beam_shape G
+!beam size h and v
+beam_h 35
+beam_v 30
+!
+number_apertures 4
+aperture_size 10 20 30 50
+!
+!PHI for mesh1 and mesh2 
+phi1 0
+phi2 90
+!rotation_axis h or v
+rotation_axis h
+!position of rotation axis in mech coordinates
+axis_zero 11. 15.5
+!reject_level - % of score, if less, crystal number=999
+reject_level 50
+!
+name_template_scan d_00?
+number_scans 2
+first_scan_number 1
+end
