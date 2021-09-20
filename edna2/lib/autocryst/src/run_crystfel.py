@@ -256,17 +256,6 @@ class AutoCrystFEL(object):
         sub.call('chmod +x %s' % shellFile, shell=True)
         # shellFile.chmod(0o755)
         AutoCrystFEL.run_as_command('sbatch -p nice -J autoCryst %s' %shellFile)
-=======
-    def slurm_submit(shellfile, crystfel_cmd):
-        slurm_handle = open(shellfile, 'w')
-        slurm_handle.write("#!/bin/bash \n\n")
-        slurm_handle.write(crystfel_cmd)
-        slurm_handle.close()
-        sub.call('chmod +x %s' % shellfile, shell=True)
-
-        AutoCrystFEL.run_as_command('sbatch -p grid -J autoCryst %s' % shellfile)
->>>>>>> refs/remotes/origin/master
-        return
 
     @staticmethod
     def combine_streams():
@@ -275,11 +264,7 @@ class AutoCrystFEL(object):
         slurm_handle.write("cat *.stream >> alltogether.stream")
         slurm_handle.close()
         AutoCrystFEL.run_as_command('chmod +x tmp_cat.sh')
-<<<<<<< HEAD
         AutoCrystFEL.run_as_command('sbatch --wait -d singleton -p nice -J autoCryst tmp_cat.sh')
-=======
-        AutoCrystFEL.run_as_command('sbatch --wait -d singleton -p grid -J autoCryst tmp_cat.sh')
->>>>>>> refs/remotes/origin/master
         return
 
     @staticmethod
