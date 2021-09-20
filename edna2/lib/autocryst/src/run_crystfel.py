@@ -230,14 +230,31 @@ class AutoCrystFEL(object):
         return
 
     @staticmethod
-    def slurm_submit(shellfile, crystfel_cmd):
-        slurm_handle = open(shellfile, 'w')
-        slurm_handle.write("#!/bin/bash \n\n")
-        slurm_handle.write(crystfel_cmd)
-        slurm_handle.close()
-        sub.call('chmod +x %s' % shellfile, shell=True)
-
-        AutoCrystFEL.run_as_command('sbatch -p mx -J autoCryst %s' % shellfile)
+    def slurm_submit(shellFile, workingDir, crystfel_cmd):
+        # workingDir = str(self.getOutputDirectory())
+        if workingDir.startswith("/mntdirect/_users"):
+          workingDir = workingDir.replace("/mntdirect/_users", "/home/esrf")
+        nodes = 1
+        core = 10
+        time = '1:00:00'
+        mem = 8000  # 4 Gb memory by default
+        script = '#!/bin/bash\n'
+        script += '#SBATCH --mem={0}\n'.format(mem)
+        script += '#SBATCH --nodes={0}\n'.format(nodes)
+        script += '#SBATCH --nodes=1\n' # Necessary for not splitting jobs! See ATF-57
+        script += '#SBATCH --cpus-per-task={0}\n'.format(core)
+        script += '#SBATCH --time={0}\n'.format(time)
+        script += '#SBATCH --chdir={0}\n'.format(workingDir)
+        script += '#SBATCH --output=stdout.txt\n'
+        script += '#SBATCH --error=stderr.txt\n'
+        script += crystfel_cmd + '\n'
+        # shellFile = self.getOutputDirectory() / (jobName + '_slurm.sh')
+        with open(shellFile, 'w') as f:
+            f.write(script)
+            f.close()
+        sub.call('chmod +x %s' % shellFile, shell=True)
+        # shellFile.chmod(0o755)
+        AutoCrystFEL.run_as_command('sbatch -p nice -J autoCryst %s' %shellFile)
         return
 
     @staticmethod
@@ -247,7 +264,7 @@ class AutoCrystFEL(object):
         slurm_handle.write("cat *.stream >> alltogether.stream")
         slurm_handle.close()
         AutoCrystFEL.run_as_command('chmod +x tmp_cat.sh')
-        AutoCrystFEL.run_as_command('sbatch --wait -d singleton -p mx -J autoCryst tmp_cat.sh')
+        AutoCrystFEL.run_as_command('sbatch --wait -d singleton -p nice -J autoCryst tmp_cat.sh')
         return
 
     @staticmethod
@@ -461,7 +478,7 @@ class AutoCrystFEL(object):
                 self.oarshell_submit(shellfile, cmd)
                 self.check_oarstat(wait_count=6000)
             elif self.is_executable('sbatch'):
-                self.slurm_submit(shellfile, cmd)
+                self.slurm_submit(shellfile, str(final_stream.parent), cmd)
             else:
                 self.run_as_command(cmd)
 
@@ -522,10 +539,10 @@ class AutoCrystFEL(object):
                         ofh.write('\n')
                     ofh.close()
 
-                    if self.is_executable('oarsub'):
+                    if self.is_executable('bsub'):
                         self.oarshell_submit(shellfile, self.indexamajig_cmd(infile, outstream, str(geomfile)))
                     elif self.is_executable('sbatch'):
-                        self.slurm_submit(shellfile, self.indexamajig_cmd(infile, outstream, str(geomfile)))
+                        self.slurm_submit(shellfile, str(self.getOutputDirectory()), self.indexamajig_cmd(infile, outstream, str(geomfile)))
                     else:
                         error_message = "doSubmit was set True but queue system is unavailable in running node; " \
                                         "please change doSubmit to False"
@@ -673,7 +690,7 @@ def __run__(inData):
         crystTask.run_indexing()
         crystTask.writeInputData(inData)
 
-        if crystTask.is_executable('oarsub'):
+        if crystTask.is_executable('bsub'):
             crystTask.check_oarstat()
 
         elif crystTask.is_executable('sbatch'):
@@ -766,3 +783,4 @@ if __name__ == '__main__':
         else:
             pass
     output = __run__(input_Dict)
+    print(output)
