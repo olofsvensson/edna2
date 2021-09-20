@@ -220,7 +220,6 @@ class AbstractMosflmTask(AbstractTask):
             'WAVELENGTH {0}'.format(inData['wavelength']),
             'DISTANCE {0}'.format(inData['distance']),
             'BEAM {0} {1}'.format(inData['beam']['x'], inData['beam']['y']),
-            'DETECTOR {0}'.format(detectorCommand),
             'DIRECTORY {0}'.format(inData['directory']),
             'TEMPLATE {0}'.format(inData['template'])
         ]
@@ -239,6 +238,7 @@ class AbstractMosflmTask(AbstractTask):
 
         # Add exclude regions if Pilatus
         if detectorType == 'PILATUS':
+            listCommand.append('DETECTOR {0}'.format(detectorCommand))
             if detector['numberPixelX'] == 1475 and \
                detector['numberPixelY'] == 1679:
                 # Pilatus 2M

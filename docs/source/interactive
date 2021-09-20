@@ -1,0 +1,82 @@
+#!/bin/bash
+# -*- coding: utf-8 -*-
+# Author: Pär Andersson (National Supercomputer Centre, Sweden)
+# Version: 0.3 2007-07-30
+#
+# This will submit a batch script that starts screen on a node.
+# Then ssh is used to connect to the node and attach the screen.
+# The result is very similar to an interactive shell in PBS
+# (qsub -I)
+
+# Batch Script that starts SCREEN
+BS=/usr/local/bin/_interactive
+# Interactive screen script
+IS=/usr/local/bin/_interactive_screen
+if [ $# -gt 0 ]
+then
+  if [ $1 == "matlab2015b" ] || [ $1 == "matlab/2015b" ] || [ $1 == "matlab-2015b" ]
+  then
+    IS=/usr/local/bin/_interactive_matlab2015b
+    shift
+  elif [ $1 == "matlab2016a" ] || [ $1 == "matlab/2016a" ] || [ $1 == "matlab-2016a" ]
+  then
+    IS=/usr/local/bin/_interactive_matlab2016a
+    shift
+  elif [ $1 == "matlab2016b" ] || [ $1 == "matlab/2016b" ] || [ $1 == "matlab-2016b" ]
+  then
+    IS=/usr/local/bin/_interactive_matlab2016b
+    shift
+  fi
+fi
+
+# Submit the job and get the job id
+JOB=`sbatch --output=/dev/null --error=/dev/null $@ $BS 2>&1 \
+    | egrep -o -e "\b[0-9]+$"`
+
+# Make sure the job is always canceled
+trap "{ /usr/bin/scancel $JOB; exit; }" SIGINT SIGTERM EXIT
+
+nt=0
+message="Be patient, job scheduler is trying to allocate resources for your job. ................................................."
+
+echo "Waiting for JOBID $JOB to start"
+while true;do
+    sleep 5s
+
+    # Check job status
+    STATUS=`squeue -j $JOB -t PD,R -h -o %t`
+    
+    if [ "$STATUS" = "R" ];then
+        # Job is running, break the while loop
+        echo
+        break
+    elif [ "$STATUS" != "PD" ];then
+        echo
+        echo "Job is not Running or Pending. Aborting"
+        scancel $JOB
+        exit 1
+    fi
+
+    if [ "$nt" -gt 120 ]
+    then
+        echo
+        echo "We tried ten minutes to get resources for this job but failed"
+        scancel $JOB
+        exit 1
+    fi
+
+#    echo -n "."
+    echo -n "${message:${nt}:1}"
+    nt=`expr $nt + 1`
+
+done
+
+# Determine the first node in the job:
+NODE=`srun --jobid=$JOB -N1 hostname`
+
+# SSH to the node and attach the screen
+sleep 1s
+ssh -XAY -t $NODE $IS slurm$JOB
+# The trap will now cancel the job before exiting.
+                                                                                                                                                    80,1          Bot
+

@@ -1,0 +1,21 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "http://github.com/olofsvensson/edna2/edna2/schema/sample.json#",
+    "type": "object",
+    "properties": {
+        "absorbedDoseRate": {"type": "number"},
+        "radiationDamageModelBeta": {"type": "number"},
+        "radiationDamageModelGamma": {"type": "number"},
+        "shape": {"type": "number"},
+        "omegaMin": {"type": "number"},
+        "susceptibility": {"type": "number"},
+        "size": {
+            "type": "object",
+            "properties": {
+                "x": {"type": "number"},
+                "y": {"type": "number"},
+                "z": {"type": "number"}
+            }
+        }
+    }
+}

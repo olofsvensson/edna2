@@ -1,0 +1,12 @@
+{
+	"doDistlSignalStrength": false,
+	"doCrystfel": false,
+	"doIndexing": false,
+	"doUploadToIspyb": false,
+	"directory": "$EDNA2_TESTDATA_IMAGES",
+	"template": "mesh-mx415_1_####.h5",
+	"startNo": 1,
+	"endNo": 51,
+    "batchSize": 17,
+    "fastMesh": true
+}

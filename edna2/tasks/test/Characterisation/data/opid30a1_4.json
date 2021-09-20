@@ -1,0 +1,46 @@
+{
+	"diffractionPlan": {
+		"aimedCompleteness": 0.99,
+		"aimedIOverSigmaAtHighestResolution": 3.0,
+		"aimedMultiplicity": 4.0,
+		"aimedResolution": 3.0,
+		"anomalousData": false,
+		"complexity": "none",
+		"forcedSpaceGroup": "",
+		"kappaStrategyOption": "cell",
+		"maxExposureTimePerDataCollection": 30.0,
+		"strategyOption": "-low never"
+	},
+	"experimentalCondition": {
+		"beam": {
+			"flux": 1e12,
+			"minExposurePerImage": 0.037,
+			"size": {
+				"x": 0.1,
+				"y": 0.1
+			}
+		},
+		"goniostat": {
+			"maxOscillationSpeed": 360.0,
+            "minOscillationWidth": 0.05
+		}
+	},
+	"sample": {
+		"radiationDamageModelBeta": 1e-06,
+		"radiationDamageModelGamma": 6e-08,
+		"shape": 1.0,
+		"susceptibility": 1.0,
+        "size": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 0.1
+        }
+    },
+	"imagePath": [
+		"$EDNA2_TESTDATA_IMAGES/ref-opid30a1_4_0001.cbf",
+		"$EDNA2_TESTDATA_IMAGES/ref-opid30a1_4_0002.cbf",
+		"$EDNA2_TESTDATA_IMAGES/ref-opid30a1_4_0003.cbf",
+		"$EDNA2_TESTDATA_IMAGES/ref-opid30a1_4_0004.cbf"
+	],
+	"token": "1234567890"
+}

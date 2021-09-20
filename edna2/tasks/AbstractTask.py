@@ -67,12 +67,13 @@ class AbstractTask(object):
     """
     Parent task to all EDNA2 tasks.
     """
-    def __init__(self, inData):
+    def __init__(self, inData, workingDirectorySuffix=None):
         self._dictInOut = multiprocessing.Manager().dict()
         self._dictInOut['inData'] = json.dumps(inData, default=str)
         self._dictInOut['outData'] = json.dumps({})
         self._dictInOut['isFailure'] = False
         self._process = EDNA2Process(target=self.executeRun, args=())
+        self._workingDirectorySuffix = workingDirectorySuffix
         self._workingDirectory = None
         self._logFileName = None
         self._schemaPath = pathlib.Path(__file__).parents[1] / 'schema'
@@ -97,7 +98,9 @@ class AbstractTask(object):
         else:
             hasValidInDataSchema = True
         if hasValidInDataSchema:
-            self._workingDirectory = UtilsPath.getWorkingDirectory(self, inData)
+            self._workingDirectory = UtilsPath.getWorkingDirectory(
+                self, inData,
+                workingDirectorySuffix=self._workingDirectorySuffix)
             self.writeInputData(inData)
             self._oldDir = os.getcwd()
             os.chdir(str(self._workingDirectory))
@@ -168,7 +171,7 @@ class AbstractTask(object):
         return log
 
     def runCommandLine(self, commandLine, logPath=None, listCommand=None,
-                       ignoreErrors=False, doSubmit=False):
+                       ignoreErrors=False, doSubmit=False, partition=None):
         if logPath is None:
             logPath = self.getLogPath()
         logFileName = os.path.basename(logPath)
@@ -190,14 +193,16 @@ class AbstractTask(object):
             if workingDir.startswith("/mntdirect/_users"):
                 workingDir = workingDir.replace("/mntdirect/_users", "/home/esrf")
             nodes = 1
-            core = 20
-            time = '0:10:00'
+            core = 10
+            time = '1:00:00'
+            mem = 4000  # 4 Gb memory by default
             script = '#!/bin/bash\n'
             script += '#SBATCH --job-name="{0}"\n'.format(jobName)
-            script += '#SBATCH --partition={0}\n'.format('mx')
-            mem = 2000  # 2 Gb memory by default
+            if partition is not None:
+                script += '#SBATCH --partition={0}\n'.format(partition)
             script += '#SBATCH --mem={0}\n'.format(mem)
             script += '#SBATCH --nodes={0}\n'.format(nodes)
+            script += '#SBATCH --nodes=1\n' # Necessary for not splitting jobs! See ATF-57
             script += '#SBATCH --cpus-per-task={0}\n'.format(core)
             script += '#SBATCH --time={0}\n'.format(time)
             script += '#SBATCH --chdir={0}\n'.format(workingDir)

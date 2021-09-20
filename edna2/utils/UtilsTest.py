@@ -36,6 +36,7 @@ import tempfile
 import threading
 
 from edna2.utils import UtilsLogging
+from edna2.utils import UtilsImage
 
 from urllib.request import urlopen, ProxyHandler, build_opener
 
@@ -88,34 +89,42 @@ def loadTestImage(imageFileName):
     imageDirPath = getTestImageDirPath()
     if not imageDirPath.exists():
         imageDirPath.mkdir(mode=0o777, parents=True)
-    imagePath = imageDirPath / imageFileName
-    if not imagePath.exists():
-        logger.info(
-            "Trying to download image %s" % str(imagePath) +
-            ", timeout set to %d s" % MAX_DOWNLOAD_TIME
-        )
-        if "http_proxy" in os.environ:
-            dictProxies = {'http': os.environ["http_proxy"]}
-            proxy_handler = ProxyHandler(dictProxies)
-            opener = build_opener(proxy_handler).open
-        else:
-            opener = urlopen
-
-        timer = threading.Timer(MAX_DOWNLOAD_TIME + 1,
-                                __timeoutDuringDownload)
-        timer.start()
-        data = opener("%s/%s" % (URL_EDNA_SITE, imageFileName),
-                      data=None,
-                      timeout=MAX_DOWNLOAD_TIME
-                      ).read()
-        timer.cancel()
-
-        try:
-            open(str(imagePath), "wb").write(data)
-        except IOError:
-            raise IOError(
-                "Unable to write downloaded data to disk at %s" % imagePath
+    # Check if h5 data
+    if imageFileName.endswith(".h5"):
+        imagePath = imageDirPath / imageFileName
+        hasOverlap = imagePath.name.startswith("ref-")
+        h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(imagePath, hasOverlap=hasOverlap)
+        listImagePath = [h5MasterFilePath, h5DataFilePath]
+    else:
+        listImagePath = [imageDirPath / imageFileName]
+    for imagePath in listImagePath:
+        if not imagePath.exists():
+            logger.info(
+                "Trying to download image %s" % str(imagePath) +
+                ", timeout set to %d s" % MAX_DOWNLOAD_TIME
             )
+            if "http_proxy" in os.environ:
+                dictProxies = {'http': os.environ["http_proxy"]}
+                proxy_handler = ProxyHandler(dictProxies)
+                opener = build_opener(proxy_handler).open
+            else:
+                opener = urlopen
+
+            timer = threading.Timer(MAX_DOWNLOAD_TIME + 1,
+                                    __timeoutDuringDownload)
+            timer.start()
+            data = opener("%s/%s" % (URL_EDNA_SITE, imagePath.name),
+                          data=None,
+                          timeout=MAX_DOWNLOAD_TIME
+                          ).read()
+            timer.cancel()
+
+            try:
+                open(str(imagePath), "wb").write(data)
+            except IOError:
+                raise IOError(
+                    "Unable to write downloaded data to disk at %s" % imagePath
+                )
 
         if os.path.exists(str(imagePath)):
             logger.info("Image %s successfully downloaded." % imagePath)

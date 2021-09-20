@@ -76,7 +76,7 @@ class H5ToCBFTask(AbstractTask):
                 inData, directory, prefix, hdf5File)
             outData['outputCBFFileTemplate'] = template
         self.setLogFileName('h5ToCBF.log')
-        self.runCommandLine('eiger2cbf ' + commandLine, ignoreErrors=True)
+        self.runCommandLine('/opt/pxsoft/bin/eiger2cbf ' + commandLine, ignoreErrors=True)
         return outData
 
     @classmethod
@@ -104,7 +104,7 @@ class H5ToCBFTask(AbstractTask):
             imageNumberInHdf5File = imageNumber
         else:
             cbfFileName = prefix + "_%04d" % imageNumber + ".cbf"
-            imageNumberInHdf5File = imageNumber - hdf5ImageNumber + 1
+            imageNumberInHdf5File = 1
         if not 'forcedOutputDirectory' in inData:
             cbfFile = directory / cbfFileName
         else:

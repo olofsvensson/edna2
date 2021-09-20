@@ -1,0 +1,22 @@
+{
+	"detectorType": "pilatus6m",
+	"beamline": "id23eh1",
+    "detector_distance": 313.875,
+    "wavelength": 0.965459,
+    "orgx": 700.64,
+    "orgy": 851.21,
+	"number_row": 38,
+	"number_images": 304,
+	"isZigZag": true,
+	"step_h": 20.4,
+	"step_v": 21.5,
+	"beam_shape": "G",
+	"beam_h": 30,
+	"beam_v": 30,
+	"number_apertures": 5,
+	"aperture_size": "10 20 30 50 100",
+	"reject_level": 10,
+	"dozorAllFile": "$EDNA2_TASK_DATA/dozor_all_id30a1_001",
+	"number_scans": 1,
+	"first_scan_number": 1
+}

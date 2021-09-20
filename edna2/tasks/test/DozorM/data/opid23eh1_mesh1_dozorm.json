@@ -1,0 +1,21 @@
+{
+	"detectorType": "pilatus6m",
+	"beamline": "id23eh1",
+	"detector_distance": 294.775,
+	"wavelength": 0.972423,
+	"orgx": 1217.81,
+	"orgy": 1279.13,
+	"number_row": 18,
+	"number_images": 288,
+	"isZigZag": true,
+	"step_h": 47.2,
+	"step_v": 46.9,
+	"beam_shape": "G",
+	"beam_h": 50,
+	"beam_v": 50,
+	"number_apertures": 5,
+	"aperture_size": "10 20 30 50 100",
+	"reject_level": 10,
+	"number_scans": 1,
+	"dozorAllFile": "/data/id23eh1/inhouse/opid231/20201127/PROCESSED_DATA/Sasha/DOZORM_TEST/50mkm/MeshScan_01/Workflow_20201127-130217/ExecDozorM_mesh-x_0/dozorm_001"
+}

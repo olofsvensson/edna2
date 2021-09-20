@@ -1,0 +1,11 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "http://github.com/olofsvensson/edna2/edna2/schema/subWedge.json#",
+    "type": "object",
+    "properties": {
+        "action": {"type": "string"},
+        "experimentalCondition": {
+            "$ref": "./experimentalCondition.json"
+        }
+    }
+}

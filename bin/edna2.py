@@ -86,9 +86,13 @@ errorLogLevel = results.error
 if taskName is None:
     parser.print_help()
     sys.exit(1)
-elif (inData is None and inDataFile is None) or \
-     (inData is not None and inDataFile is not None):
-    inData = '{}'
+elif inData is None and inDataFile is not None:
+    with open(inDataFile) as fd:
+        inData = fd.read()
+else:
+    print("Error - no indata provided!")
+    parser.print_help()
+    sys.exit(1)
 
 # Set up logging
 
@@ -102,7 +106,8 @@ else:
     logger = UtilsLogging.getLogger('INFO')
 
 # Load and run EDNA2 task
-tasks = __import__('tasks.{0}'.format(taskName))
+edna2 = __import__('edna2.tasks.{0}'.format(taskName))
+tasks = getattr(edna2, "tasks")
 tasksModule = getattr(tasks, taskName)
 TaskClass = getattr(tasksModule, taskName)
 

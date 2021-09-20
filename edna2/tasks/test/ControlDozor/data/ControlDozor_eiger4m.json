@@ -1,0 +1,9 @@
+{
+	"image": [
+		"$EDNA2_TESTDATA_IMAGES/ref-local-user_1_0001.h5",
+		"$EDNA2_TESTDATA_IMAGES/ref-local-user_1_0002.h5",
+		"$EDNA2_TESTDATA_IMAGES/ref-local-user_1_0003.h5",
+		"$EDNA2_TESTDATA_IMAGES/ref-local-user_1_0004.h5"
+		],
+	"overlap": -89.0
+}
