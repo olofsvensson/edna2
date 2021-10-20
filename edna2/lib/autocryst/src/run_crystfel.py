@@ -230,7 +230,7 @@ class AutoCrystFEL(object):
         return
 
     @staticmethod
-    def slurm_submit(shellFile, workingDir, crystfel_cmd):
+    def slurm_submit(shellFile, workingDir, crystfel_cmd, partition="low"):
         # workingDir = str(self.getOutputDirectory())
         if workingDir.startswith("/mntdirect/_users"):
           workingDir = workingDir.replace("/mntdirect/_users", "/home/esrf")
@@ -241,6 +241,7 @@ class AutoCrystFEL(object):
         script = '#!/bin/bash\n'
         script += '#SBATCH --mem={0}\n'.format(mem)
         script += '#SBATCH --nodes={0}\n'.format(nodes)
+        script += '#SBATCH --partition={0}\n'.format(partition)
         script += '#SBATCH --nodes=1\n' # Necessary for not splitting jobs! See ATF-57
         script += '#SBATCH --cpus-per-task={0}\n'.format(core)
         script += '#SBATCH --time={0}\n'.format(time)
@@ -253,8 +254,8 @@ class AutoCrystFEL(object):
             f.write(script)
             f.close()
         sub.call('chmod +x %s' % shellFile, shell=True)
-        # shellFile.chmod(0o755)
-        AutoCrystFEL.run_as_command('sbatch -p nice -J autoCryst %s' %shellFile)
+        
+        # AutoCrystFEL.run_as_command('sbatch --wait -J autoCryst %s' %shellFile)
 
     @staticmethod
     def combine_streams():
@@ -405,9 +406,9 @@ class AutoCrystFEL(object):
     def indexamajig_cmd(self, infile, streamfile, geometryfile):
         command = ""
         unitcell = self.jshandle.get('unit_cell_file', None)
-        indexing_method = self.jshandle.get('indexing_method', 'mosflm')
+        indexing_method = self.jshandle.get('indexing_method', 'xgandalf')
         peak_search = self.jshandle.get('peak_search', 'peakfinder8')
-        int_method = self.jshandle.get('int_method', 'rings-grad-rescut')
+        int_method = self.jshandle.get('int_method', 'rings-grad')
         int_radius = self.jshandle.get('int_radius', '3,4,6')
         highres = self.jshandle.get('highres', '0.0')
         nproc = self.jshandle.get('num_processors', '20')
@@ -416,7 +417,7 @@ class AutoCrystFEL(object):
         if self.is_executable('indexamajig'):
             command = 'indexamajig -i %s -o %s -g %s' \
                       % (infile, streamfile, geometryfile)
-            command += ' --indexing=%s --no-cell-combinations --peaks=%s' \
+            command += ' --indexing=%s  --peaks=%s' \
                        % (indexing_method, peak_search)
             command += ' --integration=%s --int-radius=%s -j %s --no-check-peaks --highres=%s' \
                        % (int_method, int_radius, nproc, highres)
@@ -473,11 +474,12 @@ class AutoCrystFEL(object):
             cmd += self.compare_hkl_cmd(ohkl1, ohkl2, 'auto.cell', self.results['resolution_limit'], fom='Rsplit')
             cmd += '\n\n'
             shellfile = str(self.getOutputDirectory() / 'merge.sh')
-            if self.is_executable('oarsub'):
+            if self.is_executable('bsub'):
                 self.oarshell_submit(shellfile, cmd)
                 self.check_oarstat(wait_count=6000)
             elif self.is_executable('sbatch'):
                 self.slurm_submit(shellfile, str(final_stream.parent), cmd)
+                sub.call('sbatch -J autoCryst %s' %shellfile, shell=True)
             else:
                 self.run_as_command(cmd)
 
@@ -542,6 +544,7 @@ class AutoCrystFEL(object):
                         self.oarshell_submit(shellfile, self.indexamajig_cmd(infile, outstream, str(geomfile)))
                     elif self.is_executable('sbatch'):
                         self.slurm_submit(shellfile, str(self.getOutputDirectory()), self.indexamajig_cmd(infile, outstream, str(geomfile)))
+                        sub.call('sbatch -J autoCryst %s' %shellfile, shell=True)
                     else:
                         error_message = "doSubmit was set True but queue system is unavailable in running node; " \
                                         "please change doSubmit to False"
@@ -696,10 +699,10 @@ def __run__(inData):
             crystTask.combine_streams()
         else:
             pass
-        if crystTask.is_success():
-            crystTask.run_as_command('cat *.stream >> alltogether.stream')
-        else:
-            pass
+        #if crystTask.is_success():
+        #    crystTask.run_as_command('cat *.stream >> alltogether.stream')
+        #else:
+        #    pass
         streampath = crystTask.getOutputDirectory() / 'alltogether.stream'
         results['QualityMetrics'] = crystTask.report_stats(str(streampath))
         if results:
@@ -745,19 +748,19 @@ def optparser():
     parser.add_argument("--doMerging", type=bool, default=False)
     parser.add_argument("--doSubmit", type=bool, default=True)
     parser.add_argument("--GeneratePeaklist", type=bool, default=False)
-    parser.add_argument("--indexing_method", type=str, default="mosflm",
+    parser.add_argument("--indexing_method", type=str, default="xgandalf",
                         help="change to asdf,or dirax or xds if needed")
     parser.add_argument("--peak_search", type=str, default="peakfinder8",
                         help="alternatively, peakfinder9 can be tried")
     parser.add_argument("--peak_info", type=str, default="/data/peakinfo")
-    parser.add_argument("--int_method", type=str, default='rings-grad-rescut')
+    parser.add_argument("--int_method", type=str, default='rings-grad')
     parser.add_argument("--int_radius", type=str, default='3,4,6')
     parser.add_argument("--min_peaks", type=str, default='30')
     parser.add_argument("--peak_radius", type=str, default='3,4,6')
     parser.add_argument("--min_snr", type=str, default='4.0')
     parser.add_argument("--threshold", type=str, default='10')
     parser.add_argument("--local_bg_radius", type=str, default='10')
-    parser.add_argument("--min_res", type=str, default='70',
+    parser.add_argument("--min_res", type=str, default='50',
                         help="Applied to avoid regions near beamstop in peak search")
     parser.add_argument("--unit_cell_file", type=str,
                         help="optional key, if you want to index with a given unit-cell")
