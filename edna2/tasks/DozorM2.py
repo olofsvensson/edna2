@@ -99,10 +99,8 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         commandLine = "dozorm2 -cr dozorm2.dat"
         logPath = self.getWorkingDirectory() / 'dozorm2.log'
         self.runCommandLine(commandLine, logPath=logPath)
-        # outData = self.parseOutput(self.getWorkingDirectory(), logPath)
-        outData = {
-            "logPath": str(logPath)
-        }
+        outData = self.parseDozorm2LogFile(logPath)
+        outData ["logPath"] = str(logPath)
         return outData
 
     @staticmethod
@@ -187,50 +185,94 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         return outData
 
     @staticmethod
-    def parseDozormLogFile(logPath):
-        listPositions = []
-        #    Total N.of crystals in Loop =  2
-        # Cryst Aperture Central  Coordinate    Int/Sig N.of Images Score  Helic   Start     Finish   Int/Sig
-        # number size     image      X    Y            All dX dY    sum           x     y     x    y   helical
-        # --------------------------------------------------------------------------------------------------
-        #     1   100.0     260    8.1   15.1  545.7  12   3   5  1242.5   NO
-        #     2   100.0      82    9.9    5.0  354.0   7   3   3   670.6   NO
-        #     3    10.0     183    2.7   10.8   31.2   3   2   2   169.1   NO
-        #     4    10.0     170   10.8    9.7   26.7   3   2   3   128.6  YES    11    10    12    11   100.7
-
+    def parseDozorm2LogFile(logPath):
+        #                    SCAN 1
+        #                    ======
+        #
+        #    Total N.of crystals in Loop =  8
+        # Cryst Aperture Central  Coordinate  Int/Sig  N.of Images CRsize Score  Helic   Start     Finish     Int/Sig
+        # number size     image      X    Y          All  dX  dY   X   Y   sum           x     y     x     y   helical
+        # ------------------------------------------------------------------------------------------------------------> X
+        #     1   100.0      23   13.5    1.9  261.4   6   6   1   6   1   550.0   NO
+        #     2    30.0      50   14.0    2.9   92.8   3   3   1   3   1   151.7  YES    14     3    16     3   317.9
+        #     3    30.0      53   17.0    2.9   54.7   2   2   1   2   1    70.4   NO
+        #     4    30.0      26   11.0    1.9   31.0   1   1   1   1   1    66.2   NO
         with open(str(logPath)) as fd:
             listLogLines = fd.readlines()
         doParseLine = False
+        do3dCoordinates = False
+        scan1 = None
+        scan2 = None
         for line in listLogLines:
+            # print([line])
+            if "SCAN 1" in line:
+                listPositions = []
+            elif "SCAN 2" in line:
+                scan1 = listPositions
+                listPositions = []
+            elif "3D COORDINATES" in line:
+                scan2 = listPositions
+                do3dCoordinates = True
+                listCoord = []
             if line.startswith("------"):
                 doParseLine = True
+            elif len(line) == 1:
+                doParseLine = False
             elif doParseLine:
                 listValues = line.split()
-                try:
-                    iOverSigma = float(listValues[5])
-                except:
-                    iOverSigma = listValues[5]
-                position = {
-                    "number": int(listValues[0]),
-                    "apertureSize": str(int(float(listValues[1]))),
-                    "imageNumber": int(listValues[2]),
-                    "xPosition": float(listValues[3]),
-                    "yPosition": float(listValues[4]),
-                    "iOverSigma": iOverSigma,
-                    "numberOfImagesTotal": int(listValues[6]),
-                    "numberOfImagesTotalX": int(listValues[7]),
-                    "numberOfImagesTotalY": int(listValues[8]),
-                    "score": float(listValues[9]),
-                    "helical": listValues[10] == 'YES'
-                }
-                if position["helical"]:
-                    position["helicalStartX"] = listValues[11]
-                    position["helicalStartY"] = listValues[12]
-                    position["helicalStopX"] = listValues[13]
-                    position["helicalStopY"] = listValues[14]
-                    position["helicalIoverSigma"] = listValues[15]
-                listPositions.append(position)
-        return listPositions
+                if not do3dCoordinates:
+                    try:
+                        iOverSigma = float(listValues[5])
+                    except:
+                        iOverSigma = listValues[5]
+                    position = {
+                        "number": int(listValues[0]),
+                        "apertureSize": str(int(float(listValues[1]))),
+                        "imageNumber": int(listValues[2]),
+                        "xPosition": float(listValues[3]),
+                        "yPosition": float(listValues[4]),
+                        "iOverSigma": iOverSigma,
+                        "numberOfImagesTotal": int(listValues[6]),
+                        "numberOfImagesTotalX": int(listValues[7]),
+                        "numberOfImagesTotalY": int(listValues[8]),
+                        "score": float(listValues[9]),
+                        "helical": listValues[10] == 'YES'
+                    }
+                    if position["helical"]:
+                        position["helicalStartX"] = listValues[11]
+                        position["helicalStartY"] = listValues[12]
+                        position["helicalStopX"] = listValues[13]
+                        position["helicalStopY"] = listValues[14]
+                        position["helicalIoverSigma"] = listValues[15]
+                    listPositions.append(position)
+                else:
+                    coord = {
+                        "number": int(listValues[0]),
+                        "averageScore": float(listValues[1]),
+                        "sc1": int(listValues[2]),
+                        "sc2": int(listValues[3]),
+                        "size": float(listValues[4]),
+                        "scanX":  float(listValues[5]),
+                        "scanY1": float(listValues[6]),
+                        "scanY2": float(listValues[7]),
+                        "dx": float(listValues[8]),
+                        "dy1": float(listValues[9]),
+                        "dy2": float(listValues[10]),
+                        "x": float(listValues[11]),
+                        "y": float(listValues[12]),
+                        "z": float(listValues[13]),
+                        "alfa": float(listValues[14]),
+                        "sampx": float(listValues[15]),
+                        "sampy": float(listValues[16]),
+                        "phiy": float(listValues[17])
+                    }
+                    listCoord.append(coord)
+        dictCoord = {
+            "scan1": scan1,
+            "scan2": scan2,
+            "coord": listCoord
+        }
+        return dictCoord
 
     @staticmethod
     def makeCrystalPlot(arrayCrystal, workingDirectory, debug=False):
