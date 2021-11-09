@@ -149,7 +149,7 @@ def findDataCollectionFromFileLocationAndFileName(imagePath, client=None):
     if dataCollectionWS3VO is None:
         time.sleep(1)
         if noTrials == 0:
-            raise RuntimeError("ISPyB error for findDataCollectionFromFileLocationAndFileName - no data collections found for path {0}".format(imagePath))
+            logger.error("No data collections found for path {0}".format(imagePath))
         else:
             logger.warning("Cannot find {0} in ISPyB - retrying, {1} trials left".format(imagePath, noTrials))
     return dataCollectionWS3VO
