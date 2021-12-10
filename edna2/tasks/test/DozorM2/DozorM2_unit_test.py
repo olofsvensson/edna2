@@ -23,6 +23,7 @@ __authors__ = ['O. Svensson']
 __license__ = 'MIT'
 __date__ = '2021/07/20'
 
+import pprint
 import pathlib
 import tempfile
 import unittest
@@ -32,7 +33,7 @@ from edna2.tasks.DozorM2 import DozorM2
 from edna2.utils import UtilsTest
 
 
-class DozorMUnitTest(unittest.TestCase):
+class DozorM2UnitTest(unittest.TestCase):
 
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
@@ -43,3 +44,13 @@ class DozorMUnitTest(unittest.TestCase):
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         command = DozorM2.generateCommands(inData, workingDir)
         print(command)
+
+    def test_unit_parseDozorm2LogFile_1(self):
+        logPath = self.dataPath / 'dozorm2.log'
+        dictCoord = DozorM2.parseDozorm2LogFile(logPath)
+        # pprint.pprint(scan1)
+        # pprint.pprint(scan2)
+        # pprint.pprint(coord)
+        self.assertEqual(len(dictCoord["scan1"]), 8)
+        self.assertEqual(len(dictCoord["scan2"]), 8)
+        self.assertEqual(len(dictCoord["coord"]), 7)

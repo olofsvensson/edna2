@@ -32,7 +32,7 @@ from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig
 
 
-class DozorMTest(unittest.TestCase):
+class DozorM2Test(unittest.TestCase):
 
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
