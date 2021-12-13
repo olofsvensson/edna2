@@ -39,8 +39,8 @@ class DozorM2Test(unittest.TestCase):
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run dozor test with default config')
-    def test_execute_DozorM2(self):
-        referenceDataPath = self.dataPath / 'inDataDozorM2.json'
+    def test_execute_DozorM2_twoScans(self):
+        referenceDataPath = self.dataPath / 'inDataDozorM2_twoScans.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         dozorm2 = DozorM2(inData=inData)
         dozorm2.execute()
@@ -48,3 +48,13 @@ class DozorM2Test(unittest.TestCase):
         outData = dozorm2.outData
         # self.assertEqual(len(outData['imageDozor']), 10)
 
+    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
+                     'Cannot run dozor test with default config')
+    def test_execute_DozorM2_oneScan(self):
+        referenceDataPath = self.dataPath / 'inDataDozorM2_oneScan.json'
+        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+        dozorm = DozorM2(inData=inData)
+        dozorm.execute()
+        self.assertTrue(dozorm.isSuccess())
+        outData = dozorm.outData
+        # self.assertEqual(len(outData['imageDozor']), 10)

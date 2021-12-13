@@ -93,18 +93,63 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
 
     def run(self, inData):
         outData = {}
-        commands = self.generateCommands(inData, self.getWorkingDirectory())
+        if len(inData["list_dozor_all"]) > 1:
+            commandLine = "dozorm2 -cr dozorm2.dat"
+        else:
+            commandLine = "dozorm2 dozorm2.dat"
+        commands = self.generateCommandsTwoScans(inData, self.getWorkingDirectory())
         with open(str(self.getWorkingDirectory() / 'dozorm2.dat'), 'w') as f:
             f.write(commands)
-        commandLine = "dozorm2 -cr dozorm2.dat"
         logPath = self.getWorkingDirectory() / 'dozorm2.log'
         self.runCommandLine(commandLine, logPath=logPath)
-        outData = self.parseDozorm2LogFile(logPath)
+        outData = self.parseOutput(self.getWorkingDirectory(), logPath)
         outData ["logPath"] = str(logPath)
         return outData
 
+    def generateCommandsOneScan(self, inData):
+        """
+        This method creates the input file for dozorm
+        """
+        detectorType = inData['detectorType']
+        nx = UtilsDetector.getNx(detectorType)
+        ny = UtilsDetector.getNy(detectorType)
+        pixelSize = UtilsDetector.getPixelsize(detectorType)
+        nameTemplateScan = self.getWorkingDirectory() / "dozorm_00?"
+        os.symlink(inData["dozorAllFile"], str(self.getWorkingDirectory() / "dozorm_001"))
+        firstScanNumber = 1
+        if inData.get('isHorizontalScan', True):
+            meshDirect = "-h"
+        else:
+            meshDirect = "-v"
+        command = '!\n'
+        command += 'detector {0}\n'.format(detectorType)
+        command += 'nx %d\n' % nx
+        command += 'ny %d\n' % ny
+        command += 'pixel %f\n' % pixelSize
+        command += 'detector_distance {0}\n'.format(inData['detector_distance'])
+        command += 'X-ray_wavelength {0}\n'.format(inData['wavelength'])
+        command += 'orgx {0}\n'.format(inData['orgx'])
+        command += 'orgy {0}\n'.format(inData['orgy'])
+        command += 'number_row {0}\n'.format(inData['number_row'])
+        command += 'number_images {0}\n'.format(inData['number_images'])
+        command += 'mesh_direct {0}\n'.format(meshDirect)
+        command += 'step_h {0}\n'.format(inData['step_h'])
+        command += 'step_v {0}\n'.format(inData['step_v'])
+        command += 'beam_shape {0}\n'.format(inData['beam_shape'])
+        command += 'beam_h {0}\n'.format(inData['beam_h'])
+        command += 'beam_v {0}\n'.format(inData['beam_v'])
+        command += 'number_apertures {0}\n'.format(inData['number_apertures'])
+        command += 'aperture_size {0}\n'.format(inData['aperture_size'])
+        command += 'reject_level {0}\n'.format(inData['reject_level'])
+        command += 'name_template_scan {0}\n'.format(nameTemplateScan)
+        command += 'number_scans {0}\n'.format(inData['number_scans'])
+        command += 'first_scan_number {0}\n'.format(firstScanNumber)
+        command += 'end\n'
+        # logger.debug('command: {0}'.format(command))
+        return command
+
     @staticmethod
-    def generateCommands(inData, workingDirectory):
+    def generateCommandsTwoScans(inData, workingDirectory):
         """
         This method creates the input file for dozorm
         """
@@ -142,9 +187,10 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         command += 'name_template_scan {0}\n'.format(nameTemplateScan)
         command += 'number_scans {0}\n'.format(inData['number_scans'])
         command += 'first_scan_number 1\n'
-        for index, phi_value in enumerate(inData['phi_values']):
-            command += 'phi{0} {1}\n'.format(index+1, phi_value)
-        command += 'axis_zero {0} {1}\n'.format(inData["grid_x0"], inData["grid_y0"])
+        if 'phi_values' in inData:
+            for index, phi_value in enumerate(inData['phi_values']):
+                command += 'phi{0} {1}\n'.format(index+1, phi_value)
+            command += 'axis_zero {0} {1}\n'.format(inData["grid_x0"], inData["grid_y0"])
         if "sampx" in inData:
             command += 'sampx {0}\n'.format(inData["sampx"])
         if "sampy" in inData:
@@ -158,22 +204,22 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
     @staticmethod
     def parseOutput(workingDir, logPath):
         outData = {}
-        pathDozormMap = workingDir / "dozorm_001.map"
-        if pathDozormMap.exists():
-            dictMap = DozorM.parseMap(pathDozormMap)
+        pathDozorm2Map = workingDir / "dozorm_001.map"
+        if pathDozorm2Map.exists():
+            dictMap = DozorM2.parseMap(pathDozorm2Map)
             nx = dictMap["nx"]
             ny = dictMap["ny"]
-            listPositions = DozorM.parseDozormLogFile(logPath)
+            dictCoord = DozorM2.parseDozorm2LogFile(logPath)
             # Fix for problem with 1D scans
-            listPositions = DozorM.check1Dpositions(listPositions, nx, ny)
-            crystalMapPath = DozorM.makeCrystalPlot(dictMap["crystal"], workingDir)
+            # listPositions = DozorM2.check1Dpositions(listPositions, nx, ny)
+            crystalMapPath = DozorM2.makeCrystalPlot(dictMap["crystal"], workingDir)
             if nx != 1 and ny != 1:
-                imageNumberMapPath = DozorM.makeImageNumberMap(dictMap["imageNumber"], workingDir)
+                imageNumberMapPath = DozorM2.makeImageNumberMap(dictMap["imageNumber"], workingDir)
             else:
                 imageNumberMapPath = None
             outData = {
-                "dozorMap": str(pathDozormMap),
-                "listPositions": listPositions,
+                "dozorMap": str(pathDozorm2Map),
+                "dictCoord": dictCoord,
                 "nx": nx,
                 "ny": ny,
                 "score": dictMap["score"],
@@ -203,6 +249,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         do3dCoordinates = False
         scan1 = None
         scan2 = None
+        listCoord = None
         for line in listLogLines:
             # print([line])
             if "SCAN 1" in line:
@@ -267,6 +314,8 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
                         "phiy": float(listValues[17])
                     }
                     listCoord.append(coord)
+        if scan1 is None:
+            scan1 = listPositions
         dictCoord = {
             "scan1": scan1,
             "scan2": scan2,
@@ -283,6 +332,9 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
             npArrayCrystal = numpy.transpose(npArrayCrystal)
             ySize, xSize = npArrayCrystal.shape
         npArrayCrystalAbs = numpy.abs(npArrayCrystal)
+        # Make '999' be the max crystal number + 1
+        maxNumber = numpy.amax(numpy.where(npArrayCrystalAbs < 999, npArrayCrystalAbs, 0))
+        npArrayCrystalAbs = numpy.where(npArrayCrystalAbs == 999, maxNumber + 1, npArrayCrystalAbs)
         # minValue = numpy.amin(npArrayCrystal)
         # newZeroValue = minValue - 1
         # npArrayCrystal = numpy.where(npArrayCrystal == 0.0, newZeroValue, npArrayCrystal)
@@ -435,15 +487,18 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         index = 1
         nx, ny = map(int, listLines[index].split())
         # Parse scores
-        index, arrayScore = DozorM.parseMatrix(index, listLines, spacing=6, isFloat=True)
+        index, arrayScore = DozorM2.parseMatrix(index, listLines, spacing=6, isFloat=True)
+        # Parse rel. contamination
+        index, relContamination = DozorM2.parseMatrix(index, listLines, spacing=6, isFloat=True)
         # Parse crystals
-        index, arrayCrystal = DozorM.parseMatrix(index, listLines, spacing=4, isFloat=False)
+        index, arrayCrystal = DozorM2.parseMatrix(index, listLines, spacing=4, isFloat=False)
         # Parse image number
-        index, arrayImageNumber = DozorM.parseMatrix(index, listLines, spacing=5, isFloat=False)
+        index, arrayImageNumber = DozorM2.parseMatrix(index, listLines, spacing=5, isFloat=False)
         dictMap = {
             "nx": nx,
             "ny": ny,
             "score": arrayScore,
+            "relContamination": relContamination,
             "crystal": arrayCrystal,
             "imageNumber": arrayImageNumber
         }

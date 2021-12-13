@@ -23,7 +23,8 @@ __authors__ = ['O. Svensson']
 __license__ = 'MIT'
 __date__ = '2021/07/20'
 
-import pprint
+import os
+import shutil
 import pathlib
 import tempfile
 import unittest
@@ -54,3 +55,21 @@ class DozorM2UnitTest(unittest.TestCase):
         self.assertEqual(len(dictCoord["scan1"]), 8)
         self.assertEqual(len(dictCoord["scan2"]), 8)
         self.assertEqual(len(dictCoord["coord"]), 7)
+
+    def test_unit_DozorM2_parseMap(self):
+        mapPath = self.dataPath / 'dozorm_001.map'
+        dictMap = DozorM2.parseMap(mapPath)
+        # pprint.pprint(dictMap)
+        self.assertEqual(dictMap["nx"], 18)
+        self.assertEqual(dictMap["ny"], 4)
+
+    def test_unit_DozorM_makePlots(self):
+        tmpDir = tempfile.mkdtemp(prefix="test_unit_DozorM_makePlots_")
+        mapPath = self.dataPath / 'dozorm_001.map'
+        dictMap = DozorM2.parseMap(mapPath)
+        imagePath = DozorM2.makeCrystalPlot(dictMap["crystal"], tmpDir, debug=True)
+        # os.system("display {0}".format(imagePath))
+        self.assertTrue(os.path.exists(imagePath))
+        imagePath = DozorM2.makeImageNumberMap(dictMap["imageNumber"], tmpDir, debug=False)
+        self.assertTrue(os.path.exists(imagePath))
+        shutil.rmtree(tmpDir)
