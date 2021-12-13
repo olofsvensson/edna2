@@ -1,0 +1,13 @@
+{
+        "detectorType": "pilatus2m",
+        "doCBFtoH5": false,
+        "doSubmit": true,
+        "cbfFileInfo": {
+                "directory": "/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id23eh2/inhouse/opid232/20200527/RAW_DATA/Sample-1-3-12/XrayCentering_01",
+                "template": "mesh-LRmesh_0_####.cbf",
+                "startNo": 1,
+                "endNo": 4592, 
+                "batchSize": 40
+        },  
+    "fastMesh": false
+}

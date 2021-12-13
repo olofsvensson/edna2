@@ -1,0 +1,13 @@
+{
+    "doDistlSignalStrength": false,
+    "doCrystfel": true,
+    "doIndexing": false,
+    "doUploadToIspyb": false,
+    "fastMesh": true,
+   	"directory": "/data/id23eh2/inhouse/opid232/20200709/RAW_DATA/gfd/gfd-rgg/MeshScan_01",
+	"template": "mesh-rgg-gfd_0_####.cbf",
+	"startNo": 1,
+	"endNo": 1116,
+    "batchSize": 50,
+    "doSubmit": true
+}
