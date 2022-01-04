@@ -39,12 +39,21 @@ class DozorM2UnitTest(unittest.TestCase):
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    def test_generateCommands(self):
+    def test_generateCommandsOneScan(self):
         workingDir = pathlib.Path(tempfile.mkdtemp(prefix="DozorM2_"))
-        referenceDataPath = self.dataPath / 'inDataDozorM2.json'
+        referenceDataPath = self.dataPath / 'inDataDozorM2_oneScan.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         command = DozorM2.generateCommands(inData, workingDir)
         print(command)
+        shutil.rmtree(workingDir)
+
+    def test_generateCommandsTwoScans(self):
+        workingDir = pathlib.Path(tempfile.mkdtemp(prefix="DozorM2_"))
+        referenceDataPath = self.dataPath / 'inDataDozorM2_twoScans.json'
+        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+        command = DozorM2.generateCommands(inData, workingDir)
+        print(command)
+        shutil.rmtree(workingDir)
 
     def test_unit_parseDozorm2LogFile_1(self):
         logPath = self.dataPath / 'dozorm2.log'

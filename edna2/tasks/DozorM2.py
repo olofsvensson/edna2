@@ -97,7 +97,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
             commandLine = "dozorm2 -cr dozorm2.dat"
         else:
             commandLine = "dozorm2 dozorm2.dat"
-        commands = self.generateCommandsTwoScans(inData, self.getWorkingDirectory())
+        commands = self.generateCommands(inData, self.getWorkingDirectory())
         with open(str(self.getWorkingDirectory() / 'dozorm2.dat'), 'w') as f:
             f.write(commands)
         logPath = self.getWorkingDirectory() / 'dozorm2.log'
@@ -106,50 +106,8 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         outData ["logPath"] = str(logPath)
         return outData
 
-    def generateCommandsOneScan(self, inData):
-        """
-        This method creates the input file for dozorm
-        """
-        detectorType = inData['detectorType']
-        nx = UtilsDetector.getNx(detectorType)
-        ny = UtilsDetector.getNy(detectorType)
-        pixelSize = UtilsDetector.getPixelsize(detectorType)
-        nameTemplateScan = self.getWorkingDirectory() / "dozorm_00?"
-        os.symlink(inData["dozorAllFile"], str(self.getWorkingDirectory() / "dozorm_001"))
-        firstScanNumber = 1
-        if inData.get('isHorizontalScan', True):
-            meshDirect = "-h"
-        else:
-            meshDirect = "-v"
-        command = '!\n'
-        command += 'detector {0}\n'.format(detectorType)
-        command += 'nx %d\n' % nx
-        command += 'ny %d\n' % ny
-        command += 'pixel %f\n' % pixelSize
-        command += 'detector_distance {0}\n'.format(inData['detector_distance'])
-        command += 'X-ray_wavelength {0}\n'.format(inData['wavelength'])
-        command += 'orgx {0}\n'.format(inData['orgx'])
-        command += 'orgy {0}\n'.format(inData['orgy'])
-        command += 'number_row {0}\n'.format(inData['number_row'])
-        command += 'number_images {0}\n'.format(inData['number_images'])
-        command += 'mesh_direct {0}\n'.format(meshDirect)
-        command += 'step_h {0}\n'.format(inData['step_h'])
-        command += 'step_v {0}\n'.format(inData['step_v'])
-        command += 'beam_shape {0}\n'.format(inData['beam_shape'])
-        command += 'beam_h {0}\n'.format(inData['beam_h'])
-        command += 'beam_v {0}\n'.format(inData['beam_v'])
-        command += 'number_apertures {0}\n'.format(inData['number_apertures'])
-        command += 'aperture_size {0}\n'.format(inData['aperture_size'])
-        command += 'reject_level {0}\n'.format(inData['reject_level'])
-        command += 'name_template_scan {0}\n'.format(nameTemplateScan)
-        command += 'number_scans {0}\n'.format(inData['number_scans'])
-        command += 'first_scan_number {0}\n'.format(firstScanNumber)
-        command += 'end\n'
-        # logger.debug('command: {0}'.format(command))
-        return command
-
     @staticmethod
-    def generateCommandsTwoScans(inData, workingDirectory):
+    def generateCommands(inData, workingDirectory):
         """
         This method creates the input file for dozorm
         """
