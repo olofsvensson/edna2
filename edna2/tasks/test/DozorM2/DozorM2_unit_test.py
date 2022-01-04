@@ -76,7 +76,7 @@ class DozorM2UnitTest(unittest.TestCase):
         tmpDir = tempfile.mkdtemp(prefix="test_unit_DozorM_makePlots_")
         mapPath = self.dataPath / 'dozorm_001.map'
         dictMap = DozorM2.parseMap(mapPath)
-        imagePath = DozorM2.makeCrystalPlot(dictMap["crystal"], tmpDir, debug=True)
+        imagePath = DozorM2.makeCrystalPlot(dictMap["crystal"], tmpDir, debug=False)
         # os.system("display {0}".format(imagePath))
         self.assertTrue(os.path.exists(imagePath))
         imagePath = DozorM2.makeImageNumberMap(dictMap["imageNumber"], tmpDir, debug=False)
