@@ -60,4 +60,4 @@ and `copyright <https://github.com/olofsvensson/edna2/blob/master/copyright>`_
 files for details.
 
 .. |Travis Status| image:: https://api.travis-ci.com/olofsvensson/edna2.svg?branch=master
-   :target: https://travis-ci.org/olofsvensson/edna2?branch=master
+   :target: https://travis-ci.com/olofsvensson/edna2?branch=master
