@@ -49,13 +49,8 @@ class CrystfelTaskExecTest(unittest.TestCase):
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ImageQualityIndicatorsExecTest ' +
                      'test with default config')
-<<<<<<< HEAD
     def test_execute_listOfImages(self):
         referenceDataPath = self.dataPath / 'id23eh2_4500images.json'
-=======
-    def tes_execute_listOfImages(self):
-        referenceDataPath = self.dataPath / 'pilatus2m_listimages.json'
->>>>>>> refs/remotes/origin/master
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         task = ExeCrystFEL(inData=inData)
         task.execute()

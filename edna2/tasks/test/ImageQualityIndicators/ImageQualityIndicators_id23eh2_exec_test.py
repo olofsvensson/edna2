@@ -47,13 +47,8 @@ class ImageQualityIndicatorsExecTest(unittest.TestCase):
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ImageQualityIndicatorsExecTest ' +
                      'test with default config')
-<<<<<<< HEAD:edna2/tasks/test/ImageQualityIndicatorsTask/ImageQualityIndicatorsTask_id23eh2_exec_test.py
     def test_execute(self):
         referenceDataPath = self.dataPath / 'id23eh2_200709.json'
-=======
-    def tes_execute(self):
-        referenceDataPath = self.dataPath / 'id23eh2.json'
->>>>>>> refs/remotes/origin/master:edna2/tasks/test/ImageQualityIndicators/ImageQualityIndicators_id23eh2_exec_test.py
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         task = ImageQualityIndicators(inData=inData)
         task.execute()
