@@ -1,7 +1,7 @@
 {
 	"doDistlSignalStrength": true,
 	"doIndexing": true,
-	"doCrystfel": true,
+	"doCrystfel": false,
 	"doUploadToIspyb": false,
 	"directory": "$EDNA2_TESTDATA_IMAGES",
 	"template": "x_1_####.cbf",

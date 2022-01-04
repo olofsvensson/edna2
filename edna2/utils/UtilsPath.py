@@ -54,11 +54,11 @@ def getWorkingDirectory(task, inData, workingDirectorySuffix=None):
     else:
         # Here we assume that the user knows what he is doing and there's no
         # race condition for creating the working directory!
-        workingDirectoryName = task.__class__.__name__ + '_' + workingDirectorySuffix
+        workingDirectoryName = task.__class__.__name__ + '_' + str(workingDirectorySuffix)
         workingDirectory = parentDirectory / workingDirectoryName
         index = 1
         while workingDirectory.exists():
-            workingDirectoryName = task.__class__.__name__ + '_' + workingDirectorySuffix + '_{0:02d}'.format(index)
+            workingDirectoryName = task.__class__.__name__ + '_' + str(workingDirectorySuffix) + '_{0:02d}'.format(index)
             workingDirectory = parentDirectory / workingDirectoryName
             index += 1
         workingDirectory.mkdir(mode=0o775, parents=True, exist_ok=False)
