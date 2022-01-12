@@ -70,3 +70,14 @@ class ReadImageHeaderTasksExecTest(unittest.TestCase):
         outData = readImageHeader.outData
         self.assertIsNotNone(outData)
 
+
+    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
+                     'Cannot run dozor test_execute_ReadImageHeader_eiger4m with default config')
+    def test_execute_ReadImageHeader_eiger16m_cbf(self):
+        referenceDataPath = self.dataPath / 'ReadImageHeader_Eiger16M_cbf.json'
+        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+        readImageHeader = ReadImageHeader(inData=inData)
+        readImageHeader.execute()
+        self.assertTrue(readImageHeader.isSuccess())
+        outData = readImageHeader.outData
+        self.assertIsNotNone(outData)

@@ -251,7 +251,7 @@ class ReadImageHeader(AbstractTask):
         return dictHeader
 
     @classmethod
-    def createHdf5HeaderData(cls, imagePath, skipNumberOfImages=False, hasOverlap=False, isFastMesh=False):
+    def createHdf5HeaderData(cls, imagePath, skipNumberOfImages=False, hasOverlap=False, isFastMesh=True):
         h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(
             pathlib.Path(imagePath),
             isFastMesh=isFastMesh,
