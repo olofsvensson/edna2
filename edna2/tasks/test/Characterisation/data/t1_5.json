@@ -1,0 +1,44 @@
+{
+    "dataCollectionId": 2544912,
+    "diffractionPlan": {
+        "aimedCompleteness": 0.99,
+        "aimedIOverSigmaAtHighestResolution": 3.0,
+        "aimedMultiplicity": 4.0,
+        "aimedResolution": 3.0,
+        "anomalousData": "false",
+        "complexity": "none",
+        "forcedSpaceGroup": null,
+        "maxExposureTimePerDataCollection": 30.0,
+        "strategyOption": "-low never"
+    },
+    "experimentalCondition": {
+        "beam": {
+            "flux": 3000000000000.0,
+            "minExposureTimePerImage": 0.037,
+            "size": {
+                "x": 0.05,
+                "y": 0.05
+            }
+        },
+        "goniostat": {
+            "maxOscillationSpeed": 360.0,
+            "minOscillationWidth": 0.05
+        }
+    },
+    "sample": {
+        "radiationDamageModelBeta": 1e-06,
+        "radiationDamageModelGamma": 6e-08,
+        "shape": 1.0,
+        "size": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 0.1
+        },
+        "susceptibility": 1.0
+    },
+    "token": null,
+    "imagePath": [
+        "/data/id30a2/inhouse/opid30a2/20210118/RAW_DATA/t1/ref-t1_5_0001.cbf",
+        "/data/id30a2/inhouse/opid30a2/20210118/RAW_DATA/t1/ref-t1_5_0002.cbf"
+    ]
+}
