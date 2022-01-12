@@ -68,56 +68,71 @@ class XDSTask(AbstractTask):
         firstImagePath = firstSubWedge["image"][0]["path"]
         prefix = UtilsImage.getPrefix(firstImagePath)
         suffix = UtilsImage.getSuffix(firstImagePath)
-        template = "%s_xdslink_?????.%s" % (prefix, suffix)
-        xdsLowestImageNumberGlobal = 1
-        # First we have to find the smallest goniostat rotation axis start:
-        oscillationStartMin = 0
-        # for subWedge in inData["subWedge"]:
-        #     goniostat = subWedge["experimentalCondition"]["goniostat"]
-        #     oscillationStart = goniostat["rotationAxisStart"]
-        #     if oscillationStartMin is None or \
-        #         oscillationStartMin > oscillationStart:
-        #         oscillationStartMin = oscillationStart
+        if suffix == "h5":
+            lowestXDSImageNumber = 1
+            highestXDSImageNumber = 1
+            h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(firstImagePath, hasOverlap=True, isFastMesh=False)
+            h5MasterFile = os.path.basename((str(h5MasterFilePath)))
+            h5DataFile = os.path.basename((str(h5DataFilePath)))
+            listImageLink = [
+                [str(h5MasterFilePath), h5MasterFile],
+                [str(h5DataFilePath), h5DataFile]
+            ]
+            if workingDirectory is not None:
+                os.symlink(str(h5MasterFilePath), h5MasterFile)
+                os.symlink(str(h5DataFilePath), h5DataFile)
+            template = h5MasterFile.replace("master", "??????")
+        else:
+            template = "%s_xdslink_?????.%s" % (prefix, suffix)
+            xdsLowestImageNumberGlobal = 1
+            # First we have to find the smallest goniostat rotation axis start:
+            oscillationStartMin = 0
+            # for subWedge in inData["subWedge"]:
+            #     goniostat = subWedge["experimentalCondition"]["goniostat"]
+            #     oscillationStart = goniostat["rotationAxisStart"]
+            #     if oscillationStartMin is None or \
+            #         oscillationStartMin > oscillationStart:
+            #         oscillationStartMin = oscillationStart
 
-        # Loop through the list of sub wedges
+            # Loop through the list of sub wedges
 
-        for subWedge in inData["subWedge"]:
-            imageList = subWedge["image"]
-            xsDataGoniostat = subWedge["experimentalCondition"]["goniostat"]
-            oscillationStart = xsDataGoniostat["rotationAxisStart"]
-            oscillationRange = xsDataGoniostat["oscillationWidth"]
+            for subWedge in inData["subWedge"]:
+                imageList = subWedge["image"]
+                xsDataGoniostat = subWedge["experimentalCondition"]["goniostat"]
+                oscillationStart = xsDataGoniostat["rotationAxisStart"]
+                oscillationRange = xsDataGoniostat["oscillationWidth"]
 
-            # First find the lowest and highest image numbers
-            lowestImageNumber = None
-            for dictImage in imageList:
-                imageNumber = dictImage["number"]
-                if lowestImageNumber is None or imageNumber < lowestImageNumber:
-                    lowestImageNumber = imageNumber
+                # First find the lowest and highest image numbers
+                lowestImageNumber = None
+                for dictImage in imageList:
+                    imageNumber = dictImage["number"]
+                    if lowestImageNumber is None or imageNumber < lowestImageNumber:
+                        lowestImageNumber = imageNumber
 
-            # Loop through the list of images
-            lowestXDSImageNumber = None
-            highestXDSImageNumber = None
-            for dictImage in imageList:
-                imageNumber = dictImage["number"]
-                imageOscillationStart = \
-                    oscillationStart + (imageNumber - lowestImageNumber) * oscillationRange
-                # if xdsLowestImageNumberGlobal is None:
-                #     xdsLowestImageNumberGlobal = 1 + int((imageOscillationStart - oscillationStartMin) / oscillationRange)
-                xdsImageNumber = xdsLowestImageNumberGlobal + \
-                                 int((imageOscillationStart - oscillationStartMin) / oscillationRange)
-                print(xdsImageNumber, imageOscillationStart, oscillationStartMin, oscillationRange)
-                sourcePath = dictImage["path"]
-                target = "%s_xdslink_%05d.%s" % (prefix, xdsImageNumber, suffix)
-                print([sourcePath, target])
-                listImageLink.append([sourcePath, target])
-                if workingDirectory is not None:
-                    os.symlink(sourcePath, target)
-                if lowestXDSImageNumber is None or \
-                        lowestXDSImageNumber > xdsImageNumber:
-                    lowestXDSImageNumber = xdsImageNumber
-                if highestXDSImageNumber is None or \
-                        highestXDSImageNumber < xdsImageNumber:
-                    highestXDSImageNumber = xdsImageNumber
+                # Loop through the list of images
+                lowestXDSImageNumber = None
+                highestXDSImageNumber = None
+                for dictImage in imageList:
+                    imageNumber = dictImage["number"]
+                    imageOscillationStart = \
+                        oscillationStart + (imageNumber - lowestImageNumber) * oscillationRange
+                    # if xdsLowestImageNumberGlobal is None:
+                    #     xdsLowestImageNumberGlobal = 1 + int((imageOscillationStart - oscillationStartMin) / oscillationRange)
+                    xdsImageNumber = xdsLowestImageNumberGlobal + \
+                                     int((imageOscillationStart - oscillationStartMin) / oscillationRange)
+                    print(xdsImageNumber, imageOscillationStart, oscillationStartMin, oscillationRange)
+                    sourcePath = dictImage["path"]
+                    target = "%s_xdslink_%05d.%s" % (prefix, xdsImageNumber, suffix)
+                    print([sourcePath, target])
+                    listImageLink.append([sourcePath, target])
+                    if workingDirectory is not None and not os.path.exists(target):
+                        os.symlink(sourcePath, target)
+                    if lowestXDSImageNumber is None or \
+                            lowestXDSImageNumber > xdsImageNumber:
+                        lowestXDSImageNumber = xdsImageNumber
+                    if highestXDSImageNumber is None or \
+                            highestXDSImageNumber < xdsImageNumber:
+                        highestXDSImageNumber = xdsImageNumber
         dictImageLinks = {
             "imageLink": listImageLink,
             "dataRange": [lowestXDSImageNumber, highestXDSImageNumber],
@@ -187,6 +202,8 @@ class XDSTask(AbstractTask):
                 'SPACE_GROUP_NUMBER={0}'.format(spaceGroupNumber),
                 'UNIT_CELL_CONSTANTS={0}'.format(unitCellConstants)
             ]
+        if image["path"].endswith("h5") and UtilsConfig.get('XDSTask', 'LIB') is not None:
+            listXDS_INP += ['LIB= {0}'.format(UtilsConfig.get('XDSTask', 'LIB'))]
         return listXDS_INP
 
     @staticmethod
@@ -341,6 +358,25 @@ class XDSTask(AbstractTask):
                  [0, 3110, 2166, 2206],
                  [0, 3110, 2717, 2757],
                  ]
+        elif detectorType == "eiger16m":
+            untrustedRectangle = \
+                [
+                    [0, 4149, 512, 549],
+                    [0, 4149, 1062, 1099],
+                    [0, 4149, 1612, 1649],
+                    [0, 4149, 2162, 2199],
+                    [0, 4149, 2712, 2749],
+                    [0, 4149, 3262, 3299],
+                    [0, 4149, 3812, 3849],
+                    [513, 514, 0, 4362],
+                    [1028, 1039, 0, 4362],
+                    [1553, 1554, 0, 4362],
+                    [2068, 2079, 0, 4362],
+                    [2593, 2594, 0, 4362],
+                    [3108, 3119, 0, 4362],
+                    [3633, 3634, 0, 4362]
+                ]
+            sensorThickness = 0.75
         else:
             raise RuntimeError("Unknown detector: {0}".format(detectorType))
         dictXDSDetector = {
