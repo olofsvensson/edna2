@@ -1,0 +1,36 @@
+{
+	"beam": {
+		"x": 167.18414205,
+		"y": 153.5618802
+	},
+	"detector": {
+		"numberPixelX": 4148,
+		"numberPixelY": 4362,
+		"pixelSizeX": 0.075,
+		"pixelSizeY": 0.075,
+		"type": "eiger16m"
+	},
+	"directory": "$EDNA2_TESTDATA_IMAGES",
+	"distance": 364.25,
+	"template": "ref-fae_3_1_master.h5",
+	"wavelength": 0.953724,
+	"image": [
+		{
+			"number": 1,
+			"rotationAxisStart": 192.4834,
+			"rotationAxisEnd": 193.4834
+		}, {
+			"number": 2,
+			"rotationAxisStart": 282.4834,
+			"rotationAxisEnd": 283.4834
+		}, {
+			"number": 3,
+			"rotationAxisStart": 372.4834,
+			"rotationAxisEnd": 373.4834
+		}, {
+			"number": 4,
+			"rotationAxisStart": 462.4834,
+			"rotationAxisEnd": 463.4834
+		}
+	]
+}
