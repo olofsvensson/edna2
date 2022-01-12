@@ -24,7 +24,6 @@ __license__ = "MIT"
 __date__ = "21/04/2019"
 
 
-import os
 import unittest
 
 from edna2.utils import UtilsConfig
@@ -37,18 +36,18 @@ logger = UtilsLogging.getLogger()
 
 
 class ControlDozorExecTest(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run control dozor test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run control dozor test with default config",
+    )
     def test_execute_ControlDozor_eiger4m(self):
-        referenceDataPath = self.dataPath / 'ControlDozor_eiger4m.json'
+        referenceDataPath = self.dataPath / "ControlDozor_eiger4m.json"
         self.inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         controlDozor = ControlDozor(inData=self.inData)
         controlDozor.execute()
         self.assertTrue(controlDozor.isSuccess())
         outData = controlDozor.outData
-        self.assertEqual(len(outData['imageQualityIndicators']), 4)
-
+        self.assertEqual(len(outData["imageQualityIndicators"]), 4)

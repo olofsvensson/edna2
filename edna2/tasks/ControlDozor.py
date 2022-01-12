@@ -28,9 +28,6 @@ import distro
 import shutil
 import base64
 import pathlib
-import tempfile
-
-import matplotlib
 import matplotlib.pyplot as plt
 
 from edna2.tasks.AbstractTask import AbstractTask
@@ -87,11 +84,19 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
     def getInDataSchema(self):
         return {
             "type": "object",
-            "required": ["detectorType", "exposureTime", "spotSize",
-                         "detectorDistance", "wavelength",
-                         "orgx", "orgy", "oscillationRange",
-                         "firstImageNumber", "numberImages",
-                         "nameTemplateImage"],
+            "required": [
+                "detectorType",
+                "exposureTime",
+                "spotSize",
+                "detectorDistance",
+                "wavelength",
+                "orgx",
+                "orgy",
+                "oscillationRange",
+                "firstImageNumber",
+                "numberImages",
+                "nameTemplateImage",
+            ],
             "properties": {
                 "detectorType": {"type": "string"},
                 "beamline": {"type": "string"},
@@ -112,8 +117,8 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 "wedgeNumber": {"type": "integer"},
                 "radiationDamage": {"type": "boolean"},
                 "overlap": {"type": "number"},
-                "doDozorM": {"type": "boolean"}
-            }
+                "doDozorM": {"type": "boolean"},
+            },
         }
 
     def getOutDataSchema(self):
@@ -123,49 +128,47 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
             "properties": {
                 "imageDozor": {
                     "type": "array",
-                    "items": {
-                        "$ref": self.getSchemaUrl("imageDozor.json")
-                    }
+                    "items": {"$ref": self.getSchemaUrl("imageDozor.json")},
                 },
                 "halfDoseTime": {"type": "number"},
-                "dozorPlot":  {"type": "string"},
-                "plotmtvFile":  {"type": "string"},
-                "pngPlots":  {
-                    "type": "array",
-                    "items": {"type": "string"}
-                },
+                "dozorPlot": {"type": "string"},
+                "plotmtvFile": {"type": "string"},
+                "pngPlots": {"type": "array", "items": {"type": "string"}},
                 "dozorAllFile": {"type": "string"},
             },
         }
 
     def run(self, inData):
-        doSubmit = inData.get('doSubmit', False)
-        doDozorM = inData.get('doDozorM', False)
+        doSubmit = inData.get("doSubmit", False)
+        doDozorM = inData.get("doDozorM", False)
         commands = self.generateCommands(inData)
-        with open(str(self.getWorkingDirectory() / 'dozor.dat'), 'w') as f:
+        with open(str(self.getWorkingDirectory() / "dozor.dat"), "w") as f:
             f.write(commands)
         # Create dozor command line
         if doSubmit:
-            path = UtilsConfig.get(self, 'slurm_path', 'dozor')
+            path = UtilsConfig.get(self, "slurm_path", "dozor")
             executable = "export PATH={0}:$PATH".format(path)
             executable += ";export LD_LIBRARY_PATH={0}:$LD_LIBRARY_PATH".format(path)
-            executable += ";{0}/".format(path) + UtilsConfig.get(self, 'slurm_executable', 'dozor')
-            partition = UtilsConfig.get(self, 'slurm_partition', None)
+            executable += ";{0}/".format(path) + UtilsConfig.get(
+                self, "slurm_executable", "dozor"
+            )
+            partition = UtilsConfig.get(self, "slurm_partition", None)
         else:
-            executable = UtilsConfig.get(self, 'executable', 'dozor')
+            executable = UtilsConfig.get(self, "executable", "dozor")
             partition = None
-        commandLine = executable + ' -pall'
+        commandLine = executable + " -pall"
         if doDozorM:
-            commandLine += ' -mesh'
-        if 'radiationDamage' in inData:
-            commandLine += ' -rd dozor.dat'
+            commandLine += " -mesh"
+        if "radiationDamage" in inData:
+            commandLine += " -rd dozor.dat"
         else:
-            commandLine += ' -p dozor.dat'
-        self.setLogFileName('dozor.log')
+            commandLine += " -p dozor.dat"
+        self.setLogFileName("dozor.log")
         self.runCommandLine(commandLine, doSubmit=doSubmit, partition=partition)
         log = self.getLog()
-        outData = self.parseOutput(inData, log, doDozorM=doDozorM,
-                                   workingDir=self.getWorkingDirectory())
+        outData = self.parseOutput(
+            inData, log, doDozorM=doDozorM, workingDir=self.getWorkingDirectory()
+        )
         return outData
 
     def generateCommands(self, inData):
@@ -176,86 +179,90 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         ixMax = None
         iyMin = None
         iyMax = None
-        detectorType = inData['detectorType']
+        detectorType = inData["detectorType"]
         nx = UtilsDetector.getNx(detectorType)
         ny = UtilsDetector.getNy(detectorType)
         pixelSize = UtilsDetector.getPixelsize(detectorType)
-        sitePrefix = UtilsConfig.get(self, 'site_prefix')
-        doSubmit = inData.get('doSubmit', False)
-        if sitePrefix is not None and 'beamline' in inData and inData['beamline'] is not None:
+        sitePrefix = UtilsConfig.get(self, "site_prefix")
+        doSubmit = inData.get("doSubmit", False)
+        if (
+            sitePrefix is not None
+            and "beamline" in inData
+            and inData["beamline"] is not None
+        ):
             # Try to read corresponding config file
-            site = sitePrefix + inData['beamline']
+            site = sitePrefix + inData["beamline"]
             taskConfig = UtilsConfig.getTaskConfig(self.__class__.__name__, site)
             ixMin = int(taskConfig["ix_min"])
             ixMax = int(taskConfig["ix_max"])
             iyMin = int(taskConfig["iy_min"])
             iyMax = int(taskConfig["iy_max"])
-        elif detectorType == 'pilatus2m':
+        elif detectorType == "pilatus2m":
             ixMin = IX_MIN_PILATUS_2M
             ixMax = IX_MAX_PILATUS_2M
             iyMin = IY_MIN_PILATUS_2M
             iyMax = IY_MAX_PILATUS_2M
-        elif detectorType == 'pilatus6m':
+        elif detectorType == "pilatus6m":
             ixMin = IX_MIN_PILATUS_6M
             ixMax = IX_MAX_PILATUS_6M
             iyMin = IY_MIN_PILATUS_6M
             iyMax = IY_MAX_PILATUS_6M
-        elif detectorType == 'eiger4m':
+        elif detectorType == "eiger4m":
             ixMin = IX_MIN_EIGER_4M
             ixMax = IX_MAX_EIGER_4M
             iyMin = IY_MIN_EIGER_4M
             iyMax = IY_MAX_EIGER_4M
-        if inData['nameTemplateImage'].endswith("h5"):
-            library = self.getLibrary('hdf5', doSubmit=doSubmit)
+        if inData["nameTemplateImage"].endswith("h5"):
+            library = self.getLibrary("hdf5", doSubmit=doSubmit)
         else:
-            library =  self.getLibrary('cbf', doSubmit=doSubmit)
-        processInfo = 'name template: {0}'.format(
-            os.path.basename(inData['nameTemplateImage']))
-        processInfo += ', first image no: {0}'.format(
-            inData['firstImageNumber'])
-        processInfo += ', no images: {0}'.format(
-            inData['numberImages'])
-        command = '!\n'
-        command += 'detector %s\n' % detectorType
-        command += 'library %s\n' % library
-        command += 'nx %d\n' % nx
-        command += 'ny %d\n' % ny
-        command += 'pixel %f\n' % pixelSize
-        command += 'exposure %.3f\n' % inData['exposureTime']
-        command += 'spot_size %d\n' % inData['spotSize']
-        command += 'spot_level %d\n' % inData.get('spotLevel', 6)
-        command += 'detector_distance %.3f\n' % \
-            inData['detectorDistance']
-        command += 'X-ray_wavelength %.3f\n' % inData['wavelength']
-        fractionPolarization = inData.get(
-            'fractionPolarization',
-            DEFAULT_FRACTION_POLARIZATION
+            library = self.getLibrary("cbf", doSubmit=doSubmit)
+        processInfo = "name template: {0}".format(
+            os.path.basename(inData["nameTemplateImage"])
         )
-        command += 'fraction_polarization %.3f\n' % fractionPolarization
-        command += 'pixel_min 0\n'
-        command += 'pixel_max 64000\n'
+        processInfo += ", first image no: {0}".format(inData["firstImageNumber"])
+        processInfo += ", no images: {0}".format(inData["numberImages"])
+        command = "!\n"
+        command += "detector %s\n" % detectorType
+        command += "library %s\n" % library
+        command += "nx %d\n" % nx
+        command += "ny %d\n" % ny
+        command += "pixel %f\n" % pixelSize
+        command += "exposure %.3f\n" % inData["exposureTime"]
+        command += "spot_size %d\n" % inData["spotSize"]
+        command += "spot_level %d\n" % inData.get("spotLevel", 6)
+        command += "detector_distance %.3f\n" % inData["detectorDistance"]
+        command += "X-ray_wavelength %.3f\n" % inData["wavelength"]
+        fractionPolarization = inData.get(
+            "fractionPolarization", DEFAULT_FRACTION_POLARIZATION
+        )
+        command += "fraction_polarization %.3f\n" % fractionPolarization
+        command += "pixel_min 0\n"
+        command += "pixel_max 64000\n"
         if ixMin is not None:
-            command += 'ix_min %d\n' % ixMin
-            command += 'ix_max %d\n' % ixMax
-            command += 'iy_min %d\n' % iyMin
-            command += 'iy_max %d\n' % iyMax
-        badZona = UtilsConfig.get(self, 'bad_zona', None)
+            command += "ix_min %d\n" % ixMin
+            command += "ix_max %d\n" % ixMax
+            command += "iy_min %d\n" % iyMin
+            command += "iy_max %d\n" % iyMax
+        badZona = UtilsConfig.get(self, "bad_zona", None)
         if badZona is not None:
-            command += 'bad_zona %s\n' % badZona
-        command += 'orgx %.1f\n' % inData['orgx']
-        command += 'orgy %.1f\n' % inData['orgy']
-        command += 'oscillation_range %.3f\n' % \
-            inData['oscillationRange']
-        imageStep = inData.get('imageStep', DEFAULT_IMAGE_STEP)
-        command += 'image_step %.3f\n' % imageStep
-        command += 'starting_angle %.3f\n' % inData['startingAngle']
-        command += 'first_image_number %d\n' % inData['firstImageNumber']
-        command += 'number_images %d\n' % inData['numberImages']
-        if 'wedgeNumber' in inData:
-            command += 'wedge_number %d\n' % inData['wedgeNumber']
-        command += 'name_template_image %s\n' % \
-            inData['nameTemplateImage']
-        command += 'end\n'
+            command += "bad_zona %s\n" % badZona
+        command += "orgx %.1f\n" % inData["orgx"]
+        command += "orgy %.1f\n" % inData["orgy"]
+        command += "oscillation_range %.3f\n" % inData["oscillationRange"]
+        imageStep = inData.get("imageStep", DEFAULT_IMAGE_STEP)
+        command += "image_step %.3f\n" % imageStep
+        first_image_number = inData["firstImageNumber"]
+        overall_starting_angle = (
+            inData["startingAngle"]
+            - (first_image_number - 1) * inData["oscillationRange"]
+        )
+        command += "starting_angle %.3f\n" % overall_starting_angle
+        command += "first_image_number %d\n" % first_image_number
+        command += "number_images %d\n" % inData["numberImages"]
+        if "wedgeNumber" in inData:
+            command += "wedge_number %d\n" % inData["wedgeNumber"]
+        command += "name_template_image %s\n" % inData["nameTemplateImage"]
+        command += "end\n"
         # logger.debug('command: {0}'.format(command))
         return command
 
@@ -264,105 +271,99 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         This method parses the output of dozor
         """
         resultDozor = {
-            'imageDozor': []  # list of dict. each dict contains spotFile and Image_path
+            "imageDozor": []  # list of dict. each dict contains spotFile and Image_path
         }
         # Create template for image name
-        template = inData['nameTemplateImage']
+        template = inData["nameTemplateImage"]
         # HDF5 workaround
         if template.endswith(".h5"):
             template = template.replace("1_??????", "??????")
-        noWildCards = template.count('?')
-        template = template.replace('?'*noWildCards,
-                                    '{0:0'+str(noWildCards) + '}')
+        noWildCards = template.count("?")
+        template = template.replace("?" * noWildCards, "{0:0" + str(noWildCards) + "}")
         # Skip the four first lines
-        listOutput = output.split('\n')[6:]
+        listOutput = output.split("\n")[6:]
 
         for line in listOutput:
             # Remove '|'
-            listLine = shlex.split(line.replace('|', ' '))
+            listLine = shlex.split(line.replace("|", " "))
             if len(listLine) > 0 and listLine[0].isdigit():
                 imageDozor = {}
                 imageNumber = int(listLine[0])
-                overlap = inData.get('overlap', 0.0)
-                angle = inData['startingAngle'] + \
-                    (imageNumber - inData['firstImageNumber']) * \
-                    (inData['oscillationRange'] - overlap) + \
-                    inData['oscillationRange'] / 2.0
-                imageDozor['number'] = imageNumber
-                imageDozor['image'] = template.format(imageNumber)
-                imageDozor['angle'] = angle
-                imageDozor['spotsNumOf'] = None
-                imageDozor['spotsIntAver'] = None
-                imageDozor['spotsResolution'] = None
-                imageDozor['mainScore'] = None
-                imageDozor['spotScore'] = None
-                imageDozor['visibleResolution'] = 40
+                overlap = inData.get("overlap", 0.0)
+                angle = (
+                    inData["startingAngle"]
+                    + (imageNumber - inData["firstImageNumber"])
+                    * (inData["oscillationRange"] - overlap)
+                    + inData["oscillationRange"] / 2.0
+                )
+                imageDozor["number"] = imageNumber
+                imageDozor["image"] = template.format(imageNumber)
+                imageDozor["angle"] = angle
+                imageDozor["spotsNumOf"] = None
+                imageDozor["spotsIntAver"] = None
+                imageDozor["spotsResolution"] = None
+                imageDozor["mainScore"] = None
+                imageDozor["spotScore"] = None
+                imageDozor["visibleResolution"] = 40
                 try:
-                    if listLine[5].startswith('-') or len(listLine) < 11:
-                        imageDozor['spotsNumOf'] = \
-                            int(listLine[1])
-                        imageDozor['spotsIntAver'] = \
-                            self.parseDouble(listLine[2])
-                        imageDozor['spotsRFactor'] = \
-                            self.parseDouble(listLine[3])
-                        imageDozor['spotsResolution'] = \
-                            self.parseDouble(listLine[4])
-                        imageDozor['mainScore'] = \
-                            self.parseDouble(listLine[8])
-                        imageDozor['spotScore'] = \
-                            self.parseDouble(listLine[9])
-                        imageDozor['visibleResolution'] = \
-                            self.parseDouble(listLine[10])
+                    if listLine[5].startswith("-") or len(listLine) < 11:
+                        imageDozor["spotsNumOf"] = int(listLine[1])
+                        imageDozor["spotsIntAver"] = self.parseDouble(listLine[2])
+                        imageDozor["spotsRFactor"] = self.parseDouble(listLine[3])
+                        imageDozor["spotsResolution"] = self.parseDouble(listLine[4])
+                        imageDozor["mainScore"] = self.parseDouble(listLine[8])
+                        imageDozor["spotScore"] = self.parseDouble(listLine[9])
+                        imageDozor["visibleResolution"] = self.parseDouble(listLine[10])
                     else:
-                        imageDozor['spotsNumOf'] = \
-                            int(listLine[1])
-                        imageDozor['spotsIntAver'] = \
-                            self.parseDouble(listLine[2])
-                        imageDozor['spotsRfactor'] = \
-                            self.parseDouble(listLine[3])
-                        imageDozor['spotsResolution'] = \
-                            self.parseDouble(listLine[4])
-                        imageDozor['powderWilsonScale'] = \
-                            self.parseDouble(listLine[5])
-                        imageDozor['powderWilsonBfactor'] = \
-                            self.parseDouble(listLine[6])
-                        imageDozor['powderWilsonResolution'] = \
-                            self.parseDouble(listLine[7])
-                        imageDozor['powderWilsonCorrelation'] = \
-                            self.parseDouble(listLine[8])
-                        imageDozor['powderWilsonRfactor'] = \
-                            self.parseDouble(listLine[9])
-                        imageDozor['mainScore'] = \
-                            self.parseDouble(listLine[10])
-                        imageDozor['spotScore'] = \
-                            self.parseDouble(listLine[11])
-                        imageDozor['visibleResolution'] = \
-                            self.parseDouble(listLine[12])
+                        imageDozor["spotsNumOf"] = int(listLine[1])
+                        imageDozor["spotsIntAver"] = self.parseDouble(listLine[2])
+                        imageDozor["spotsRfactor"] = self.parseDouble(listLine[3])
+                        imageDozor["spotsResolution"] = self.parseDouble(listLine[4])
+                        imageDozor["powderWilsonScale"] = self.parseDouble(listLine[5])
+                        imageDozor["powderWilsonBfactor"] = self.parseDouble(
+                            listLine[6]
+                        )
+                        imageDozor["powderWilsonResolution"] = self.parseDouble(
+                            listLine[7]
+                        )
+                        imageDozor["powderWilsonCorrelation"] = self.parseDouble(
+                            listLine[8]
+                        )
+                        imageDozor["powderWilsonRfactor"] = self.parseDouble(
+                            listLine[9]
+                        )
+                        imageDozor["mainScore"] = self.parseDouble(listLine[10])
+                        imageDozor["spotScore"] = self.parseDouble(listLine[11])
+                        imageDozor["visibleResolution"] = self.parseDouble(listLine[12])
                 except Exception as e:
-                    logger.warning('Exception caught when parsing Dozor log!')
+                    logger.warning("Exception caught when parsing Dozor log!")
                     logger.warning(e)
                 # ExecDozor spot file
                 if workingDir is not None:
-                    spotFile = os.path.join(str(workingDir),
-                                            '%05d.spot' % imageDozor['number'])
+                    spotFile = os.path.join(
+                        str(workingDir), "%05d.spot" % imageDozor["number"]
+                    )
                     if os.path.exists(spotFile):
-                        imageDozor['spotFile'] = spotFile
-#                #print imageDozor['marshal()
-                resultDozor['imageDozor'].append(imageDozor)
-            elif line.startswith('h'):
-                resultDozor['halfDoseTime'] = line.split('=')[1].split()[0]
+                        imageDozor["spotFile"] = spotFile
+                #                #print imageDozor['marshal()
+                resultDozor["imageDozor"].append(imageDozor)
+            elif line.startswith("h"):
+                resultDozor["halfDoseTime"] = line.split("=")[1].split()[0]
         # Check if mtv plot file exists
         if workingDir is not None:
-            mtvFileName = 'dozor_rd.mtv'
+            mtvFileName = "dozor_rd.mtv"
             mtvFilePath = os.path.join(str(workingDir), mtvFileName)
             if os.path.exists(mtvFilePath):
-                resultDozor['plotmtvFile'] = mtvFilePath
-                resultDozor['pngPlots'] = self.generatePngPlots(mtvFilePath,
-                                                                workingDir)
+                resultDozor["plotmtvFile"] = mtvFilePath
+                resultDozor["pngPlots"] = self.generatePngPlots(mtvFilePath, workingDir)
         if doDozorM:
             # Create 'dozor_all_result' file
-            dozorAllFile = str(self.getWorkingDirectory() / 'dozor_all')
-            os.system('cat {0}/*.all > {1}'.format(str(self.getWorkingDirectory()), dozorAllFile))
+            dozorAllFile = str(self.getWorkingDirectory() / "dozor_all")
+            os.system(
+                "cat {0}/*.all > {1}".format(
+                    str(self.getWorkingDirectory()), dozorAllFile
+                )
+            )
             resultDozor["dozorAllFile"] = dozorAllFile
         return resultDozor
 
@@ -372,7 +373,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         try:
             returnValue = float(value)
         except Exception as ex:
-            errorMessage = 'Error when trying to parse '' + value + '': %r' % ex
+            errorMessage = "Error when trying to parse " " + value + " ": %r" % ex
             logger.error(errorMessage)
         return returnValue
 
@@ -388,46 +389,46 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         index = 0
         while index < len(listLines):
             # print('0' + listLines[index])
-            if listLines[index].startswith('$'):
+            if listLines[index].startswith("$"):
                 dictPlot = {}
                 dictPlotList = []
                 listPlots.append(dictPlot)
-                dictPlot['plotList'] = dictPlotList
+                dictPlot["plotList"] = dictPlotList
                 index += 1
-                dictPlot['name'] = listLines[index].split('\'')[1]
+                dictPlot["name"] = listLines[index].split("'")[1]
                 index += 1
-                while listLines[index].startswith('%'):
-                    listLine = listLines[index].split('=')
+                while listLines[index].startswith("%"):
+                    listLine = listLines[index].split("=")
                     label = listLine[0][1:].strip()
-                    if '\'' in listLine[1]:
-                        value = listLine[1].split('\'')[1]
+                    if "'" in listLine[1]:
+                        value = listLine[1].split("'")[1]
                     else:
                         value = listLine[1]
-                    value = value.replace('\n', '').strip()
+                    value = value.replace("\n", "").strip()
                     dictPlot[label] = value
                     index += 1
-            elif listLines[index].startswith('#'):
+            elif listLines[index].startswith("#"):
                 dictSubPlot = {}
                 dictPlotList.append(dictSubPlot)
-                plotName = listLines[index].split('#')[1]
-                dictSubPlot['name'] = plotName.replace('\n', '').strip()
+                plotName = listLines[index].split("#")[1]
+                dictSubPlot["name"] = plotName.replace("\n", "").strip()
                 index += 1
-                while listLines[index].startswith('%'):
-                    listLine = listLines[index].split('=')
+                while listLines[index].startswith("%"):
+                    listLine = listLines[index].split("=")
                     label = listLine[0][1:].strip()
-                    if '\'' in listLine[1]:
-                        value = listLine[1].split('\'')[1]
+                    if "'" in listLine[1]:
+                        value = listLine[1].split("'")[1]
                     else:
                         value = listLine[1]
-                    value = value.replace('\n', '').strip()
+                    value = value.replace("\n", "").strip()
                     dictSubPlot[label] = value
                     index += 1
-                dictSubPlot['xValues'] = []
-                dictSubPlot['yValues'] = []
+                dictSubPlot["xValues"] = []
+                dictSubPlot["yValues"] = []
             else:
-                listData = listLines[index].replace('\n', '').split()
-                dictSubPlot['xValues'].append(float(listData[0]))
-                dictSubPlot['yValues'].append(float(listData[1]))
+                listData = listLines[index].replace("\n", "").split()
+                dictSubPlot["xValues"].append(float(listData[0]))
+                dictSubPlot["yValues"].append(float(listData[1]))
                 index += 1
         # Generate the plots
         for mtvplot in listPlots:
@@ -436,71 +437,69 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
             xmax = None
             ymin = None
             ymax = None
-            for subPlot in mtvplot['plotList']:
-                xmin1 = min(subPlot['xValues'])
+            for subPlot in mtvplot["plotList"]:
+                xmin1 = min(subPlot["xValues"])
                 if xmin is None or xmin > xmin1:
                     xmin = xmin1
-                xmax1 = max(subPlot['xValues'])
+                xmax1 = max(subPlot["xValues"])
                 if xmax is None or xmax < xmax1:
                     xmax = xmax1
-                ymin1 = min(subPlot['yValues'])
+                ymin1 = min(subPlot["yValues"])
                 if ymin is None or ymin > ymin1:
                     ymin = ymin1
-                ymax1 = max(subPlot['yValues'])
+                ymax1 = max(subPlot["yValues"])
                 if ymax is None or ymax < ymax1:
                     ymax = ymax1
-            if 'xmin' in mtvplot:
-                xmin = float(mtvplot['xmin'])
-            if 'ymin' in mtvplot:
-                ymin = float(mtvplot['ymin'])
+            if "xmin" in mtvplot:
+                xmin = float(mtvplot["xmin"])
+            if "ymin" in mtvplot:
+                ymin = float(mtvplot["ymin"])
             plt.xlim(xmin, xmax)
             plt.ylim(ymin, ymax)
-            plt.xlabel(mtvplot['xlabel'])
-            plt.ylabel(mtvplot['ylabel'])
-            plt.title(mtvplot['name'])
-            for subPlot in mtvplot['plotList']:
-                if 'markercolor' in subPlot:
-                    style = 'bs-.'
+            plt.xlabel(mtvplot["xlabel"])
+            plt.ylabel(mtvplot["ylabel"])
+            plt.title(mtvplot["name"])
+            for subPlot in mtvplot["plotList"]:
+                if "markercolor" in subPlot:
+                    style = "bs-."
                 else:
-                    style = 'r'
-                plt.plot(
-                    subPlot['xValues'],
-                    subPlot['yValues'],
-                    style,
-                    linewidth=2
-                )
-                listLegend.append(subPlot['linelabel'])
-            plt.legend(listLegend, loc='lower right')
-            mtvPlotName = mtvplot['name'].replace(' ', '').replace('.', '_')
-            plotPath = os.path.join(str(workingDir), mtvPlotName + '.png')
-            plt.savefig(plotPath, bbox_inches='tight', dpi=75)
+                    style = "r"
+                plt.plot(subPlot["xValues"], subPlot["yValues"], style, linewidth=2)
+                listLegend.append(subPlot["linelabel"])
+            plt.legend(listLegend, loc="lower right")
+            mtvPlotName = mtvplot["name"].replace(" ", "").replace(".", "_")
+            plotPath = os.path.join(str(workingDir), mtvPlotName + ".png")
+            plt.savefig(plotPath, bbox_inches="tight", dpi=75)
             plt.close()
             listXSFile.append(plotPath)
         return listXSFile
 
     def getLibrary(self, libraryType, doSubmit=False):
-        libraryName = 'library_' + libraryType
+        libraryName = "library_" + libraryType
         if doSubmit:
-            libraryName += '_ubuntu_20.04'
+            libraryName += "_ubuntu_20.04"
         else:
             idName, version, codename = distro.linux_distribution()
-            if 'Debian' in idName:
-                libraryName += '_debian_'
-            elif idName == 'Ubuntu':
-                libraryName += '_ubuntu_'
+            if "Debian" in idName:
+                libraryName += "_debian_"
+            elif idName == "Ubuntu":
+                libraryName += "_ubuntu_"
             else:
-                raise RuntimeError('ExecDozor: unknown os name {0}'.format(idName))
+                raise RuntimeError("ExecDozor: unknown os name {0}".format(idName))
             libraryName += version
         library = UtilsConfig.get(self, libraryName)
         if library is None:
-            raise RuntimeError('ExecDozor: library configuration {0} not found'.format(libraryType))
+            raise RuntimeError(
+                "ExecDozor: library configuration {0} not found".format(libraryType)
+            )
         return library
 
 
 class ControlDozor(AbstractTask):
-
     def __init__(self, inData, workingDirectorySuffix=None):
-        AbstractTask.__init__(self, inData, workingDirectorySuffix=workingDirectorySuffix)
+        AbstractTask.__init__(
+            self, inData, workingDirectorySuffix=workingDirectorySuffix
+        )
         self.hasOverlap = False
         self.overlap = 0.0
 
@@ -526,8 +525,8 @@ class ControlDozor(AbstractTask):
                 "keepCbfTmpDirectory": {"type": "boolean"},
                 "doISPyBUpload": {"type": "boolean"},
                 "doDozorM": {"type": "boolean"},
-                "returnSpotList": {"type": "boolean"}
-            }
+                "returnSpotList": {"type": "boolean"},
+            },
         }
 
     def getOutDataSchema(self):
@@ -537,15 +536,13 @@ class ControlDozor(AbstractTask):
             "properties": {
                 "imageQualityIndicators": {
                     "type": "array",
-                    "items": {
-                        "$ref": self.getSchemaUrl("imageQualityIndicators.json")
-                    }
+                    "items": {"$ref": self.getSchemaUrl("imageQualityIndicators.json")},
                 },
                 "detectorType": {"type": "string"},
                 "halfDoseTime": {"type": "number"},
-                "dozorPlot":  {"type": "string"},
-                "pathToCbfDirectory":  {"type": "string"},
-                "pngPlots":  {"type": "string"},
+                "dozorPlot": {"type": "string"},
+                "pathToCbfDirectory": {"type": "string"},
+                "pngPlots": {"type": "string"},
                 "dozorAllFile": {"type": "string"},
             },
         }
@@ -557,22 +554,21 @@ class ControlDozor(AbstractTask):
         listDozorAllFile = []
         hasHdf5Prefix = False
         detectorType = None
-        returnSpotList = inData.get('returnSpotList', False)
+        returnSpotList = inData.get("returnSpotList", False)
         # Check doDozorM
-        doDozorM = inData.get('doDozorM', False)
+        doDozorM = inData.get("doDozorM", False)
         # Check if connection to ISPyB needed
         batchSize, dictImage = self.determineBatchsize(inData)
         # Check overlap
-        overlap = inData.get('overlap', self.overlap)
+        overlap = inData.get("overlap", self.overlap)
         if overlap != 0:
             self.hasOverlap = True
         startImageNo = inData.get("startNo", sorted(dictImage.keys())[0])
-        firstImagePath = dictImage[startImageNo]
         logger.debug("ExecDozor batch size: {0}".format(batchSize))
-        if 'hdf5BatchSize' in inData:
-           hdf5BatchSize = inData['hdf5BatchSize']
-        listAllBatches = self.createListOfBatches(dictImage.keys(), batchSize, self.hasOverlap)
-        outData['imageQualityIndicators'] = []
+        listAllBatches = self.createListOfBatches(
+            dictImage.keys(), batchSize, self.hasOverlap
+        )
+        outData["imageQualityIndicators"] = []
         for listBatch in listAllBatches:
             outDataDozor, detectorType = self.runDozorTask(
                 inData=inData,
@@ -581,54 +577,62 @@ class ControlDozor(AbstractTask):
                 overlap=overlap,
                 workingDirectory=str(self.getWorkingDirectory()),
                 hasHdf5Prefix=hasHdf5Prefix,
-                hasOverlap=self.hasOverlap
+                hasOverlap=self.hasOverlap,
             )
             if outDataDozor is not None:
-                for imageDozor in outDataDozor['imageDozor']:
+                for imageDozor in outDataDozor["imageDozor"]:
                     imageQualityIndicators = {
-                        'angle': imageDozor['angle'],
-                        'number': imageDozor['number'],
-                        'image': imageDozor['image'],
-                        'dozorScore': imageDozor['mainScore'],
-                        'dozorSpotScore': imageDozor['spotScore'],
-                        'dozorSpotsNumOf': imageDozor['spotsNumOf'],
-                        'dozorSpotsIntAver': imageDozor['spotsIntAver'],
-                        'dozorSpotsResolution': imageDozor['spotsResolution'],
-                        'dozorVisibleResolution': imageDozor['visibleResolution'],
+                        "angle": imageDozor["angle"],
+                        "number": imageDozor["number"],
+                        "image": imageDozor["image"],
+                        "dozorScore": imageDozor["mainScore"],
+                        "dozorSpotScore": imageDozor["spotScore"],
+                        "dozorSpotsNumOf": imageDozor["spotsNumOf"],
+                        "dozorSpotsIntAver": imageDozor["spotsIntAver"],
+                        "dozorSpotsResolution": imageDozor["spotsResolution"],
+                        "dozorVisibleResolution": imageDozor["visibleResolution"],
                     }
-                    if 'spotFile' in imageDozor:
-                        if os.path.exists(imageDozor['spotFile']):
-                            spotFile = imageDozor['spotFile']
-                            imageQualityIndicators['dozorSpotFile'] = spotFile
+                    if "spotFile" in imageDozor:
+                        if os.path.exists(imageDozor["spotFile"]):
+                            spotFile = imageDozor["spotFile"]
+                            imageQualityIndicators["dozorSpotFile"] = spotFile
                             if returnSpotList:
                                 numpyArray = numpy.loadtxt(spotFile, skiprows=3)
-                                imageQualityIndicators['dozorSpotList'] = \
-                                    base64.b64encode(numpyArray.tostring()).decode('utf-8')
-                                imageQualityIndicators['dozorSpotListShape'] = \
-                                    list(numpyArray.shape)
-                    outData['imageQualityIndicators'].append(imageQualityIndicators)
+                                imageQualityIndicators[
+                                    "dozorSpotList"
+                                ] = base64.b64encode(numpyArray.tostring()).decode(
+                                    "utf-8"
+                                )
+                                imageQualityIndicators["dozorSpotListShape"] = list(
+                                    numpyArray.shape
+                                )
+                    outData["imageQualityIndicators"].append(imageQualityIndicators)
                 if doDozorM:
-                    listDozorAllFile.append(outDataDozor['dozorAllFile'])
+                    listDozorAllFile.append(outDataDozor["dozorAllFile"])
         # Assemble all dozorAllFiles into one
         if doDozorM:
             controlDozorAllFile = str(self.getWorkingDirectory() / "dozor_all")
-            os.system('touch {0}'.format(controlDozorAllFile))
+            os.system("touch {0}".format(controlDozorAllFile))
             for dozorAllFile in listDozorAllFile:
-                command = 'cat ' + dozorAllFile + ' >> ' + controlDozorAllFile
+                command = "cat " + dozorAllFile + " >> " + controlDozorAllFile
                 os.system(command)
         # Make plot if we have a data collection id
-        if 'dataCollectionId' in inData:
+        if "dataCollectionId" in inData:
             if "processDirectory" in inData:
                 processDirectory = pathlib.Path(inData["processDirectory"])
             else:
                 processDirectory = self.getWorkingDirectory()
-            dozorPlotPath, dozorCsvPath = self.makePlot(inData['dataCollectionId'], outData, self.getWorkingDirectory())
+            dozorPlotPath, dozorCsvPath = self.makePlot(
+                inData["dataCollectionId"], outData, self.getWorkingDirectory()
+            )
             doIspybUpload = inData.get("doISPyBUpload", False)
             if doIspybUpload:
-                self.storeDataOnPyarch(inData["dataCollectionId"],
-                                       dozorPlotPath=dozorPlotPath,
-                                       dozorCsvPath=dozorCsvPath,
-                                       workingDirectory=processDirectory)
+                self.storeDataOnPyarch(
+                    inData["dataCollectionId"],
+                    dozorPlotPath=dozorPlotPath,
+                    dozorCsvPath=dozorCsvPath,
+                    workingDirectory=processDirectory,
+                )
         #            xsDataResultControlDozor.halfDoseTime = edPluginDozor.dataOutput.halfDoseTime
         #            xsDataResultControlDozor.pngPlots = edPluginDozor.dataOutput.pngPlots
         #
@@ -641,120 +645,132 @@ class ControlDozor(AbstractTask):
         #                shutil.rmtree(self.cbfTempDir)
 
         # Read the header from the first image in the batch
-        outData['detectorType'] = detectorType
+        outData["detectorType"] = detectorType
         if doDozorM:
-            outData['dozorAllFile'] = controlDozorAllFile
+            outData["dozorAllFile"] = controlDozorAllFile
         return outData
 
     def determineBatchsize(self, inData):
-        if 'dataCollectionId' in inData:
-            ispybInData = {
-                'dataCollectionId': inData['dataCollectionId']
-            }
+        if "dataCollectionId" in inData:
+            ispybInData = {"dataCollectionId": inData["dataCollectionId"]}
             ispybTask = ISPyBRetrieveDataCollection(inData=ispybInData)
             ispybTask.execute()
             dataCollection = ispybTask.outData
-            batchSize = UtilsConfig.get('ControlDozor', 'batchSize')
+            batchSize = UtilsConfig.get("ControlDozor", "batchSize")
             if batchSize is None:
-                batchSize = dataCollection['numberOfImages']
+                batchSize = dataCollection["numberOfImages"]
             if batchSize > MAX_BATCH_SIZE:
                 batchSize = MAX_BATCH_SIZE
-            if 'overlap' in dataCollection and \
-                    abs(dataCollection['overlap']) > 1:
+            if "overlap" in dataCollection and abs(dataCollection["overlap"]) > 1:
                 self.hasOverlap = True
-                self.overlap = dataCollection['overlap']
+                self.overlap = dataCollection["overlap"]
             else:
                 self.overlap = 0.0
             dictImage = self.createImageDictFromISPyB(dataCollection)
         else:
             # No connection to ISPyB, take parameters from input
-            if 'batchSize' in inData:
-                batchSize = inData['batchSize']
+            if "batchSize" in inData:
+                batchSize = inData["batchSize"]
             else:
                 batchSize = MAX_BATCH_SIZE
             dictImage = self.createImageDict(inData)
         return batchSize, dictImage
 
     @classmethod
-    def runDozorTask(cls, inData, dictImage, listBatch,
-                     overlap, workingDirectory,
-                     hasHdf5Prefix, hasOverlap):
-        doSubmit = inData.get('doSubmit', False)
-        doDozorM = inData.get('doDozorM', False)
+    def runDozorTask(
+        cls,
+        inData,
+        dictImage,
+        listBatch,
+        overlap,
+        workingDirectory,
+        hasHdf5Prefix,
+        hasOverlap,
+    ):
+        doSubmit = inData.get("doSubmit", False)
+        doDozorM = inData.get("doDozorM", False)
         outDataDozor = None
         image = dictImage[listBatch[0]]
         prefix = UtilsImage.getPrefix(image)
         suffix = UtilsImage.getSuffix(image)
         imageNumber = UtilsImage.getImageNumber(image)
         imageNumberOrig = imageNumber
-        workingDirectorySuffixDozor='{0:04d}_{1:04d}'.format(imageNumber, imageNumber+len(listBatch)-1)
-        if image.endswith('h5'):
+        workingDirectorySuffixDozor = "{0:04d}_{1:04d}".format(
+            imageNumber, imageNumber + len(listBatch) - 1
+        )
+        if image.endswith("h5"):
             hasHdf5Prefix = True
             prefix = UtilsImage.getPrefix(image)
-            directory = pathlib.Path(image).parent
-            h5MasterFilePath, h5DataFilePath, h5FileNumber = \
-                UtilsImage.getH5FilePath(image, hasOverlap=hasOverlap, isFastMesh=True)
-            workingDirectorySuffix='{0}_{1}_master_{2}'.format(prefix, h5FileNumber, imageNumber)
+            h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(
+                image, hasOverlap=hasOverlap, isFastMesh=True
+            )
+            workingDirectorySuffix = "{0}_{1}_master_{2}".format(
+                prefix, h5FileNumber, imageNumber
+            )
             if hasOverlap:
                 imageNumber = 1
         else:
-            workingDirectorySuffix='{0}_{1:04d}'.format(
-                prefix, UtilsImage.getImageNumber(image))
+            workingDirectorySuffix = "{0}_{1:04d}".format(
+                prefix, UtilsImage.getImageNumber(image)
+            )
         inDataReadHeader = {
-            'imagePath': [image],
+            "imagePath": [image],
             "skipNumberOfImages": True,
             "hasOverlap": hasOverlap,
-            "isFastMesh": True
+            "isFastMesh": True,
         }
         controlHeader = ReadImageHeader(
-            inData=inDataReadHeader,
-            workingDirectorySuffix=workingDirectorySuffix
+            inData=inDataReadHeader, workingDirectorySuffix=workingDirectorySuffix
         )
         controlHeader.execute()
         outDataHeader = controlHeader.outData
-        subWedge = outDataHeader['subWedge'][0]
-        experimentalCondition = subWedge['experimentalCondition']
-        beam = experimentalCondition['beam']
-        detector = experimentalCondition['detector']
-        detectorType = detector['type']
-        goniostat = experimentalCondition['goniostat']
-        inDataDozor = {'detectorType': detector['type'],
-                       'exposureTime': beam['exposureTime'],
-                       'detectorDistance': detector['distance'],
-                       'spotSize': 3, 'wavelength': beam['wavelength'],
-                       'orgx': detector['beamPositionX'] / detector['pixelSizeX'],
-                       'orgy': detector['beamPositionY'] / detector['pixelSizeY'],
-                       'oscillationRange': goniostat['oscillationWidth'],
-                       'startingAngle': goniostat['rotationAxisStart'],
-                       'firstImageNumber': imageNumber,
-                       'numberImages': len(listBatch),
-                       'workingDirectory': workingDirectory,
-                       'overlap': overlap,
-                       'doSubmit': doSubmit,
-                       'doDozorM': doDozorM
-                       }
-        if 'beamline' in inData:
-            inDataDozor['beamline'] = inData['beamline']
-        fileName = os.path.basename(subWedge['image'][0]['path'])
+        subWedge = outDataHeader["subWedge"][0]
+        experimentalCondition = subWedge["experimentalCondition"]
+        beam = experimentalCondition["beam"]
+        detector = experimentalCondition["detector"]
+        detectorType = detector["type"]
+        goniostat = experimentalCondition["goniostat"]
+        inDataDozor = {
+            "detectorType": detector["type"],
+            "exposureTime": beam["exposureTime"],
+            "detectorDistance": detector["distance"],
+            "spotSize": 3,
+            "wavelength": beam["wavelength"],
+            "orgx": detector["beamPositionX"] / detector["pixelSizeX"],
+            "orgy": detector["beamPositionY"] / detector["pixelSizeY"],
+            "oscillationRange": goniostat["oscillationWidth"],
+            "startingAngle": goniostat["rotationAxisStart"],
+            "firstImageNumber": imageNumber,
+            "numberImages": len(listBatch),
+            "workingDirectory": workingDirectory,
+            "overlap": overlap,
+            "doSubmit": doSubmit,
+            "doDozorM": doDozorM,
+        }
+        if "beamline" in inData:
+            inDataDozor["beamline"] = inData["beamline"]
         if UtilsConfig.isEMBL():
-            template = '{0}_?????.{1}'.format(prefix, suffix)
+            template = "{0}_?????.{1}".format(prefix, suffix)
         elif hasHdf5Prefix:
-            template = '{0}_{1}_??????.{2}'.format(prefix, h5FileNumber, suffix)
+            template = "{0}_{1}_??????.{2}".format(prefix, h5FileNumber, suffix)
         else:
-            template = '{0}_????.{1}'.format(prefix, suffix)
-        inDataDozor['nameTemplateImage'] = os.path.join(
-            os.path.dirname(subWedge['image'][0]['path']),
-            template
+            template = "{0}_????.{1}".format(prefix, suffix)
+        inDataDozor["nameTemplateImage"] = os.path.join(
+            os.path.dirname(subWedge["image"][0]["path"]), template
         )
-        if 'wedgeNumber' in inData:
-            inDataDozor['wedgeNumber'] = inData['wedgeNumber']
-        if 'radiationDamage' in inData:
-            inDataDozor['radiationDamage'] = inData['radiationDamage']
-        dozor = ExecDozor(inData=inDataDozor, workingDirectorySuffix=workingDirectorySuffixDozor)
+        if "wedgeNumber" in inData:
+            inDataDozor["wedgeNumber"] = inData["wedgeNumber"]
+        if "radiationDamage" in inData:
+            inDataDozor["radiationDamage"] = inData["radiationDamage"]
+        dozor = ExecDozor(
+            inData=inDataDozor, workingDirectorySuffix=workingDirectorySuffixDozor
+        )
         dozor.execute()
         if not dozor.isFailure():
             outDataDozor = dozor.outData
-            if len(outDataDozor["imageDozor"]) == 1 and outDataDozor["imageDozor"][0]["image"].endswith(".h5"):
+            if len(outDataDozor["imageDozor"]) == 1 and outDataDozor["imageDozor"][0][
+                "image"
+            ].endswith(".h5"):
                 if outDataDozor["imageDozor"][0]["number"] != imageNumberOrig:
                     outDataDozor["imageDozor"][0]["number"] = imageNumberOrig
         return outDataDozor, detectorType
@@ -768,19 +784,15 @@ class ControlDozor(AbstractTask):
         maxDozorValue = None
         minResolution = None
         maxResolution = None
-        plotFileName = 'dozor_{0}.png'.format(dataCollectionId)
-        csvFileName = 'dozor_{0}.csv'.format(dataCollectionId)
-        with open(str(workingDirectory / csvFileName), 'w') as gnuplotFile:
+        plotFileName = "dozor_{0}.png".format(dataCollectionId)
+        csvFileName = "dozor_{0}.csv".format(dataCollectionId)
+        with open(str(workingDirectory / csvFileName), "w") as gnuplotFile:
+            gnuplotFile.write("# Data directory: {0}\n".format(self.directory))
             gnuplotFile.write(
-                '# Data directory: {0}\n'.format(self.directory)
+                "# File template: {0}\n".format(self.template.replace("%04d", "####"))
             )
             gnuplotFile.write(
-                '# File template: {0}\n'.format(
-                    self.template.replace('%04d', '####')
-                )
-            )
-            gnuplotFile.write(
-                '# {0:>9s}{1:>16s}{2:>16s}{3:>16s}{4:>16s}{5:>16s}\n'.format(
+                "# {0:>9s}{1:>16s}{2:>16s}{3:>16s}{4:>16s}{5:>16s}\n".format(
                     "'Image no'",
                     "'Angle'",
                     "'No of spots'",
@@ -789,69 +801,85 @@ class ControlDozor(AbstractTask):
                     "'Visible res.'",
                 )
             )
-            for imageQualityIndicators in outDataImageDozor['imageQualityIndicators']:
-               gnuplotFile.write(
-                   '{0:10d},{1:15.3f},{2:15d},{3:15.3f},{4:15.3f},{5:15.3f}\n'.format(
-                        imageQualityIndicators['number'],
-                        imageQualityIndicators['angle'],
-                        imageQualityIndicators['dozorSpotsNumOf'],
-                        10 * imageQualityIndicators['dozorScore'],
-                        imageQualityIndicators['dozorSpotScore'],
-                        imageQualityIndicators['dozorVisibleResolution'],
+            for imageQualityIndicators in outDataImageDozor["imageQualityIndicators"]:
+                gnuplotFile.write(
+                    "{0:10d},{1:15.3f},{2:15d},{3:15.3f},{4:15.3f},{5:15.3f}\n".format(
+                        imageQualityIndicators["number"],
+                        imageQualityIndicators["angle"],
+                        imageQualityIndicators["dozorSpotsNumOf"],
+                        10 * imageQualityIndicators["dozorScore"],
+                        imageQualityIndicators["dozorSpotScore"],
+                        imageQualityIndicators["dozorVisibleResolution"],
                     )
-               )
-               if minImageNumber is None or minImageNumber > imageQualityIndicators['number']:
-                   minImageNumber = imageQualityIndicators['number']
-                   minAngle = imageQualityIndicators['angle']
-               if maxImageNumber is None or maxImageNumber < imageQualityIndicators['number']:
-                   maxImageNumber = imageQualityIndicators['number']
-                   maxAngle = imageQualityIndicators['angle']
-               if minDozorValue is None or minDozorValue > imageQualityIndicators['dozorScore']:
-                   minDozorValue = imageQualityIndicators['dozorScore']
-               if maxDozorValue is None or maxDozorValue < imageQualityIndicators['dozorScore']:
-                   maxDozorValue = imageQualityIndicators['dozorScore']
+                )
+                if (
+                    minImageNumber is None
+                    or minImageNumber > imageQualityIndicators["number"]
+                ):
+                    minImageNumber = imageQualityIndicators["number"]
+                    minAngle = imageQualityIndicators["angle"]
+                if (
+                    maxImageNumber is None
+                    or maxImageNumber < imageQualityIndicators["number"]
+                ):
+                    maxImageNumber = imageQualityIndicators["number"]
+                    maxAngle = imageQualityIndicators["angle"]
+                if (
+                    minDozorValue is None
+                    or minDozorValue > imageQualityIndicators["dozorScore"]
+                ):
+                    minDozorValue = imageQualityIndicators["dozorScore"]
+                if (
+                    maxDozorValue is None
+                    or maxDozorValue < imageQualityIndicators["dozorScore"]
+                ):
+                    maxDozorValue = imageQualityIndicators["dozorScore"]
 
-               # Min resolution: the higher the value the lower the resolution
-               if minResolution is None or minResolution < imageQualityIndicators['dozorVisibleResolution']:
-                   # Disregard resolution worse than 10.0
-                   if imageQualityIndicators['dozorVisibleResolution'] < 10.0:
-                       minResolution = imageQualityIndicators['dozorVisibleResolution']
+                # Min resolution: the higher the value the lower the resolution
+                if (
+                    minResolution is None
+                    or minResolution < imageQualityIndicators["dozorVisibleResolution"]
+                ):
+                    # Disregard resolution worse than 10.0
+                    if imageQualityIndicators["dozorVisibleResolution"] < 10.0:
+                        minResolution = imageQualityIndicators["dozorVisibleResolution"]
 
-               # Max resolution: the lower the number the better the resolution
-               if maxResolution is None or maxResolution > imageQualityIndicators['dozorVisibleResolution']:
-                   maxResolution = imageQualityIndicators['dozorVisibleResolution']
+                # Max resolution: the lower the number the better the resolution
+                if (
+                    maxResolution is None
+                    or maxResolution > imageQualityIndicators["dozorVisibleResolution"]
+                ):
+                    maxResolution = imageQualityIndicators["dozorVisibleResolution"]
 
-
-        xtics = ''
+        xtics = ""
         if minImageNumber is not None and minImageNumber == maxImageNumber:
-           minAngle -= 1.0
-           maxAngle += 1.0
+            minAngle -= 1.0
+            maxAngle += 1.0
         noImages = maxImageNumber - minImageNumber + 1
         if noImages <= 4:
-           minImageNumber -= 0.1
-           maxImageNumber += 0.1
-           deltaAngle = maxAngle - minAngle
-           minAngle -= deltaAngle * 0.1 / noImages
-           maxAngle += deltaAngle * 0.1 / noImages
-           xtics = '1'
+            minImageNumber -= 0.1
+            maxImageNumber += 0.1
+            deltaAngle = maxAngle - minAngle
+            minAngle -= deltaAngle * 0.1 / noImages
+            maxAngle += deltaAngle * 0.1 / noImages
+            xtics = "1"
 
         if maxResolution is None or maxResolution > 0.8:
-           maxResolution = 0.8
+            maxResolution = 0.8
         else:
-           maxResolution = int(maxResolution * 10.0) / 10.0
+            maxResolution = int(maxResolution * 10.0) / 10.0
 
         if minResolution is None or minResolution < 4.5:
-           minResolution = 4.5
+            minResolution = 4.5
         else:
-           minResolution = int(minResolution * 10.0) / 10.0 + 1
+            minResolution = int(minResolution * 10.0) / 10.0 + 1
 
         if maxDozorValue < 0.001 and minDozorValue < 0.001:
-           yscale = 'set yrange [-0.5:0.5]\n    set ytics 1'
+            yscale = "set yrange [-0.5:0.5]\n    set ytics 1"
         else:
-           yscale = 'set autoscale  y'
+            yscale = "set autoscale  y"
 
-        gnuplotScript = \
-"""#
+        gnuplotScript = """#
 set terminal png
 set output '{dozorPlotFileName}'
 set title '{title}'
@@ -872,33 +900,36 @@ set key below
 plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with points linetype rgb 'goldenrod' pointtype 7 pointsize 1.5, \
     '{dozorCsvFileName}' using 1:4 title 'ExecDozor score' axes x1y1 with points linetype 3 pointtype 7 pointsize 1.5, \
     '{dozorCsvFileName}' using 1:6 title 'Visible resolution' axes x1y2 with points linetype 1 pointtype 7 pointsize 1.5
-""".format(title=self.template.replace('%04d', '####'),
-          dozorPlotFileName=plotFileName,
-          dozorCsvFileName=csvFileName,
-          minImageNumber=minImageNumber,
-          maxImageNumber=maxImageNumber,
-          minAngle=minAngle,
-          maxAngle=maxAngle,
-          minResolution=minResolution,
-          maxResolution=maxResolution,
-          xtics=xtics,
-          yscale=yscale,
-          )
-        pathGnuplotScript = str(workingDirectory / 'gnuplot.sh')
-        with open(pathGnuplotScript, 'w') as f:
+""".format(
+            title=self.template.replace("%04d", "####"),
+            dozorPlotFileName=plotFileName,
+            dozorCsvFileName=csvFileName,
+            minImageNumber=minImageNumber,
+            maxImageNumber=maxImageNumber,
+            minAngle=minAngle,
+            maxAngle=maxAngle,
+            minResolution=minResolution,
+            maxResolution=maxResolution,
+            xtics=xtics,
+            yscale=yscale,
+        )
+        pathGnuplotScript = str(workingDirectory / "gnuplot.sh")
+        with open(pathGnuplotScript, "w") as f:
             f.write(gnuplotScript)
         oldCwd = os.getcwd()
         os.chdir(str(workingDirectory))
-        gnuplot = UtilsConfig.get(self, 'gnuplot', 'gnuplot')
-        os.system('{0} {1}'.format(gnuplot, pathGnuplotScript))
+        gnuplot = UtilsConfig.get(self, "gnuplot", "gnuplot")
+        os.system("{0} {1}".format(gnuplot, pathGnuplotScript))
         os.chdir(oldCwd)
         dozorPlotPath = workingDirectory / plotFileName
         dozorCsvPath = workingDirectory / csvFileName
         return dozorPlotPath, dozorCsvPath
 
     @classmethod
-    def storeDataOnPyarch(cls, dataCollectionId,  dozorPlotPath, dozorCsvPath, workingDirectory):
-        resultsDirectory = pathlib.Path(workingDirectory) / 'results'
+    def storeDataOnPyarch(
+        cls, dataCollectionId, dozorPlotPath, dozorCsvPath, workingDirectory
+    ):
+        resultsDirectory = pathlib.Path(workingDirectory) / "results"
         try:
             if not resultsDirectory.exists():
                 resultsDirectory.mkdir(parents=True, mode=0o755)
@@ -908,8 +939,8 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
             shutil.copy(dozorCsvPath, dozorCsvResultPath)
         except Exception as e:
             logger.warning(
-                "Couldn't copy files to results directory: {0}".format(
-                    resultsDirectory))
+                "Couldn't copy files to results directory: {0}".format(resultsDirectory)
+            )
             logger.warning(e)
         try:
             # Create paths on pyarch
@@ -921,7 +952,8 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
             shutil.copy(dozorCsvResultPath, dozorCsvPyarchPath)
             # Upload to data collection
             dataCollectionId = UtilsIspyb.setImageQualityIndicatorsPlot(
-                dataCollectionId, dozorPlotPyarchPath, dozorCsvPyarchPath)
+                dataCollectionId, dozorPlotPyarchPath, dozorCsvPyarchPath
+            )
         except Exception as e:
             logger.warning("Couldn't copy files to pyarch.")
             logger.warning(e)
@@ -929,23 +961,24 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
     def createImageDict(self, inData):
         # Create dictionary of all images with the image number as key
         dictImage = {}
-        if 'image'in inData and len(inData['image']) > 0:
-            listImage = inData['image']
+        if "image" in inData and len(inData["image"]) > 0:
+            listImage = inData["image"]
             pathToFirstImage = listImage[0]
             self.directory = os.path.dirname(pathToFirstImage)
-            self.template = os.path.basename(
-                pathToFirstImage).replace('0001', '####')
+            self.template = os.path.basename(pathToFirstImage).replace("0001", "####")
         else:
             # Create list of images
             listImage = []
-            self.directory = inData['directory']
-            if "#" in inData['template']:
-                noWildCards = inData['template'].count('#')
-                self.template = inData['template'].replace('#' * noWildCards, '%0' + str(noWildCards) + 'd')
+            self.directory = inData["directory"]
+            if "#" in inData["template"]:
+                noWildCards = inData["template"].count("#")
+                self.template = inData["template"].replace(
+                    "#" * noWildCards, "%0" + str(noWildCards) + "d"
+                )
             else:
-                self.template = inData['template']
-            startNo = int(inData['startNo'])
-            endNo = int(inData['endNo'])
+                self.template = inData["template"]
+            startNo = int(inData["startNo"])
+            endNo = int(inData["endNo"])
             for imageIndex in range(startNo, endNo + 1):
                 imageName = self.template % imageIndex
                 imagePath = os.path.join(self.directory, imageName)
@@ -960,11 +993,12 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
         dictImage = {}
         # Create list of images
         listImage = []
-        self.directory = dataCollection['imageDirectory']
-        self.template = dataCollection['fileTemplate']
-        startNo = dataCollection['startImageNumber']
-        endNo = dataCollection['startImageNumber'] + \
-                dataCollection['numberOfImages'] - 1
+        self.directory = dataCollection["imageDirectory"]
+        self.template = dataCollection["fileTemplate"]
+        startNo = dataCollection["startImageNumber"]
+        endNo = (
+            dataCollection["startImageNumber"] + dataCollection["numberOfImages"] - 1
+        )
         for imageIndex in range(startNo, endNo + 1):
             imageName = self.template % imageIndex
             imagePath = os.path.join(self.directory, imageName)
@@ -1015,9 +1049,14 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
         return listAllBatches
 
     @classmethod
-    def convertToCBF(cls, dictImage, listAllBatches,
-                     doRadiationDamage=False, hasOverlap=False,
-                     cbfTempDir=None):
+    def convertToCBF(
+        cls,
+        dictImage,
+        listAllBatches,
+        doRadiationDamage=False,
+        hasOverlap=False,
+        cbfTempDir=None,
+    ):
         # Find start and end image number
         startImage = None
         endImage = None
@@ -1033,45 +1072,58 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
             hasHdf5Prefix = False
             for imageNumber in dictImage:
                 inDataH5ToCBF = {
-                    'hdf5File': startImage,
-                    'hdf5ImageNumber': imageNumber,
-                    'forcedOutputImageNumber': imageNumber,
+                    "hdf5File": startImage,
+                    "hdf5ImageNumber": imageNumber,
+                    "forcedOutputImageNumber": imageNumber,
                 }
                 if cbfTempDir is not None:
-                    inDataH5ToCBF['forcedOutputDirectory'] = cbfTempDir
+                    inDataH5ToCBF["forcedOutputDirectory"] = cbfTempDir
                 h5ToCBF = H5ToCBFTask(inData=inDataH5ToCBF)
                 h5ToCBF.execute()
                 outDataH5ToCBF = json.loads(h5ToCBF.outData().open().read())
-                newDict['image'] = outDataH5ToCBF['outputCBFFile']
+                newDict["image"] = outDataH5ToCBF["outputCBFFile"]
         else:
             listH5ToCBF = []
             directory = os.path.dirname(dictImage[listAllBatches[0][0]])
             for batch in listAllBatches:
                 if doRadiationDamage:
                     inDataH5ToCBF = {
-                        'hdf5File': dictImage[batch[0]],
-                        'hdf5ImageNumber': batch[0],
-                        'startImageNumber': listAllBatches[0][0],
-                        'endImageNumber': listAllBatches[0][-1],
+                        "hdf5File": dictImage[batch[0]],
+                        "hdf5ImageNumber": batch[0],
+                        "startImageNumber": listAllBatches[0][0],
+                        "endImageNumber": listAllBatches[0][-1],
                     }
                 else:
                     inDataH5ToCBF = {
-                        'hdf5File': dictImage[startImage],
-                        'hdf5ImageNumber': 1,
-                        'startImageNumber': batch[0],
-                        'endImageNumber': batch[-1],
+                        "hdf5File": dictImage[startImage],
+                        "hdf5ImageNumber": 1,
+                        "startImageNumber": batch[0],
+                        "endImageNumber": batch[-1],
                     }
                 if cbfTempDir is not None:
-                    inDataH5ToCBF['forcedOutputDirectory'] = cbfTempDir
+                    inDataH5ToCBF["forcedOutputDirectory"] = cbfTempDir
                 h5ToCBF = H5ToCBFTask(inData=inDataH5ToCBF)
                 if doRadiationDamage:
                     h5ToCBF.execute()
-                    if h5ToCBF.outData is not None and h5ToCBF.outData['outputCBFFileTemplate'] is not None:
-                        outputCBFFileTemplate = h5ToCBF.outData['outputCBFFileTemplate']
+                    if (
+                        h5ToCBF.outData is not None
+                        and h5ToCBF.outData["outputCBFFileTemplate"] is not None
+                    ):
+                        outputCBFFileTemplate = h5ToCBF.outData["outputCBFFileTemplate"]
                         for newImageNumber in batch:
                             oldImageNumber = newImageNumber - batch[0] + 1
-                            oldPath = os.path.join(directory, outputCBFFileTemplate.path.value.replace('######', '{0:06d}'.format(oldImageNumber)))
-                            newPath = os.path.join(directory, outputCBFFileTemplate.path.value.replace('######', '{0:04d}'.format(newImageNumber)))
+                            oldPath = os.path.join(
+                                directory,
+                                outputCBFFileTemplate.path.value.replace(
+                                    "######", "{0:06d}".format(oldImageNumber)
+                                ),
+                            )
+                            newPath = os.path.join(
+                                directory,
+                                outputCBFFileTemplate.path.value.replace(
+                                    "######", "{0:04d}".format(newImageNumber)
+                                ),
+                            )
                             os.rename(oldPath, newPath)
                             # newDict[newImageNumber] = XSDataFile(XSDataString(newPath))
                     hasHdf5Prefix = False
@@ -1081,14 +1133,12 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
             for h5ToCBF in listH5ToCBF:
                 h5ToCBF.join()
                 outDataH5ToCBF = h5ToCBF.outData
-                if 'outputCBFFileTemplate' in outDataH5ToCBF:
-                    template = outDataH5ToCBF['outputCBFFileTemplate']
-                    template = template.replace('######', '{0:06d}')
+                if "outputCBFFileTemplate" in outDataH5ToCBF:
+                    template = outDataH5ToCBF["outputCBFFileTemplate"]
+                    template = template.replace("######", "{0:06d}")
                     for image in dictImage:
                         newDict[image] = template.format(image)
         return newDict, hasHdf5Prefix
-
-
 
 
 #

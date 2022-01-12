@@ -33,11 +33,10 @@ from edna2.tasks.ControlDozor import ControlDozor
 
 
 class ControlDozorPlotExecTest(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(os.name == 'nt', "Don't run on Windows")
+    @unittest.skipIf(os.name == "nt", "Don't run on Windows")
     def test_makePlot(self):
         workingDirectory = UtilsTest.getTestRunPath()
         dataCollectionId = 123456

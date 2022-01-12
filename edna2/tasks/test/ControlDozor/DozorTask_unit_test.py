@@ -19,9 +19,9 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__authors__ = ['O. Svensson']
-__license__ = 'MIT'
-__date__ = '21/04/2019'
+__authors__ = ["O. Svensson"]
+__license__ = "MIT"
+__date__ = "21/04/2019"
 
 import os
 import json
@@ -36,16 +36,17 @@ from edna2.utils import UtilsConfig
 
 
 class ExecDozorUnitTest(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
-        referenceDataPath = self.dataPath / 'inDataDozor.json'
+        referenceDataPath = self.dataPath / "inDataDozor.json"
         with open(str(referenceDataPath)) as f:
             self.inData = json.load(f)
         self.dozor = ExecDozor(inData=self.inData)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run dozor test_generateCommands with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run dozor test_generateCommands with default config",
+    )
     def test_generateCommands(self):
         dozor = ExecDozor(inData=self.inData)
         strCommandText = dozor.generateCommands(self.inData)
@@ -57,43 +58,36 @@ class ExecDozorUnitTest(unittest.TestCase):
         self.dozor.firstImageNumber = 1
         self.dozor.oscillationRange = 0.1
         self.dozor.overlap = 0.0
-        logFileName = self.dataPath / 'Dozor_v2.0.2.log'
+        logFileName = self.dataPath / "Dozor_v2.0.2.log"
         with open(str(logFileName)) as f:
             output = f.read()
         result = self.dozor.parseOutput(self.inData, output)
-        self.assertEqual(10,
-                         len(result['imageDozor']),
-                         "Result from 10 images")
+        self.assertEqual(10, len(result["imageDozor"]), "Result from 10 images")
         # Log file with 'no results'
-        logFileName2 = self.dataPath / 'Dozor_v2.0.2_no_results.log'
+        logFileName2 = self.dataPath / "Dozor_v2.0.2_no_results.log"
         with open(str(logFileName2)) as f:
             output2 = f.read()
         result2 = self.dozor.parseOutput(self.inData, output2)
-        self.assertEqual(51,
-                         len(result2['imageDozor']),
-                         "Result from 51 images")
+        self.assertEqual(51, len(result2["imageDozor"]), "Result from 51 images")
 
     def test_parseDouble(self):
-        self.assertEqual(1.0,
-                         ExecDozor.parseDouble('1.0'),
-                         "Parsing '1.0'")
-        self.assertEqual(None,
-                         ExecDozor.parseDouble('****'),
-                         "Parsing '****'")
+        self.assertEqual(1.0, ExecDozor.parseDouble("1.0"), "Parsing '1.0'")
+        self.assertEqual(None, ExecDozor.parseDouble("****"), "Parsing '****'")
 
     def test_generatePngPlots(self):
-        plotmtvFile = self.dataPath / 'dozor_rd.mtv'
-        tmpDir = tempfile.mkdtemp(suffix='EDTestCasePluginUnitDozor_')
+        plotmtvFile = self.dataPath / "dozor_rd.mtv"
+        tmpDir = tempfile.mkdtemp(suffix="EDTestCasePluginUnitDozor_")
         listFile = ExecDozor.generatePngPlots(plotmtvFile, tmpDir)
         for plotFile in listFile:
             self.assertTrue(os.path.exists(plotFile))
         shutil.rmtree(tmpDir)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run dozor test_getLibrary with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run dozor test_getLibrary with default config",
+    )
     def test_getLibrary(self):
-        library = self.dozor.getLibrary('cbf')
-        self.assertTrue('xds-zcbf.so' in library)
-        library = self.dozor.getLibrary('hdf5')
-        self.assertTrue('durin-plugin.so' in library)
-
+        library = self.dozor.getLibrary("cbf")
+        self.assertTrue("xds-zcbf.so" in library)
+        library = self.dozor.getLibrary("hdf5")
+        self.assertTrue("durin-plugin.so" in library)

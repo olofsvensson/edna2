@@ -37,54 +37,67 @@ logger = UtilsLogging.getLogger()
 
 
 class ControlDozorExecTest(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run control dozor test with default config')
-    @unittest.skipIf(not os.path.exists('/data/id30a2/inhouse/opid30a2/20200907/RAW_DATA/opid30a2_1_0001.cbf'),
-                    'Image /data/id30a2/inhouse/opid30a2/20200907/RAW_DATA/opid30a2_1_0001.cbf doesn\'t exist')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run control dozor test with default config",
+    )
+    @unittest.skipIf(
+        not os.path.exists(
+            "/data/id30a2/inhouse/opid30a2/20200907/RAW_DATA/opid30a2_1_0001.cbf"
+        ),
+        "Image /data/id30a2/inhouse/opid30a2/20200907/RAW_DATA/opid30a2_1_0001.cbf doesn't exist",
+    )
     def test_execute_ControlDozor_ispyb(self):
         currentSite = UtilsConfig.getSite()
-        referenceDataPath = self.dataPath / 'ControlDozor_ispyb.json'
+        referenceDataPath = self.dataPath / "ControlDozor_ispyb.json"
         self.inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         controlDozor = ControlDozor(inData=self.inData)
         controlDozor.execute()
         self.assertTrue(controlDozor.isSuccess())
         UtilsConfig.setSite(currentSite)
         outData = controlDozor.outData
-        self.assertEqual(len(outData['imageQualityIndicators']), 100)
+        self.assertEqual(len(outData["imageQualityIndicators"]), 100)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run control dozor test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run control dozor test with default config",
+    )
     # @unittest.skipIf(not os.path.exists('/data/id30a2/inhouse/opid30a2/20200907/RAW_DATA/opid30a2_1_0001.cbf'),
     #                 'Image /data/id30a2/inhouse/opid30a2/20200907/RAW_DATA/opid30a2_1_0001.cbf doesn\'t exist')
     def test_execute_ControlDozor_ispyb_id30a3(self):
         currentSite = UtilsConfig.getSite()
-        referenceDataPath = self.dataPath / 'ControlDozor_ispyb_id30a3.json'
+        referenceDataPath = self.dataPath / "ControlDozor_ispyb_id30a3.json"
         self.inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         controlDozor = ControlDozor(inData=self.inData)
         controlDozor.execute()
         self.assertTrue(controlDozor.isSuccess())
         UtilsConfig.setSite(currentSite)
         outData = controlDozor.outData
-        self.assertEqual(len(outData['imageQualityIndicators']), 4)
+        self.assertEqual(len(outData["imageQualityIndicators"]), 4)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run control dozor test with default config')
-    @unittest.skipIf(not os.path.exists('/data/visitor/mx415/id30a3/20171127/' +
-                                        'RAW_DATA/mx415/1-2-2/MXPressF_01/' +
-                                        'mesh-mx415_1_1_master.h5'),
-                     'Image /data/visitor/mx415/id30a3/20171127/RAW_DATA/mx415/' +
-                     '1-2-2/MXPressF_01/mesh-mx415_1_1_master.h5 doesn\'t exist')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run control dozor test with default config",
+    )
+    @unittest.skipIf(
+        not os.path.exists(
+            "/data/visitor/mx415/id30a3/20171127/"
+            + "RAW_DATA/mx415/1-2-2/MXPressF_01/"
+            + "mesh-mx415_1_1_master.h5"
+        ),
+        "Image /data/visitor/mx415/id30a3/20171127/RAW_DATA/mx415/"
+        + "1-2-2/MXPressF_01/mesh-mx415_1_1_master.h5 doesn't exist",
+    )
     def test_execute_ControlDozor_ispyb_h5(self):
         currentSite = UtilsConfig.getSite()
-        referenceDataPath = self.dataPath / 'ControlDozor_ispyb_hdf5.json'
+        referenceDataPath = self.dataPath / "ControlDozor_ispyb_hdf5.json"
         self.inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         controlDozor = ControlDozor(inData=self.inData)
         controlDozor.execute()
         UtilsConfig.setSite(currentSite)
         self.assertTrue(controlDozor.isSuccess())
         outData = controlDozor.outData
-        self.assertEqual(len(outData['imageQualityIndicators']), 51)
+        self.assertEqual(len(outData["imageQualityIndicators"]), 51)

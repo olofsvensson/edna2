@@ -38,12 +38,9 @@ from edna2.tasks.ControlDozor import ControlDozor
 
 
 class ControlDozorUnitTest(unittest.TestCase):
-
     def setUp(self):
-        self.dataPath = os.path.join(os.path.dirname(__file__),
-                                     "data")
-        referenceDataPath = os.path.join(self.dataPath,
-                                         "ControlDozor.json")
+        self.dataPath = os.path.join(os.path.dirname(__file__), "data")
+        referenceDataPath = os.path.join(self.dataPath, "ControlDozor.json")
         with open(referenceDataPath) as f:
             self.inData = json.loads(f.read())
         self.controlDozor = ControlDozor(inData=self.inData)
@@ -54,50 +51,36 @@ class ControlDozorUnitTest(unittest.TestCase):
 
     def testCreateListOfBatches(self):
         self.assertEqual(
-            [[1], [2], [3], [4], [5]],
-            ControlDozor.createListOfBatches(range(1, 6), 1)
+            [[1], [2], [3], [4], [5]], ControlDozor.createListOfBatches(range(1, 6), 1)
         )
 
         self.assertEqual(
-            [[1, 2], [3, 4], [5]],
-            ControlDozor.createListOfBatches(range(1, 6), 2)
+            [[1, 2], [3, 4], [5]], ControlDozor.createListOfBatches(range(1, 6), 2)
         )
 
         self.assertEqual(
-            [[1, 2, 3], [4, 5]],
-            ControlDozor.createListOfBatches(range(1, 6), 3)
+            [[1, 2, 3], [4, 5]], ControlDozor.createListOfBatches(range(1, 6), 3)
         )
 
         self.assertEqual(
-            [[1, 2, 3, 4], [5]],
-            ControlDozor.createListOfBatches(range(1, 6), 4)
+            [[1, 2, 3, 4], [5]], ControlDozor.createListOfBatches(range(1, 6), 4)
         )
 
         self.assertEqual(
-            [[1, 2, 3, 4, 5]],
-            ControlDozor.createListOfBatches(range(1, 6), 5)
+            [[1, 2, 3, 4, 5]], ControlDozor.createListOfBatches(range(1, 6), 5)
         )
 
         self.assertEqual(
             [[1], [2], [4], [5], [6]],
-            ControlDozor.createListOfBatches(
-                list(range(4, 7)) + list(range(1, 3)),
-                1
-            )
+            ControlDozor.createListOfBatches(list(range(4, 7)) + list(range(1, 3)), 1),
         )
 
         self.assertEqual(
             [[1, 2], [4, 5], [6]],
-            ControlDozor.createListOfBatches(
-                list(range(4, 7)) + list(range(1, 3)),
-                2
-            )
+            ControlDozor.createListOfBatches(list(range(4, 7)) + list(range(1, 3)), 2),
         )
 
         self.assertEqual(
             [[1, 2], [4, 5, 6]],
-            ControlDozor.createListOfBatches(
-                list(range(4, 7)) + list(range(1, 3)),
-                3
-            )
+            ControlDozor.createListOfBatches(list(range(4, 7)) + list(range(1, 3)), 3),
         )

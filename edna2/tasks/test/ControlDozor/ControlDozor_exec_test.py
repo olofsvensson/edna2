@@ -37,56 +37,64 @@ logger = UtilsLogging.getLogger()
 
 
 class ControlDozorExecTest(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run control dozor test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run control dozor test with default config",
+    )
     def test_execute_ControlDozor(self):
-        referenceDataPath = self.dataPath / 'ControlDozor.json'
+        referenceDataPath = self.dataPath / "ControlDozor.json"
         self.inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         controlDozor = ControlDozor(inData=self.inData)
         controlDozor.execute()
         self.assertTrue(controlDozor.isSuccess())
         outData = controlDozor.outData
-        self.assertEqual(len(outData['imageQualityIndicators']), 5)
+        self.assertEqual(len(outData["imageQualityIndicators"]), 5)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run control dozor test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run control dozor test with default config",
+    )
     def test_execute_ControlDozor_batchSize_2(self):
-        referenceDataPath = self.dataPath / 'ControlDozor_batchSize_2.json'
+        referenceDataPath = self.dataPath / "ControlDozor_batchSize_2.json"
         self.inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         controlDozor = ControlDozor(inData=self.inData)
         controlDozor.execute()
         self.assertTrue(controlDozor.isSuccess())
         outData = controlDozor.outData
-        self.assertEqual(len(outData['imageQualityIndicators']), 5)
+        self.assertEqual(len(outData["imageQualityIndicators"]), 5)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run control dozor test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run control dozor test with default config",
+    )
     def test_execute_ControlDozor_batchSize_2a(self):
-        referenceDataPath = self.dataPath / 'ControlDozor_batchSize_2a.json'
+        referenceDataPath = self.dataPath / "ControlDozor_batchSize_2a.json"
         self.inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         controlDozor = ControlDozor(inData=self.inData)
         controlDozor.execute()
         self.assertTrue(controlDozor.isSuccess())
         outData = controlDozor.outData
-        self.assertEqual(len(outData['imageQualityIndicators']), 4)
+        self.assertEqual(len(outData["imageQualityIndicators"]), 4)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run control dozor test with default config')
-    @unittest.skipIf(not os.path.exists('/data/visitor/mx415/id30a2/20160315/' +
-                                        'RAW_DATA/test3/mx415_1_0001.cbf'),
-                     'Image /data/visitor/mx415/id30a2/20160315/RAW_DATA/' +
-                     'test3/mx415_1_0001.cbf doesn\'t exist')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run control dozor test with default config",
+    )
+    @unittest.skipIf(
+        not os.path.exists(
+            "/data/visitor/mx415/id30a2/20160315/" + "RAW_DATA/test3/mx415_1_0001.cbf"
+        ),
+        "Image /data/visitor/mx415/id30a2/20160315/RAW_DATA/"
+        + "test3/mx415_1_0001.cbf doesn't exist",
+    )
     def test_execute_ControlDozor_wedgeNumber(self):
-        referenceDataPath = self.dataPath / 'ControlDozor_wedgeNumber.json'
+        referenceDataPath = self.dataPath / "ControlDozor_wedgeNumber.json"
         self.inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         controlDozor = ControlDozor(inData=self.inData)
         controlDozor.execute()
         self.assertTrue(controlDozor.isSuccess())
         outData = controlDozor.outData
-        self.assertEqual(len(outData['imageQualityIndicators']), 740)
-
-
+        self.assertEqual(len(outData["imageQualityIndicators"]), 740)
