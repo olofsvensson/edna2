@@ -1,0 +1,68 @@
+{
+    "subWedge": [
+        {
+            "experimentalCondition": {
+                "detector": {
+                    "numberPixelX": 4148,
+                    "numberPixelY": 4362,
+                    "pixelSizeX": 0.075,
+                    "pixelSizeY": 0.075,
+                    "beamPositionX": 153.843,
+                    "beamPositionY": 166.81,
+                    "distance": 265.775,
+                    "serialNumber": "E-32-0126",
+                    "name": "EIGER 16M",
+                    "type": "eiger16m"
+                },
+                "beam": {
+                    "wavelength": 0.61992,
+                    "exposureTime": 0.05
+                },
+                "goniostat": {
+                    "rotationAxisStart": 167.2926,
+                    "rotationAxisEnd": 168.2926,
+                    "oscillationWidth": 1.0
+                }
+            },
+            "image": [
+                {
+                    "path": "/data/id23eh1/inhouse/opid231/20210315/RAW_DATA/tryps/tryps-x/ref-x-tryps_1_0001.h5",
+                    "date": "2021-03-15T13:41:21.802+01:00",
+                    "number": 1
+                }
+            ]
+        },
+        {
+            "experimentalCondition": {
+                "detector": {
+                    "numberPixelX": 4148,
+                    "numberPixelY": 4362,
+                    "pixelSizeX": 0.075,
+                    "pixelSizeY": 0.075,
+                    "beamPositionX": 153.843,
+                    "beamPositionY": 166.81,
+                    "distance": 265.775,
+                    "serialNumber": "E-32-0126",
+                    "name": "EIGER 16M",
+                    "type": "eiger16m"
+                },
+                "beam": {
+                    "wavelength": 0.61992,
+                    "exposureTime": 0.05
+                },
+                "goniostat": {
+                    "rotationAxisStart": 167.2926,
+                    "rotationAxisEnd": 168.2926,
+                    "oscillationWidth": 1.0
+                }
+            },
+            "image": [
+                {
+                    "path": "/data/id23eh1/inhouse/opid231/20210315/RAW_DATA/tryps/tryps-x/ref-x-tryps_1_0004.h5",
+                    "date": "2021-03-15T13:41:21.802+01:00",
+                    "number": 1
+                }
+            ]
+        }
+    ]
+}
