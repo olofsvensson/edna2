@@ -51,5 +51,5 @@ class ControlIndexing_id30a1_SIRP_007_ExecTest(unittest.TestCase):
         controlIndexing.execute()
         self.assertTrue(controlIndexing.isSuccess())
         self.assertEqual(
-            controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 16
+            controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 5
         )

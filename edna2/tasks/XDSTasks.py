@@ -250,9 +250,9 @@ class XDSTask(AbstractTask):
             # Read the file
             with open(str(dozorSpotFile)) as f:
                 dozorLines = f.readlines()
-            omega = float(dozorLines[2].split()[1])
+            omega = float(dozorLines[2].split()[1]) % 360
             frame = int((omega - oscRange/2)/oscRange) + 1
-            frame = frame % 360
+            print(omega, frame)
             for dozorLine in dozorLines[3:]:
                 new = True
                 listValues = dozorLine.split()

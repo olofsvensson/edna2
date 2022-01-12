@@ -128,7 +128,7 @@ class ControlIndexing(AbstractTask):
             listSubWedgeImage = subWedge["image"]
             for image in listSubWedgeImage:
                 # listImage.append(image['path'])
-                inDataControlDozor = {"image": [image["path"]], "overlap": -89}
+                inDataControlDozor = {"image": [image["path"]]}
                 controlDozor = ControlDozor(
                     inData=inDataControlDozor,
                     workingDirectorySuffix=UtilsImage.getPrefixNumber(image["path"]),
