@@ -32,6 +32,8 @@ from edna2.tasks.XDSTasks import XDSGenerateBackground
 from edna2.tasks.XDSTasks import XDSIntegration
 from edna2.tasks.ReadImageHeader import ReadImageHeader
 from edna2.tasks.Raddose import Raddose
+from edna2.tasks.H5ToCBFTask import H5ToCBFTask
+from edna2.tasks.H5ToBinnedCBFTask import H5ToBinnedCBFTask
 
 from edna2.utils import UtilsImage
 from edna2.utils import UtilsSymmetry
@@ -90,8 +92,36 @@ class Characterisation(AbstractTask):
                 #     beam["size"] = listSubWedge[0]["experimentalCondition"]["beam"]["size"]
                 beam["exposureTime"] = listSubWedge[0]["experimentalCondition"]["beam"]["exposureTime"]
                 beam["wavelength"] = listSubWedge[0]["experimentalCondition"]["beam"]["wavelength"]
+        # Convert images to CBF
+        firstImage = listSubWedge[0]["image"][0]["path"]
+        import os
+        import pprint
+        listH5ToCBF = []
+        suffix = os.path.splitext(firstImage)[1]
+        if suffix == ".h5q":
+            newListImagePath = []
+            for subWedge in listSubWedge:
+                imageList = subWedge["image"]
+                for image in imageList:
+                    imagePath = image["path"]
+                    hdf5ImageNumber = UtilsImage.getImageNumber(imagePath)
+                    inDataH5ToCBF = {
+                        'hdf5File': imagePath,
+                        'hdf5ImageNumber': hdf5ImageNumber,
+                        'imageNumber': 1,
+                        'forcedOutputDirectory': str(self.getWorkingDirectory()),
+                        'forcedOutputImageNumber': hdf5ImageNumber
+                    }
+                    h5ToCBF = H5ToCBFTask(inData=inDataH5ToCBF)
+                    h5ToCBF.start()
+                    listH5ToCBF.append((image, h5ToCBF))
+        # Join CBF creation
+        for image, h5ToCBF in listH5ToCBF:
+            h5ToCBF.join()
+            image["path"] = h5ToCBF.outData["outputCBFFile"]
+        pprint.pprint(listSubWedge)
         # Start indexing
-        outDataIndexing, outDataGB = self.indexing(prefix, listSubWedge)
+        outDataIndexing, outDataGB, listSubWedge = self.indexing(prefix, listSubWedge, self.getWorkingDirectory())
         if outDataIndexing is not None and outDataGB is not None:
             listXdsAsciiHkl, correctLp, bkgpixCbf = self.integration(
                 prefix, listSubWedge, outDataIndexing, outDataGB)
@@ -156,7 +186,7 @@ class Characterisation(AbstractTask):
                 bestTask.execute()
 
     @staticmethod
-    def indexing(prefix, listSubWedge):
+    def indexing(prefix, listSubWedge, workingDirectory):
         outDataIndexing = None
         outDataGB = None
         # Start indexing
@@ -170,7 +200,7 @@ class Characterisation(AbstractTask):
         indexingTask.start()
         # Start background esitmation
         inDataGenerateBackground = {
-            "subWedge": listSubWedge,
+            "subWedge": [listSubWedge[0]],
         }
         generateBackground = XDSGenerateBackground(
             inData=inDataGenerateBackground,
@@ -183,7 +213,7 @@ class Characterisation(AbstractTask):
         if indexingTask.isSuccess():
             outDataIndexing = indexingTask.outData
             outDataGB = generateBackground.outData
-        return outDataIndexing, outDataGB
+        return outDataIndexing, outDataGB, listSubWedge
 
 
     @staticmethod
