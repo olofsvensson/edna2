@@ -35,18 +35,18 @@ logger = UtilsLogging.getLogger()
 
 
 class CharacterisationExecTest(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run indexing test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run indexing test with default config",
+    )
     def test_execute_Characterisation_id23eh1_eiger16m(self):
-        referenceDataPath = self.dataPath / 'id23eh1_eiger16m_3.json'
+        referenceDataPath = self.dataPath / "id23eh1_eiger16m_3.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         characterisation = Characterisation(
-            inData=inData,
-            workingDirectorySuffix='id23eh1_eiger16m'
+            inData=inData, workingDirectorySuffix="id23eh1_eiger16m"
         )
         characterisation.execute()
         self.assertTrue(characterisation.isSuccess())

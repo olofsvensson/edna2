@@ -35,18 +35,18 @@ logger = UtilsLogging.getLogger()
 
 
 class CharacterisationExecTest(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run indexing test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run indexing test with default config",
+    )
     def test_execute_Characterisation_opid231_2(self):
-        referenceDataPath = self.dataPath / 'opid231_2.json'
+        referenceDataPath = self.dataPath / "opid231_2.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         characterisation = Characterisation(
-            inData=inData,
-            workingDirectorySuffix='opid231_2'
+            inData=inData, workingDirectorySuffix="opid231_2"
         )
         characterisation.execute()
         self.assertTrue(characterisation.isSuccess())

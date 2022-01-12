@@ -33,10 +33,10 @@ from edna2.tasks.XDSTasks import XDSIntegration
 from edna2.tasks.ReadImageHeader import ReadImageHeader
 from edna2.tasks.Raddose import Raddose
 from edna2.tasks.H5ToCBFTask import H5ToCBFTask
-from edna2.tasks.H5ToBinnedCBFTask import H5ToBinnedCBFTask
 
 from edna2.utils import UtilsImage
 from edna2.utils import UtilsSymmetry
+
 
 class Characterisation(AbstractTask):
     """
@@ -48,33 +48,25 @@ class Characterisation(AbstractTask):
         return {
             "type": "object",
             "properties": {
-                "dataCollectionId": { "type": "integer" },
-                "diffractionPlan" : {
+                "dataCollectionId": {"type": "integer"},
+                "diffractionPlan": {
                     "$ref": self.getSchemaUrl("ispybDiffractionPlan.json")
                 },
-                "experimentalCondition" : {
+                "experimentalCondition": {
                     "$ref": self.getSchemaUrl("experimentalCondition.json")
                 },
                 "imagePath": {
                     "type": "array",
                     "items": {
                         "type": "string",
-                    }
+                    },
                 },
-                "sample": {
-                    "$ref": self.getSchemaUrl("sample.json")
-                },
-                "token": {
-                    "anyOf": [
-                        {"type": "string"},
-                        {"type": "null"}
-                    ]
-                }
-            }
+                "sample": {"$ref": self.getSchemaUrl("sample.json")},
+                "token": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+            },
         }
 
     def run(self, inData):
-        outData = {}
         listImagePath = inData["imagePath"]
         prefix = UtilsImage.getPrefix(listImagePath[0])
         listSubWedge = self.getListSubWedge(inData)
@@ -90,27 +82,31 @@ class Characterisation(AbstractTask):
                 flux = beam.get("flux", None)
                 # if not "size" in beam:
                 #     beam["size"] = listSubWedge[0]["experimentalCondition"]["beam"]["size"]
-                beam["exposureTime"] = listSubWedge[0]["experimentalCondition"]["beam"]["exposureTime"]
-                beam["wavelength"] = listSubWedge[0]["experimentalCondition"]["beam"]["wavelength"]
+                beam["exposureTime"] = listSubWedge[0]["experimentalCondition"]["beam"][
+                    "exposureTime"
+                ]
+                beam["wavelength"] = listSubWedge[0]["experimentalCondition"]["beam"][
+                    "wavelength"
+                ]
         # Convert images to CBF
         firstImage = listSubWedge[0]["image"][0]["path"]
         import os
         import pprint
+
         listH5ToCBF = []
         suffix = os.path.splitext(firstImage)[1]
-        if suffix == ".h5q":
-            newListImagePath = []
+        if suffix == ".h5":
             for subWedge in listSubWedge:
                 imageList = subWedge["image"]
                 for image in imageList:
                     imagePath = image["path"]
                     hdf5ImageNumber = UtilsImage.getImageNumber(imagePath)
                     inDataH5ToCBF = {
-                        'hdf5File': imagePath,
-                        'hdf5ImageNumber': hdf5ImageNumber,
-                        'imageNumber': 1,
-                        'forcedOutputDirectory': str(self.getWorkingDirectory()),
-                        'forcedOutputImageNumber': hdf5ImageNumber
+                        "hdf5File": imagePath,
+                        "hdf5ImageNumber": hdf5ImageNumber,
+                        "imageNumber": 1,
+                        "forcedOutputDirectory": str(self.getWorkingDirectory()),
+                        "forcedOutputImageNumber": hdf5ImageNumber,
                     }
                     h5ToCBF = H5ToCBFTask(inData=inDataH5ToCBF)
                     h5ToCBF.start()
@@ -121,24 +117,34 @@ class Characterisation(AbstractTask):
             image["path"] = h5ToCBF.outData["outputCBFFile"]
         pprint.pprint(listSubWedge)
         # Start indexing
-        outDataIndexing, outDataGB, listSubWedge = self.indexing(prefix, listSubWedge, self.getWorkingDirectory())
+        outDataIndexing, outDataGB, listSubWedge = self.indexing(
+            prefix, listSubWedge, self.getWorkingDirectory()
+        )
         if outDataIndexing is not None and outDataGB is not None:
             listXdsAsciiHkl, correctLp, bkgpixCbf = self.integration(
-                prefix, listSubWedge, outDataIndexing, outDataGB)
+                prefix, listSubWedge, outDataIndexing, outDataGB
+            )
             if listXdsAsciiHkl is not None:
                 # Check if Raddose should be run
-                estimateRadiationDamage = self.checkEstimateRadiationDamage(inData, flux)
+                estimateRadiationDamage = self.checkEstimateRadiationDamage(
+                    inData, flux
+                )
                 if estimateRadiationDamage:
                     # Check if forced space group
                     forcedSpaceGroup = None
                     numOperators = None
                     cell = None
-                    if "diffractionPlan" in inData and "forcedSpaceGroup" in inData["diffractionPlan"]:
+                    if (
+                        "diffractionPlan" in inData
+                        and "forcedSpaceGroup" in inData["diffractionPlan"]
+                    ):
                         forcedSpaceGroup = inData["diffractionPlan"]["forcedSpaceGroup"]
                         if forcedSpaceGroup is not None:
                             if forcedSpaceGroup != "":
                                 forcedSpaceGroup = forcedSpaceGroup.replace(" ", "")
-                                numOperators = UtilsSymmetry.getNumberOfSymmetryOperatorsFromSpaceGroupName(forcedSpaceGroup)
+                                numOperators = UtilsSymmetry.getNumberOfSymmetryOperatorsFromSpaceGroupName(
+                                    forcedSpaceGroup
+                                )
                             else:
                                 forcedSpaceGroup = None
                     if forcedSpaceGroup is None:
@@ -148,10 +154,16 @@ class Characterisation(AbstractTask):
                             cell = resultIndexing["cell"]
                             if "spaceGroupNumber" in resultIndexing:
                                 spaceGroupNumber = resultIndexing["spaceGroupNumber"]
-                                numOperators = UtilsSymmetry.getNumberOfSymmetryOperatorsFromSpaceGroupITNumber(spaceGroupNumber)
+                                numOperators = UtilsSymmetry.getNumberOfSymmetryOperatorsFromSpaceGroupITNumber(
+                                    spaceGroupNumber
+                                )
                     if numOperators is None:
-                        raise RuntimeError("Error when trying to determine number of symmetry operators!")
-                    chemicalComposition = self.getDefaultChemicalComposition(cell, numOperators)
+                        raise RuntimeError(
+                            "Error when trying to determine number of symmetry operators!"
+                        )
+                    chemicalComposition = self.getDefaultChemicalComposition(
+                        cell, numOperators
+                    )
                     numberOfImages = self.getNumberOfImages(listSubWedge)
                     sample = inData["sample"]
                     inDataRaddose = {
@@ -160,13 +172,13 @@ class Characterisation(AbstractTask):
                         "sample": sample,
                         "cell": cell,
                         "numberOfImages": numberOfImages,
-                        "numOperators": numOperators
+                        "numOperators": numOperators,
                     }
                     # import pprint
                     # pprint.pprint(inDataRaddose)
                     raddose = Raddose(
-                        inData=inDataRaddose,
-                        workingDirectorySuffix=prefix)
+                        inData=inDataRaddose, workingDirectorySuffix=prefix
+                    )
                     raddose.execute()
                     if raddose.isSuccess():
                         absorbedDoseRate = raddose.outData["absorbedDoseRate"]
@@ -177,12 +189,9 @@ class Characterisation(AbstractTask):
                     "xdsAsciiHkl": listXdsAsciiHkl,
                     "bkgpixCbf": bkgpixCbf,
                     "correctLp": correctLp,
-                    "crystalAbsorbedDoseRate": absorbedDoseRate
+                    "crystalAbsorbedDoseRate": absorbedDoseRate,
                 }
-                bestTask = Best(
-                    inData=inDataBest,
-                    workingDirectorySuffix=prefix
-                )
+                bestTask = Best(inData=inDataBest, workingDirectorySuffix=prefix)
                 bestTask.execute()
 
     @staticmethod
@@ -194,8 +203,7 @@ class Characterisation(AbstractTask):
             "subWedge": listSubWedge,
         }
         indexingTask = ControlIndexing(
-            inData=inDataIndexing,
-            workingDirectorySuffix=prefix
+            inData=inDataIndexing, workingDirectorySuffix=prefix
         )
         indexingTask.start()
         # Start background esitmation
@@ -203,8 +211,7 @@ class Characterisation(AbstractTask):
             "subWedge": [listSubWedge[0]],
         }
         generateBackground = XDSGenerateBackground(
-            inData=inDataGenerateBackground,
-            workingDirectorySuffix = prefix
+            inData=inDataGenerateBackground, workingDirectorySuffix=prefix
         )
         generateBackground.start()
         generateBackground.join()
@@ -214,7 +221,6 @@ class Characterisation(AbstractTask):
             outDataIndexing = indexingTask.outData
             outDataGB = generateBackground.outData
         return outDataIndexing, outDataGB, listSubWedge
-
 
     @staticmethod
     def integration(prefix, listSubWedge, outDataIndexing, outDataGB):
@@ -236,12 +242,12 @@ class Characterisation(AbstractTask):
                     "blankCbf": outDataGB["blankCbf"],
                     "bkginitCbf": outDataGB["bkginitCbf"],
                     "xCorrectionsCbf": outDataGB["xCorrectionsCbf"],
-                    "yCorrectionsCbf": outDataGB["yCorrectionsCbf"]
+                    "yCorrectionsCbf": outDataGB["yCorrectionsCbf"],
                 }
                 imageNo = subWedge["image"][0]["number"]
                 integrationTask = XDSIntegration(
                     inData=inDataIntergation,
-                    workingDirectorySuffix=prefix + "_{0:04d}".format(imageNo)
+                    workingDirectorySuffix=prefix + "_{0:04d}".format(imageNo),
                 )
                 integrationTask.start()
                 listTasks.append(integrationTask)
@@ -271,12 +277,10 @@ class Characterisation(AbstractTask):
     @staticmethod
     def readImageHeaders(listImagePath):
         # Read the header(s)
-        inDataReadImageHeader = {
-            "imagePath": listImagePath
-        }
+        inDataReadImageHeader = {"imagePath": listImagePath}
         readImageHeader = ReadImageHeader(
             inData=inDataReadImageHeader,
-            workingDirectorySuffix=UtilsImage.getPrefix(listImagePath[0])
+            workingDirectorySuffix=UtilsImage.getPrefix(listImagePath[0]),
         )
         readImageHeader.execute()
         listSubWedge = readImageHeader.outData["subWedge"]
@@ -298,16 +302,28 @@ class Characterisation(AbstractTask):
         beta = math.radians(cell["beta"])
         gamma = math.radians(cell["gamma"])
 
-        unitCellVolume = a * b * c * (
-            math.sqrt(1 - math.cos(alpha) * math.cos(alpha) -
-            math.cos(beta) * math.cos(beta) -
-            math.cos(gamma) * math.cos(gamma) +
-            2 * math.cos(alpha) * math.cos(beta) * math.cos(gamma))
+        unitCellVolume = (
+            a
+            * b
+            * c
+            * (
+                math.sqrt(
+                    1
+                    - math.cos(alpha) * math.cos(alpha)
+                    - math.cos(beta) * math.cos(beta)
+                    - math.cos(gamma) * math.cos(gamma)
+                    + 2 * math.cos(alpha) * math.cos(beta) * math.cos(gamma)
+                )
+            )
         )
         polymerVolume = unitCellVolume * (1 - averageCrystalSolventContent)
         numberOfMonomersPerUnitCell = round(polymerVolume / averageAminoAcidVolume)
-        numberOfMonomersPerAsymmetricUnit = round(numberOfMonomersPerUnitCell / numOperators)
-        numberOfSulfurAtom = int(round(numberOfMonomersPerAsymmetricUnit * averageSulfurContentPerAminoacid))
+        numberOfMonomersPerAsymmetricUnit = round(
+            numberOfMonomersPerUnitCell / numOperators
+        )
+        numberOfSulfurAtom = int(
+            round(numberOfMonomersPerAsymmetricUnit * averageSulfurContentPerAminoacid)
+        )
 
         chemicalCompositionMM = {
             "solvent": {
@@ -324,16 +340,11 @@ class Characterisation(AbstractTask):
                         "type": "protein",
                         "numberOfCopies": 1,
                         "numberOfMonomers": numberOfMonomersPerAsymmetricUnit,
-                        "heavyAtoms": [
-                            {
-                                "symbol": "S",
-                                "numberOf": numberOfSulfurAtom
-                            }
-                        ]
+                        "heavyAtoms": [{"symbol": "S", "numberOf": numberOfSulfurAtom}],
                     }
                 ],
-                "numberOfCopiesInAsymmetricUnit": 1
-            }
+                "numberOfCopiesInAsymmetricUnit": 1,
+            },
         }
 
         return chemicalCompositionMM

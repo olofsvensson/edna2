@@ -23,7 +23,6 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "14/04/2020"
 
-import pprint
 import unittest
 
 from edna2.tasks.Characterisation import Characterisation
@@ -34,22 +33,32 @@ logger = UtilsLogging.getLogger()
 
 
 class ControlIndexingUnitTest(unittest.TestCase):
-
     def test_getDefaultChemicalComposition(self):
         cell = {
-            "a": 78.9, "b": 95.162, "c": 104.087,
-            "alpha": 90, "beta": 90, "gamma": 90
+            "a": 78.9,
+            "b": 95.162,
+            "c": 104.087,
+            "alpha": 90,
+            "beta": 90,
+            "gamma": 90,
         }
         numOperators = 4
-        chemicalCompositionMM = Characterisation.getDefaultChemicalComposition(cell, numOperators)
+        chemicalCompositionMM = Characterisation.getDefaultChemicalComposition(
+            cell, numOperators
+        )
         # pprint.pprint(chemicalCompositionMM)
-        self.assertEqual(chemicalCompositionMM["solvent"]["atom"][0]["concentration"], 314)
-        self.assertEqual(chemicalCompositionMM["structure"]["chain"][0]["numberOfMonomers"], 764)
-        self.assertEqual(chemicalCompositionMM["structure"]["chain"][0]["type"], "protein")
+        self.assertEqual(
+            chemicalCompositionMM["solvent"]["atom"][0]["concentration"], 314
+        )
+        self.assertEqual(
+            chemicalCompositionMM["structure"]["chain"][0]["numberOfMonomers"], 764
+        )
+        self.assertEqual(
+            chemicalCompositionMM["structure"]["chain"][0]["type"], "protein"
+        )
 
     def test_checkEstimateRadiationDamage(self):
         inData = {}
-        listSubWedge = []
         self.assertFalse(Characterisation.checkEstimateRadiationDamage(inData))
         inData = {"diffractionPlan": {"estimateRadiationDamage": False}}
         self.assertFalse(Characterisation.checkEstimateRadiationDamage(inData))
