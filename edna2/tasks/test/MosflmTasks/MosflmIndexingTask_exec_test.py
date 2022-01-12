@@ -82,7 +82,9 @@ class MosflmTasksExecTest(unittest.TestCase):
         mosflmIndexingTask.execute()
         self.assertTrue(mosflmIndexingTask.isSuccess())
 
-    def test_aggregate_master(self):
+    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
+                     'Cannot run mosflm test with default config')
+    def tes_aggregate_master(self):
         import h5py
         import pprint
         filePath = "/opt/pxsoft/bes/vgit/linux-x86_64/id30a2/edna2/testdata/images/ref-fae_3_1_data_000001.h5"
@@ -113,7 +115,9 @@ class MosflmTasksExecTest(unittest.TestCase):
         # pprint.pprint(data.values())
         f.close()
 
-    def test_modify_master(self):
+    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
+                     'Cannot run mosflm test with default config')
+    def tes_modify_master(self):
         import h5py
         import pprint
         filePath1 = "/opt/pxsoft/bes/vgit/linux-x86_64/id30a2/edna2/testdata/images/ref-fae_3_1_master.h5"
