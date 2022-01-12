@@ -23,18 +23,15 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "14/04/2020"
 
-import itertools
-from collections import Counter
 
 import numpy as np
-
 
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.ReadImageHeader import ReadImageHeader
 from edna2.tasks.ControlDozor import ControlDozor
 from edna2.tasks.XDSTasks import XDSIndexing
-
 from edna2.utils import UtilsImage
+
 
 class ControlIndexing(AbstractTask):
     """
@@ -46,14 +43,14 @@ class ControlIndexing(AbstractTask):
         return {
             "type": "object",
             "properties": {
-                "dataCollectionId": { "type": "integer" },
+                "dataCollectionId": {"type": "integer"},
                 "imagePath": {
                     "type": "array",
                     "items": {
                         "type": "string",
-                    }
-                }
-            }
+                    },
+                },
+            },
         }
 
     def run(self, inData):
@@ -68,31 +65,32 @@ class ControlIndexing(AbstractTask):
         listDozorSpotFile = []
         for outDataControlDozor in listOutDataControlDozor:
             if "dozorSpotFile" in outDataControlDozor["imageQualityIndicators"][0]:
-                dozorSpotFile = outDataControlDozor["imageQualityIndicators"][0]["dozorSpotFile"]
+                dozorSpotFile = outDataControlDozor["imageQualityIndicators"][0][
+                    "dozorSpotFile"
+                ]
                 listDozorSpotFile.append(dozorSpotFile)
         imageDict = listSubWedge[0]
-        listXdsIndexingTask = []
-        listResult = []
-        listSpaceGroup = []
         # Run XDS indexing
         xdsIndexinInData = {
             "subWedge": listSubWedge,
-            "dozorSpotFile": listDozorSpotFile
+            "dozorSpotFile": listDozorSpotFile,
         }
         xdsIndexingTask = XDSIndexing(
             inData=xdsIndexinInData,
-            workingDirectorySuffix=UtilsImage.getPrefix(imageDict["image"][0]["path"])
+            workingDirectorySuffix=UtilsImage.getPrefix(imageDict["image"][0]["path"]),
         )
         xdsIndexingTask.execute()
         xparmXdsPath = None
         if xdsIndexingTask.isSuccess():
             xdsIndexingOutData = xdsIndexingTask.outData
             xparmXdsPath = xdsIndexingOutData["xparmXdsPath"]
-            resultIndexing = ControlIndexing.getResultIndexingFromXds(xdsIndexingOutData)
+            resultIndexing = ControlIndexing.getResultIndexingFromXds(
+                xdsIndexingOutData
+            )
         outData = {
             "resultIndexing": resultIndexing,
             "resultDozor": listOutDataControlDozor,
-            "xparmXdsPath": xparmXdsPath
+            "xparmXdsPath": xparmXdsPath,
         }
         return outData
 
@@ -113,12 +111,10 @@ class ControlIndexing(AbstractTask):
     @staticmethod
     def readImageHeaders(listImagePath):
         # Read the header(s)
-        inDataReadImageHeader = {
-            "imagePath": listImagePath
-        }
+        inDataReadImageHeader = {"imagePath": listImagePath}
         readImageHeader = ReadImageHeader(
             inData=inDataReadImageHeader,
-            workingDirectorySuffix=UtilsImage.getPrefix(listImagePath[0])
+            workingDirectorySuffix=UtilsImage.getPrefix(listImagePath[0]),
         )
         readImageHeader.execute()
         listSubWedge = readImageHeader.outData["subWedge"]
@@ -129,16 +125,13 @@ class ControlIndexing(AbstractTask):
         listControlDozor = []
         listOutDataControlDozor = []
         for subWedge in listSubWedge:
-            listSubWedgeImage = subWedge['image']
+            listSubWedgeImage = subWedge["image"]
             for image in listSubWedgeImage:
                 # listImage.append(image['path'])
-                inDataControlDozor = {
-                    'image': [image['path']],
-                    'overlap': -89
-                }
+                inDataControlDozor = {"image": [image["path"]], "overlap": -89}
                 controlDozor = ControlDozor(
                     inData=inDataControlDozor,
-                    workingDirectorySuffix=UtilsImage.getPrefixNumber(image['path'])
+                    workingDirectorySuffix=UtilsImage.getPrefixNumber(image["path"]),
                 )
                 listControlDozor.append(controlDozor)
                 controlDozor.start()
@@ -209,9 +202,8 @@ class ControlIndexing(AbstractTask):
                 "mosaicity": idxref["mosaicity"],
                 "XDS_xparm": xparamDict,
                 "mosflmB": mosflmU.tolist(),
-                "mosflmU": mosflmU.tolist()
+                "mosflmU": mosflmU.tolist(),
             }
         else:
             resultIndexing = {}
         return resultIndexing
-
