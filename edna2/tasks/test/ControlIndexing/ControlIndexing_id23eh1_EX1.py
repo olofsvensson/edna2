@@ -41,7 +41,7 @@ class ControlIndexing_id23eh1_EX1_ExecTest(unittest.TestCase):
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run indexing test with default config')
-    def tes_execute_ControlIndexing_id23eh1_EX1(self):
+    def test_execute_ControlIndexing_id23eh1_EX1(self):
         referenceDataPath = self.dataPath / 'id23eh1_EX1.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         controlIndexing = ControlIndexing(

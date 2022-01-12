@@ -21,7 +21,7 @@
 
 __authors__ = ["O. Svensson"]
 __license__ = "MIT"
-__date__ = "19/11/2020"
+__date__ = "14/04/2020"
 
 import unittest
 
@@ -35,21 +35,21 @@ logger = UtilsLogging.getLogger()
 
 
 class ControlIndexing_id23eh1_EX1_ExecTest(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run indexing test with default config')
-    def tes_execute_ControlIndexing_id23eh2_Y1(self):
-        referenceDataPath = self.dataPath / 'id23eh2_Y2.json'
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run indexing test with default config",
+    )
+    def test_execute_ControlIndexing_id23eh1_EX1(self):
+        referenceDataPath = self.dataPath / "id30a1_SIRP-007_7.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         controlIndexing = ControlIndexing(
-            inData=inData,
-            workingDirectorySuffix='id23eh2_Y2'
+            inData=inData, workingDirectorySuffix="local_user_1"
         )
         controlIndexing.execute()
         self.assertTrue(controlIndexing.isSuccess())
-        print(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"])
-        # self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 16)
-
+        self.assertEqual(
+            controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 16
+        )

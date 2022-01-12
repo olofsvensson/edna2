@@ -97,22 +97,6 @@ class ControlIndexing(AbstractTask):
         return outData
 
     @staticmethod
-    def getListPermutation(listDozorSpotFile):
-        listPermutation = []
-        noSpotFiles = len(listDozorSpotFile)
-        if noSpotFiles > 2:
-            start = 2
-        else:
-            start = 1
-        for index in range(start,noSpotFiles+1):
-            tupleCombination = itertools.combinations(listDozorSpotFile, index)
-            for combination in tupleCombination:
-                listCombination = list(combination)
-                if len(listCombination) > 0:
-                    listPermutation += [listCombination]
-        return listPermutation
-
-    @staticmethod
     def getListSubWedge(inData):
         listSubWedge = None
         # First check if we have data collection ids or image list

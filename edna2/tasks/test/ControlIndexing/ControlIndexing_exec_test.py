@@ -35,58 +35,69 @@ logger = UtilsLogging.getLogger()
 
 
 class ControlIndexingExecTest(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run indexing test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run indexing test with default config",
+    )
     def test_execute_ControlIndexing_opid30a1_4(self):
-        referenceDataPath = self.dataPath / 'opid30a1_4.json'
+        referenceDataPath = self.dataPath / "opid30a1_4.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         controlIndexing = ControlIndexing(
-            inData=inData,
-            workingDirectorySuffix='opid30a1_4'
+            inData=inData, workingDirectorySuffix="opid30a1_4"
         )
         controlIndexing.execute()
         self.assertTrue(controlIndexing.isSuccess())
-        self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 143)
+        self.assertEqual(
+            controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 143
+        )
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run indexing test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run indexing test with default config",
+    )
     def test_execute_ControlIndexing_TRYP_X1_4(self):
-        referenceDataPath = self.dataPath / 'TRYP-X1_4.json'
+        referenceDataPath = self.dataPath / "TRYP-X1_4.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         controlIndexing = ControlIndexing(
-            inData=inData,
-            workingDirectorySuffix='TRYP-X1_4'
+            inData=inData, workingDirectorySuffix="TRYP-X1_4"
         )
         controlIndexing.execute()
         self.assertTrue(controlIndexing.isSuccess())
-        self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 16)
+        self.assertEqual(
+            controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 16
+        )
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run indexing test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run indexing test with default config",
+    )
     def test_execute_ControlIndexing_adrcpt_For1_4(self):
-        referenceDataPath = self.dataPath / 'adrcpt-For1_4.json'
+        referenceDataPath = self.dataPath / "adrcpt-For1_4.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         controlIndexing = ControlIndexing(
-            inData=inData,
-            workingDirectorySuffix='adrcpt-For1_4'
+            inData=inData, workingDirectorySuffix="adrcpt-For1_4"
         )
         controlIndexing.execute()
         self.assertTrue(controlIndexing.isSuccess())
-        self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 75)
+        self.assertEqual(
+            controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 75
+        )
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run indexing test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run indexing test with default config",
+    )
     def test_execute_ControlIndexing_MWB_CD269A_07_4(self):
-        referenceDataPath = self.dataPath / 'MWB-CD269A_07_4.json'
+        referenceDataPath = self.dataPath / "MWB-CD269A_07_4.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         controlIndexing = ControlIndexing(
-            inData=inData,
-            workingDirectorySuffix='MWB-CD269A_07_4'
+            inData=inData, workingDirectorySuffix="MWB-CD269A_07_4"
         )
         controlIndexing.execute()
         self.assertTrue(controlIndexing.isSuccess())
-        self.assertEqual(controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 75)
+        self.assertEqual(
+            controlIndexing.outData["resultIndexing"]["spaceGroupNumber"], 75
+        )
