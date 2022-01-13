@@ -51,10 +51,9 @@ class EDNA2Process(multiprocessing.Process):
         try:
             multiprocessing.Process.run(self)
             self._cconn.send(None)
-        except Exception as e:
+        except BaseException as e:
             tb = traceback.format_exc()
             self._cconn.send((e, tb))
-        return
 
     @property
     def exception(self):
@@ -63,25 +62,26 @@ class EDNA2Process(multiprocessing.Process):
         return self._exception
 
 
-class AbstractTask(object):
+class AbstractTask(object):  # noqa R0904
     """
     Parent task to all EDNA2 tasks.
     """
+
     def __init__(self, inData, workingDirectorySuffix=None):
         self._dictInOut = multiprocessing.Manager().dict()
-        self._dictInOut['inData'] = json.dumps(inData, default=str)
-        self._dictInOut['outData'] = json.dumps({})
-        self._dictInOut['isFailure'] = False
+        self._dictInOut["inData"] = json.dumps(inData, default=str)
+        self._dictInOut["outData"] = json.dumps({})
+        self._dictInOut["isFailure"] = False
         self._process = EDNA2Process(target=self.executeRun, args=())
         self._workingDirectorySuffix = workingDirectorySuffix
         self._workingDirectory = None
         self._logFileName = None
-        self._schemaPath = pathlib.Path(__file__).parents[1] / 'schema'
+        self._schemaPath = pathlib.Path(__file__).parents[1] / "schema"
         self._persistInOutData = True
         self._oldDir = os.getcwd()
 
     def getSchemaUrl(self, schemaName):
-        return 'file://' + str(self._schemaPath / schemaName)
+        return "file://" + str(self._schemaPath / schemaName)
 
     def executeRun(self):
         inData = self.getInData()
@@ -99,8 +99,8 @@ class AbstractTask(object):
             hasValidInDataSchema = True
         if hasValidInDataSchema:
             self._workingDirectory = UtilsPath.getWorkingDirectory(
-                self, inData,
-                workingDirectorySuffix=self._workingDirectorySuffix)
+                self, inData, workingDirectorySuffix=self._workingDirectorySuffix
+            )
             self.writeInputData(inData)
             self._oldDir = os.getcwd()
             os.chdir(str(self._workingDirectory))
@@ -126,31 +126,33 @@ class AbstractTask(object):
             os.rmdir(str(self._workingDirectory))
 
     def getInData(self):
-        return json.loads(self._dictInOut['inData'])
+        return json.loads(self._dictInOut["inData"])
 
     def setInData(self, inData):
-        self._dictInOut['inData'] = json.dumps(inData, default=str)
+        self._dictInOut["inData"] = json.dumps(inData, default=str)
+
     inData = property(getInData, setInData)
 
     def getOutData(self):
-        return json.loads(self._dictInOut['outData'])
+        return json.loads(self._dictInOut["outData"])
 
     def setOutData(self, outData):
-        self._dictInOut['outData'] = json.dumps(outData, default=str)
+        self._dictInOut["outData"] = json.dumps(outData, default=str)
+
     outData = property(getOutData, setOutData)
 
     def writeInputData(self, inData):
         # Write input data
         if self._persistInOutData and self._workingDirectory is not None:
             jsonName = "inData" + self.__class__.__name__ + ".json"
-            with open(str(self._workingDirectory / jsonName), 'w') as f:
+            with open(str(self._workingDirectory / jsonName), "w") as f:
                 f.write(json.dumps(inData, default=str, indent=4))
 
     def writeOutputData(self, outData):
         self.setOutData(outData)
         if self._persistInOutData and self._workingDirectory is not None:
             jsonName = "outData" + self.__class__.__name__ + ".json"
-            with open(str(self._workingDirectory / jsonName), 'w') as f:
+            with open(str(self._workingDirectory / jsonName), "w") as f:
                 f.write(json.dumps(outData, default=str, indent=4))
 
     def getLogPath(self):
@@ -170,78 +172,88 @@ class AbstractTask(object):
             log = f.read()
         return log
 
-    def runCommandLine(self, commandLine, logPath=None, listCommand=None,
-                       ignoreErrors=False, doSubmit=False, partition=None):
+    def submitCommandLine(self, commandLine, jobName, partition, ignoreErrors):
+        workingDir = str(self._workingDirectory)
+        if workingDir.startswith("/mntdirect/_users"):
+            workingDir = workingDir.replace("/mntdirect/_users", "/home/esrf")
+        nodes = 1
+        core = 10
+        time = "1:00:00"
+        mem = 4000  # 4 Gb memory by default
+        script = "#!/bin/bash\n"
+        script += '#SBATCH --job-name="{0}"\n'.format(jobName)
+        if partition is not None:
+            script += "#SBATCH --partition={0}\n".format(partition)
+        script += "#SBATCH --mem={0}\n".format(mem)
+        script += "#SBATCH --nodes={0}\n".format(nodes)
+        script += "#SBATCH --nodes=1\n"  # Necessary for not splitting jobs! See ATF-57
+        script += "#SBATCH --cpus-per-task={0}\n".format(core)
+        script += "#SBATCH --time={0}\n".format(time)
+        script += "#SBATCH --chdir={0}\n".format(workingDir)
+        script += "#SBATCH --output=stdout.txt\n"
+        script += "#SBATCH --error=stderr.txt\n"
+        script += commandLine + "\n"
+        shellFile = self._workingDirectory / (jobName + "_slurm.sh")
+        with open(str(shellFile), "w") as f:
+            f.write(script)
+            f.close()
+        shellFile.chmod(0o755)
+        slurmCommandLine = "sbatch --wait {0}".format(shellFile)
+        pipes = subprocess.Popen(
+            slurmCommandLine,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            close_fds=True,
+            cwd=str(self._workingDirectory),
+        )
+        stdout, stderr = pipes.communicate()
+        slurmLogPath = self._workingDirectory / (jobName + "_slurm.log")
+        slurmErrorLogPath = self._workingDirectory / (jobName + "_slurm.error.log")
+        if len(stdout) > 0:
+            log = str(stdout, "utf-8")
+            with open(str(slurmLogPath), "w") as f:
+                f.write(log)
+        if len(stderr) > 0:
+            if not ignoreErrors:
+                logger.warning(
+                    "Error messages from command {0}".format(commandLine.split(" ")[0])
+                )
+            with open(str(slurmErrorLogPath), "w") as f:
+                f.write(str(stderr, "utf-8"))
+        if pipes.returncode != 0:
+            # Error!
+            warningMessage = "{0}, code {1}".format(stderr, pipes.returncode)
+            logger.warning(warningMessage)
+            # raise RuntimeError(errorMessage)
+
+    def runCommandLine(
+        self,
+        commandLine,
+        logPath=None,
+        listCommand=None,
+        ignoreErrors=False,
+        doSubmit=False,
+        partition=None,
+    ):
         if logPath is None:
             logPath = self.getLogPath()
         logFileName = os.path.basename(logPath)
         # Fix problem with /mntdirect
         jobName = self.__class__.__name__
         errorLogFileName = jobName + ".err.txt"
-        commandLine += ' 1>{0} 2>{1}'.format(logFileName, errorLogFileName)
+        commandLine += " 1>{0} 2>{1}".format(logFileName, errorLogFileName)
         if listCommand is not None:
-            commandLine += ' << EOF-EDNA2\n'
+            commandLine += " << EOF-EDNA2\n"
             for command in listCommand:
-                commandLine += command + '\n'
+                commandLine += command + "\n"
             commandLine += "EOF-EDNA2"
         commandLogFileName = jobName + ".commandLine.txt"
         commandLinePath = self._workingDirectory / commandLogFileName
-        with open(str(commandLinePath), 'w') as f:
+        with open(str(commandLinePath), "w") as f:
             f.write(commandLine)
         if doSubmit:
-            workingDir = str(self._workingDirectory)
-            if workingDir.startswith("/mntdirect/_users"):
-                workingDir = workingDir.replace("/mntdirect/_users", "/home/esrf")
-            nodes = 1
-            core = 10
-            time = '1:00:00'
-            mem = 4000  # 4 Gb memory by default
-            script = '#!/bin/bash\n'
-            script += '#SBATCH --job-name="{0}"\n'.format(jobName)
-            if partition is not None:
-                script += '#SBATCH --partition={0}\n'.format(partition)
-            script += '#SBATCH --mem={0}\n'.format(mem)
-            script += '#SBATCH --nodes={0}\n'.format(nodes)
-            script += '#SBATCH --nodes=1\n' # Necessary for not splitting jobs! See ATF-57
-            script += '#SBATCH --cpus-per-task={0}\n'.format(core)
-            script += '#SBATCH --time={0}\n'.format(time)
-            script += '#SBATCH --chdir={0}\n'.format(workingDir)
-            script += '#SBATCH --output=stdout.txt\n'
-            script += '#SBATCH --error=stderr.txt\n'
-            script += commandLine + '\n'
-            shellFile = self._workingDirectory / (jobName + '_slurm.sh')
-            with open(str(shellFile), 'w') as f:
-                f.write(script)
-                f.close()
-            shellFile.chmod(0o755)
-            slurmCommandLine = 'sbatch --wait {0}'.format(shellFile)
-            pipes = subprocess.Popen(
-                slurmCommandLine,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                close_fds=True,
-                cwd=str(self._workingDirectory)
-            )
-            stdout, stderr = pipes.communicate()
-            slurmLogPath = self._workingDirectory / (jobName + '_slurm.log')
-            slurmErrorLogPath = self._workingDirectory / (jobName + '_slurm.error.log')
-            if len(stdout) > 0:
-                log = str(stdout, 'utf-8')
-                with open(str(slurmLogPath), 'w') as f:
-                    f.write(log)
-            if len(stderr) > 0:
-                if not ignoreErrors:
-                    logger.warning("Error messages from command {0}".format(
-                        commandLine.split(' ')[0])
-                    )
-                with open(str(slurmErrorLogPath), 'w') as f:
-                    f.write(str(stderr, 'utf-8'))
-            if pipes.returncode != 0:
-                # Error!
-                warningMessage = "{0}, code {1}".format(stderr, pipes.returncode)
-                logger.warning(warningMessage)
-                # raise RuntimeError(errorMessage)
+            self.submitCommandLine(self, commandLine, jobName, partition, ignoreErrors)
         else:
             pipes = subprocess.Popen(
                 commandLine,
@@ -249,22 +261,24 @@ class AbstractTask(object):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 close_fds=True,
-                cwd=str(self._workingDirectory)
+                cwd=str(self._workingDirectory),
             )
             stdout, stderr = pipes.communicate()
             if len(stdout) > 0:
-                log = str(stdout, 'utf-8')
-                with open(str(logPath), 'w') as f:
+                log = str(stdout, "utf-8")
+                with open(str(logPath), "w") as f:
                     f.write(log)
             if len(stderr) > 0:
                 if not ignoreErrors:
-                    logger.warning("Error messages from command {0}".format(
-                        commandLine.split(' ')[0])
+                    logger.warning(
+                        "Error messages from command {0}".format(
+                            commandLine.split(" ")[0]
+                        )
                     )
                 errorLogFileName = jobName + ".err.txt"
                 errorLogPath = self._workingDirectory / errorLogFileName
-                with open(str(errorLogPath), 'w') as f:
-                    f.write(str(stderr, 'utf-8'))
+                with open(str(errorLogPath), "w") as f:
+                    f.write(str(stderr, "utf-8"))
             if pipes.returncode != 0:
                 # Error!
                 errorMessage = "{0}, code {1}".format(stderr, pipes.returncode)
@@ -282,7 +296,7 @@ class AbstractTask(object):
             error, trace = self._process.exception
             logger.error(error)
             logger.error(trace)
-            self._dictInOut['isFailure'] = True
+            self._dictInOut["isFailure"] = True
             self.onError()
 
     def execute(self):
@@ -290,10 +304,10 @@ class AbstractTask(object):
         self.join()
 
     def setFailure(self):
-        self._dictInOut['isFailure'] = True
+        self._dictInOut["isFailure"] = True
 
     def isFailure(self):
-        return self._dictInOut['isFailure']
+        return self._dictInOut["isFailure"]
 
     def isSuccess(self):
         return not self.isFailure()
