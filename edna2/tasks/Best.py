@@ -24,7 +24,6 @@ __license__ = "MIT"
 __date__ = "23/11/2020"
 
 
-
 from edna2.tasks.AbstractTask import AbstractTask
 
 # aimedCompleteness : XSDataDouble optional
@@ -63,7 +62,6 @@ from edna2.tasks.AbstractTask import AbstractTask
 # xdsAsciiHkl : XSDataFile [] optional
 
 
-
 class Best(AbstractTask):
     """
     This task runs the program BEST
@@ -74,25 +72,23 @@ class Best(AbstractTask):
         return {
             "type": "object",
             "properties": {
-                "diffractionPlan" : {
+                "diffractionPlan": {
                     "$ref": self.getSchemaUrl("ispybDiffractionPlan.json")
                 },
-                "subWedge" : {
+                "subWedge": {
                     "type": "array",
-                    "items": {
-                        "$ref": self.getSchemaUrl("subWedge.json")
-                    }
+                    "items": {"$ref": self.getSchemaUrl("subWedge.json")},
                 },
-                "xdsBackgroundImage": { "type": "string" },
-                "correctLp": { "type": "string" },
-                "xdsBkgpixCbf": { "type": "string" },
+                "xdsBackgroundImage": {"type": "string"},
+                "correctLp": {"type": "string"},
+                "xdsBkgpixCbf": {"type": "string"},
                 "xdsAsciiHkl": {
                     "type": "array",
                     "items": {
                         "type": "string",
-                    }
-                }
-            }
+                    },
+                },
+            },
         }
 
     def run(self, inData):
@@ -126,24 +122,44 @@ class Best(AbstractTask):
         commandLine += Best.addOption(diffractionPlan, "complexity", "-e")
         commandLine += Best.addOption(inData, "crystalShape", "-sh")
         commandLine += Best.addOption(diffractionPlan, "crystalSusceptibility", "-su")
-        commandLine += Best.addOption(diffractionPlan, "detectorDistanceMax", "-DIS_MAX")
-        commandLine += Best.addOption(diffractionPlan, "detectorDistanceMin", "-DIS_MIN")
+        commandLine += Best.addOption(
+            diffractionPlan, "detectorDistanceMax", "-DIS_MAX"
+        )
+        commandLine += Best.addOption(
+            diffractionPlan, "detectorDistanceMin", "-DIS_MIN"
+        )
         commandLine += Best.addOption(diffractionPlan, "doseLimit", "-DMAX")
-        commandLine += Best.addOption(diffractionPlan, "goniostatMaxRotationSpeed", "-S")
-        commandLine += Best.addOption(diffractionPlan, "goniostatMinRotationWidth", "-w")
-        commandLine += Best.addOption(diffractionPlan, "maxExposureTimePerDataCollection", "-T")
+        commandLine += Best.addOption(
+            diffractionPlan, "goniostatMaxRotationSpeed", "-S"
+        )
+        commandLine += Best.addOption(
+            diffractionPlan, "goniostatMinRotationWidth", "-w"
+        )
+        commandLine += Best.addOption(
+            diffractionPlan, "maxExposureTimePerDataCollection", "-T"
+        )
         commandLine += Best.addOption(diffractionPlan, "minExposureTimePerImage", "-M")
         commandLine += Best.addOption(diffractionPlan, "minTransmission", "-TRmin")
-        commandLine += Best.addOption(diffractionPlan, "numberOfCrystalPositions", "-Npos")
-        commandLine += Best.addOption(diffractionPlan, "radiationDamageModelBeta", "-beta")
-        commandLine += Best.addOption(diffractionPlan, "radiationDamageModelGamma", "-gama")
+        commandLine += Best.addOption(
+            diffractionPlan, "numberOfCrystalPositions", "-Npos"
+        )
+        commandLine += Best.addOption(
+            diffractionPlan, "radiationDamageModelBeta", "-beta"
+        )
+        commandLine += Best.addOption(
+            diffractionPlan, "radiationDamageModelGamma", "-gama"
+        )
         commandLine += Best.addOption(diffractionPlan, "rFriedel", "-Rf")
         commandLine += Best.addOption(diffractionPlan, "strategyOption", "")
         commandLine += Best.addOption(diffractionPlan, "transmission", "-Trans")
-        if "userDefinedRotationRange" in diffractionPlan and \
-                "userDefinedRotationStart" in diffractionPlan:
-            commandLine += " -phi {userDefinedRotationStart} {userDefinedRotationRange}".format(
-                **diffractionPlan
+        if (
+            "userDefinedRotationRange" in diffractionPlan
+            and "userDefinedRotationStart" in diffractionPlan
+        ):
+            commandLine += (
+                " -phi {userDefinedRotationStart} {userDefinedRotationRange}".format(
+                    **diffractionPlan
+                )
             )
             # if self.dataInput.aimedRedundancy is not None:
             #     self.warning("Aimed redundancy of {0} igored as the oscillation range has been specified.".format(self.dataInput.aimedRedundancy.value))

@@ -22,4 +22,3 @@
 __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "21/04/2019"
-

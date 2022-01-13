@@ -34,12 +34,11 @@ logger = UtilsLogging.getLogger()
 
 
 class BestUnitTest(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
     def test_execute(self):
-        referenceDataPath = self.dataPath / 'inDataBest.json'
+        referenceDataPath = self.dataPath / "inDataBest.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         commandLine = Best.createBestCommandLine(inData)
         print(commandLine)
