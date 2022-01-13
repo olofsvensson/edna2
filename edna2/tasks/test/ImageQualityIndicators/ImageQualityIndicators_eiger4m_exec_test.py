@@ -23,10 +23,6 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "21/04/2019"
 
-import os
-import shutil
-import pathlib
-import tempfile
 import unittest
 
 from edna2.utils import UtilsTest
@@ -39,25 +35,25 @@ logger = UtilsLogging.getLogger()
 
 
 class ImageQualityIndicatorsEiger4MExecTest(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
-        UtilsTest.loadTestImage('mesh-mx415_1_0001.h5')
+        UtilsTest.loadTestImage("mesh-mx415_1_0001.h5")
         # self.dataPath = pathlib.Path(os.getcwd()) / 'data'
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run ImageQualityIndicatorsExecTest ' +
-                     'test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run ImageQualityIndicatorsExecTest " + "test with default config",
+    )
     def test_execute_eiger4m_h5_10images(self):
-        referenceDataPath = self.dataPath / 'eiger4m_h5_10images.json'
+        referenceDataPath = self.dataPath / "eiger4m_h5_10images.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         task = ImageQualityIndicators(inData=inData)
         task.execute()
         self.assertFalse(task.isFailure())
         outData = task.outData
-        self.assertTrue('imageQualityIndicators' in outData)
-        self.assertEqual(len(outData['imageQualityIndicators']), 51)
+        self.assertTrue("imageQualityIndicators" in outData)
+        self.assertEqual(len(outData["imageQualityIndicators"]), 51)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

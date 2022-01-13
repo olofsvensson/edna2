@@ -23,10 +23,7 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "21/04/2019"
 
-import os, pathlib
-import logging
 import unittest
-import json
 
 from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig
@@ -38,22 +35,22 @@ logger = UtilsLogging.getLogger()
 
 
 class ImageQualityIndicatorsPilatus2MExecTest(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run ImageQualityIndicatorsExecTest ' +
-                     'test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run ImageQualityIndicatorsExecTest " + "test with default config",
+    )
     def test_execute_pilatus2m_10images(self):
-        referenceDataPath = self.dataPath / 'pilatus2m_20images.json'
+        referenceDataPath = self.dataPath / "pilatus2m_20images.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         task = ImageQualityIndicators(inData=inData)
         task.execute()
         self.assertFalse(task.isFailure())
         outData = task.outData
-        self.assertTrue('imageQualityIndicators' in outData)
+        self.assertTrue("imageQualityIndicators" in outData)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

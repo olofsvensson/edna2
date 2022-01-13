@@ -23,10 +23,6 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "21/04/2019"
 
-import os
-import shutil
-import pathlib
-import tempfile
 import unittest
 
 from edna2.utils import UtilsTest
@@ -39,26 +35,26 @@ logger = UtilsLogging.getLogger()
 
 
 class ImageQualityIndicatorsExecTest(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
         # self.dataPath = pathlib.Path(os.getcwd()) / 'data'
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run ImageQualityIndicatorsExecTest ' +
-                     'test with default config')
-    @unittest.skipIf(True, 'Disabled')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run ImageQualityIndicatorsExecTest " + "test with default config",
+    )
+    @unittest.skipIf(True, "Disabled")
     def test_execute(self):
-        referenceDataPath = self.dataPath / 'id23eh2.json'
+        referenceDataPath = self.dataPath / "id23eh2.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         task = ImageQualityIndicators(inData=inData)
         task.execute()
         self.assertFalse(task.isFailure())
         outData = task.outData
-        self.assertTrue('imageQualityIndicators' in outData)
-        self.assertTrue('resolution_limit' in outData['crystfel_results'][0])
-        self.assertEqual(1116, len(outData['imageQualityIndicators']))
+        self.assertTrue("imageQualityIndicators" in outData)
+        self.assertTrue("resolution_limit" in outData["crystfel_results"][0])
+        self.assertEqual(1116, len(outData["imageQualityIndicators"]))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
