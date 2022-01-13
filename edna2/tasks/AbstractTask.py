@@ -62,7 +62,7 @@ class EDNA2Process(multiprocessing.Process):
         return self._exception
 
 
-class AbstractTask(object):  # noqa R0904
+class AbstractTask():  # noqa R0904
     """
     Parent task to all EDNA2 tasks.
     """

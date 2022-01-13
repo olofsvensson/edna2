@@ -161,8 +161,6 @@ class Best(AbstractTask):
                     **diffractionPlan
                 )
             )
-            # if self.dataInput.aimedRedundancy is not None:
-            #     self.warning("Aimed redundancy of {0} igored as the oscillation range has been specified.".format(self.dataInput.aimedRedundancy.value))
         # Output of GLE files and plotmtv files
         commandLine += " -g -o plot.mtv"
         # Integration data
