@@ -34,8 +34,8 @@ def getConfigDir():
     If EDNA2_CONFIG is defined the value is returned,
     otherwise <project_base>/config.
     """
-    if 'EDNA2_CONFIG' in os.environ:
-        configDir = pathlib.Path(os.environ['EDNA2_CONFIG'])
+    if "EDNA2_CONFIG" in os.environ:
+        configDir = pathlib.Path(os.environ["EDNA2_CONFIG"])
     else:
         pathFile = pathlib.Path(__file__)
         pathProjectBase = pathFile.parents[2]
@@ -94,14 +94,14 @@ def isEMBL():
     """
     Returns true if EMBL config
     """
-    return getSite().lower().startswith('embl')
+    return getSite().lower().startswith("embl")
 
 
 def isESRF():
     """
     Returns true if ESRF config
     """
-    return getSite().lower().startswith('esrf')
+    return getSite().lower().startswith("esrf")
 
 
 def get(task, parameterName, defaultValue=None):

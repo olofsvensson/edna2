@@ -19,9 +19,9 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__authors__ = ['O. Svensson']
-__license__ = 'MIT'
-__date__ = '05/09/2019'
+__authors__ = ["O. Svensson"]
+__license__ = "MIT"
+__date__ = "05/09/2019"
 
 import os
 import json
@@ -30,7 +30,6 @@ import requests
 
 from suds.client import Client
 from suds.transport.https import HttpAuthenticated
-from suds.sudsobject import asdict
 
 from edna2.utils import UtilsImage
 from edna2.utils import UtilsConfig
@@ -43,13 +42,11 @@ def getDataFromURL(url):
     if "http_proxy" in os.environ:
         os.environ["http_proxy"] = ""
     response = requests.get(url)
-    data = {
-        'statusCode': response.status_code
-    }
+    data = {"statusCode": response.status_code}
     if response.status_code == 200:
-        data['data'] = json.loads(response.text)[0]
+        data["data"] = json.loads(response.text)[0]
     else:
-        data['text'] = response.text
+        data["text"] = response.text
     return data
 
 
@@ -57,28 +54,26 @@ def getRawDataFromURL(url):
     if "http_proxy" in os.environ:
         os.environ["http_proxy"] = ""
     response = requests.get(url)
-    data = {
-        'statusCode': response.status_code
-    }
+    data = {"statusCode": response.status_code}
     if response.status_code == 200:
-        data['content'] = response.content
+        data["content"] = response.content
     else:
-        data['text'] = response.text
+        data["text"] = response.text
     return data
 
 
 def getWdslRoot():
-    dictConfig = UtilsConfig.getTaskConfig('ISPyB')
-    wdslRoot = dictConfig['ispyb_ws_url']
+    dictConfig = UtilsConfig.getTaskConfig("ISPyB")
+    wdslRoot = dictConfig["ispyb_ws_url"]
     return wdslRoot
 
 
 def getTransport():
     transport = None
     logger = UtilsLogging.getLogger()
-    if not "ISPyB_user" in os.environ:
+    if "ISPyB_user" not in os.environ:
         logger.error("No ISPyB user name defined as environment variable!")
-    elif not "ISPyB_pass" in os.environ:
+    elif "ISPyB_pass" not in os.environ:
         logger.error("No ISPyB password defined as environment variable!")
     else:
         ispybUserName = os.environ["ISPyB_user"]
@@ -92,7 +87,9 @@ def getCollectionWebService():
     collectionWdsl = getToolsForCollectionWebService()
     transport = getTransport()
     if transport is None:
-        logger.error("No transport defined, ISPyB web service client cannot be instantiated.")
+        logger.error(
+            "No transport defined, ISPyB web service client cannot be instantiated."
+        )
         collectionWSClient = None
     else:
         collectionWSClient = Client(collectionWdsl, transport=transport, cache=None)
@@ -112,13 +109,21 @@ def findDataCollection(dataCollectionId, client=None):
         if client is None:
             client = getCollectionWebService()
         if client is None:
-            logger.error("No web service client available, cannot contact findDataCollection web service.")
+            logger.error(
+                "No web service client available, cannot contact findDataCollection web service."
+            )
         elif dataCollectionId is None:
-            logger.error("No dataCollectionId given, cannot contact findDataCollection web service.")
+            logger.error(
+                "No dataCollectionId given, cannot contact findDataCollection web service."
+            )
         else:
             dataCollectionWS3VO = client.service.findDataCollection(dataCollectionId)
     except Exception as e:
-        logger.error("ISPyB error for findDataCollection: {0}, {1} trials left".format(e, noTrials))
+        logger.error(
+            "ISPyB error for findDataCollection: {0}, {1} trials left".format(
+                e, noTrials
+            )
+        )
     return dataCollectionWS3VO
 
 
@@ -136,28 +141,51 @@ def findDataCollectionFromFileLocationAndFileName(imagePath, client=None):
         if client is None:
             client = getCollectionWebService()
         if client is None:
-            logger.error("No web service client available, cannot contact findDataCollectionFromFileLocationAndFileName web service.")
+            logger.error(
+                "No web service client available, cannot contact findDataCollectionFromFileLocationAndFileName web service."
+            )
         elif fileLocation is None:
-            logger.error("No fileLocation given, cannot contact findDataCollectionFromFileLocationAndFileName web service.")
+            logger.error(
+                "No fileLocation given, cannot contact findDataCollectionFromFileLocationAndFileName web service."
+            )
         elif fileName is None:
-            logger.error("No fileName given, cannot contact findDataCollectionFromFileLocationAndFileName web service.")
+            logger.error(
+                "No fileName given, cannot contact findDataCollectionFromFileLocationAndFileName web service."
+            )
         else:
-            dataCollectionWS3VO = client.service.findDataCollectionFromFileLocationAndFileName(fileLocation, fileName)
+            dataCollectionWS3VO = (
+                client.service.findDataCollectionFromFileLocationAndFileName(
+                    fileLocation, fileName
+                )
+            )
     except Exception as e:
-        logger.error("ISPyB error for findDataCollectionFromFileLocationAndFileName: {0}, {1} trials left".format(e,noTrials))
+        logger.error(
+            "ISPyB error for findDataCollectionFromFileLocationAndFileName: {0}, {1} trials left".format(
+                e, noTrials
+            )
+        )
         raise e
     if dataCollectionWS3VO is None:
         time.sleep(1)
         if noTrials == 0:
             logger.error("No data collections found for path {0}".format(imagePath))
         else:
-            logger.warning("Cannot find {0} in ISPyB - retrying, {1} trials left".format(imagePath, noTrials))
+            logger.warning(
+                "Cannot find {0} in ISPyB - retrying, {1} trials left".format(
+                    imagePath, noTrials
+                )
+            )
     return dataCollectionWS3VO
+
 
 def setImageQualityIndicatorsPlot(dataCollectionId, plotFile, csvFile):
     logger = UtilsLogging.getLogger()
     client = getCollectionWebService()
     if client is None:
-        logger.error("No web service client available, cannot contact setImageQualityIndicatorsPlot web service.")
-    returnDataCollectionId = client.service.setImageQualityIndicatorsPlot(dataCollectionId, plotFile, csvFile)
+        logger.error(
+            "No web service client available, cannot contact setImageQualityIndicatorsPlot web service."
+        )
+    returnDataCollectionId = client.service.setImageQualityIndicatorsPlot(
+        dataCollectionId, plotFile, csvFile
+    )
     return returnDataCollectionId

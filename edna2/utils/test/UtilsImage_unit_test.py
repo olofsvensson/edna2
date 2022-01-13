@@ -30,7 +30,6 @@ from edna2.utils import UtilsImage
 
 
 class UtilsImageUnitTest(unittest.TestCase):
-
     def setUp(self):
         self.imageFileName = "ref-testscale_1_0001.img"
         self.imageFileNameH5 = "mesh-local-user_0_1_000001.h5"
@@ -61,35 +60,41 @@ class UtilsImageUnitTest(unittest.TestCase):
         refH5Master1 = "ref-UPF2-UPF2__4_1_1_master.h5"
         refH5Data1 = "ref-UPF2-UPF2__4_1_1_data_000001.h5"
         file1 = "ref-UPF2-UPF2__4_1_0001.h5"
-        h5MasterFilePath, h5DataFilePath, h5FileNumber = \
-            UtilsImage.getH5FilePath(file1, hasOverlap=True)
+        h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(
+            file1, hasOverlap=True
+        )
         self.assertEqual(refH5Master1, str(h5MasterFilePath))
         self.assertEqual(refH5Data1, str(h5DataFilePath))
 
         refH5Master2 = "ref-UPF2-UPF2__4_1_2_master.h5"
         refH5Data2 = "ref-UPF2-UPF2__4_1_2_data_000001.h5"
         file2 = "ref-UPF2-UPF2__4_1_0002.h5"
-        h5MasterFilePath, h5DataFilePath, h5FileNumber = \
-            UtilsImage.getH5FilePath(file2, hasOverlap=True)
+        h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(
+            file2, hasOverlap=True
+        )
         self.assertEqual(refH5Master2, str(h5MasterFilePath))
         self.assertEqual(refH5Data2, str(h5DataFilePath))
 
     def test_splitPrefixRunNumber(self):
-        path = pathlib.Path("/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0001.cbf")
+        path = pathlib.Path(
+            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0001.cbf"
+        )
         pre_prefix, run_number = UtilsImage.splitPrefixRunNumber(path)
-        self.assertEqual(pre_prefix, 'PsPL7C-252')
+        self.assertEqual(pre_prefix, "PsPL7C-252")
         self.assertEqual(run_number, 1)
-        path = pathlib.Path("/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/Ps_PL_7C-2_52_1_0001.cbf")
+        path = pathlib.Path(
+            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/Ps_PL_7C-2_52_1_0001.cbf"
+        )
         pre_prefix, run_number = UtilsImage.splitPrefixRunNumber(path)
-        self.assertEqual(pre_prefix, 'Ps_PL_7C-2_52')
+        self.assertEqual(pre_prefix, "Ps_PL_7C-2_52")
         self.assertEqual(run_number, 1)
-
 
     def tes_mergeCbfInDirectory(self):
         for number in range(8, 9):
-            cbfDirectory = "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX{0}".format(number)
+            cbfDirectory = "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX{0}".format(
+                number
+            )
             UtilsImage.mergeCbfInDirectory(cbfDirectory)
-
 
     def tes_mergeCbf(self):
         listPath = [
@@ -102,9 +107,11 @@ class UtilsImageUnitTest(unittest.TestCase):
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0007.cbf",
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0008.cbf",
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0009.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0010.cbf"
+            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0010.cbf",
         ]
-        outputPath = "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0001.cbf"
+        outputPath = (
+            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0001.cbf"
+        )
         UtilsImage.mergeCbf(listPath, outputPath)
         listPath = [
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0450.cbf",
@@ -116,9 +123,11 @@ class UtilsImageUnitTest(unittest.TestCase):
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0456.cbf",
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0457.cbf",
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0458.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0459.cbf"
+            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0459.cbf",
         ]
-        outputPath = "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0002.cbf"
+        outputPath = (
+            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0002.cbf"
+        )
         UtilsImage.mergeCbf(listPath, outputPath)
         listPath = [
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0900.cbf",
@@ -130,9 +139,11 @@ class UtilsImageUnitTest(unittest.TestCase):
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0906.cbf",
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0907.cbf",
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0908.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0909.cbf"
+            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0909.cbf",
         ]
-        outputPath = "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0003.cbf"
+        outputPath = (
+            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0003.cbf"
+        )
         UtilsImage.mergeCbf(listPath, outputPath)
         listPath = [
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1350.cbf",
@@ -144,9 +155,11 @@ class UtilsImageUnitTest(unittest.TestCase):
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1356.cbf",
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1357.cbf",
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1358.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1359.cbf"
+            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1359.cbf",
         ]
-        outputPath = "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0004.cbf"
+        outputPath = (
+            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0004.cbf"
+        )
         UtilsImage.mergeCbf(listPath, outputPath)
         listPath = [
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1800.cbf",
@@ -158,7 +171,9 @@ class UtilsImageUnitTest(unittest.TestCase):
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1806.cbf",
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1807.cbf",
             "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1808.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1809.cbf"
+            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1809.cbf",
         ]
-        outputPath = "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0005.cbf"
+        outputPath = (
+            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0005.cbf"
+        )
         UtilsImage.mergeCbf(listPath, outputPath)

@@ -47,17 +47,18 @@ def getMinimumSymmetrySpaceGroupFromBravaisLattice(bravaisLattice):
     elif bravaisLattice == "mP":
         spaceGroup = "P2"
 
-    elif bravaisLattice == "mC" or \
-            bravaisLattice == "mI":
+    elif bravaisLattice == "mC" or bravaisLattice == "mI":
         spaceGroup = "C2"
 
     elif bravaisLattice == "oP":
         spaceGroup = "P222"
 
-    elif bravaisLattice == "oA" or \
-            bravaisLattice == "oB" or \
-            bravaisLattice == "oC" or \
-            bravaisLattice == "oS":
+    elif (
+        bravaisLattice == "oA"
+        or bravaisLattice == "oB"
+        or bravaisLattice == "oC"
+        or bravaisLattice == "oS"
+    ):
         spaceGroup = "C222"
 
     elif bravaisLattice == "oF":
@@ -66,12 +67,10 @@ def getMinimumSymmetrySpaceGroupFromBravaisLattice(bravaisLattice):
     elif bravaisLattice == "oI":
         spaceGroup = "I222"
 
-    elif bravaisLattice == "tP" or \
-            bravaisLattice == "tC":
+    elif bravaisLattice == "tP" or bravaisLattice == "tC":
         spaceGroup = "P4"
 
-    elif bravaisLattice == "tI" or \
-            bravaisLattice == "tF":
+    elif bravaisLattice == "tI" or bravaisLattice == "tF":
         spaceGroup = "I4"
 
     elif bravaisLattice == "hP":
@@ -101,10 +100,9 @@ def getNumberOfSymmetryOperatorsFromSpaceGroupName(spaceGroupName):
 
 
 def getNumberOfSymmetryOperators(spaceGroupIdOrName, index):
-    strNumOperators = None
     for strLine in getSymOpLib().splitlines():
         listItems = strLine.split()
-        if (len(listItems) > 3 and listItems[index] == str(spaceGroupIdOrName)):
+        if len(listItems) > 3 and listItems[index] == str(spaceGroupIdOrName):
             numOperators = int(listItems[1])
             break
     return numOperators

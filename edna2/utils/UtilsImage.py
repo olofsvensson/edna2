@@ -30,7 +30,6 @@ __date__ = "21/04/2019"
 import os
 import re
 import fabio
-import pprint
 import pathlib
 
 
@@ -39,7 +38,7 @@ def __compileAndMatchRegexpTemplate(pathToImage):
     if not isinstance(pathToImage, pathlib.Path):
         pathToImage = pathlib.Path(str(pathToImage))
     baseImageName = pathToImage.name
-    regexp = re.compile(r'(.*)([^0^1^2^3^4^5^6^7^8^9])([0-9]*)\.(.*)')
+    regexp = re.compile(r"(.*)([^0^1^2^3^4^5^6^7^8^9])([0-9]*)\.(.*)")
     match = regexp.match(baseImageName)
     if match is not None:
         listResult = [
@@ -47,7 +46,7 @@ def __compileAndMatchRegexpTemplate(pathToImage):
             match.group(1),
             match.group(2),
             match.group(3),
-            match.group(4)
+            match.group(4),
         ]
     return listResult
 
@@ -94,7 +93,7 @@ def getSuffix(pathToImage):
 def getPrefixNumber(pathToImage):
     prefix = getPrefix(pathToImage)
     number = getImageNumber(pathToImage)
-    prefixNumber = '{0}_{1:04d}'.format(prefix, number)
+    prefixNumber = "{0}_{1:04d}".format(prefix, number)
     return prefixNumber
 
 
@@ -106,7 +105,7 @@ def splitPrefixRunNumber(path_to_image):
     return pre_prefix, run_number
 
 
-def getH5FilePath(filePath, batchSize=100, hasOverlap= False, isFastMesh=False):
+def getH5FilePath(filePath, batchSize=100, hasOverlap=False, isFastMesh=False):
     if type(filePath) == str:
         filePath = pathlib.Path(filePath)
     imageNumber = getImageNumber(filePath)
@@ -114,18 +113,23 @@ def getH5FilePath(filePath, batchSize=100, hasOverlap= False, isFastMesh=False):
     if hasOverlap or filePath.name.startswith("ref-"):
         h5ImageNumber = 1
         h5FileNumber = imageNumber
-    elif isFastMesh or filePath.name.startswith("mesh-") or filePath.name.startswith("line-"):
+    elif (
+        isFastMesh
+        or filePath.name.startswith("mesh-")
+        or filePath.name.startswith("line-")
+    ):
         h5ImageNumber = int((imageNumber - 1) / 100) + 1
         h5FileNumber = 1
     else:
         h5ImageNumber = 1
         h5FileNumber = int((imageNumber - 1) / batchSize) * batchSize + 1
     h5MasterFileName = "{prefix}_{h5FileNumber}_master.h5".format(
-        prefix=prefix, h5FileNumber=h5FileNumber)
+        prefix=prefix, h5FileNumber=h5FileNumber
+    )
     h5MasterFilePath = filePath.parent / h5MasterFileName
-    h5DataFileName = \
-        "{prefix}_{h5FileNumber}_data_{h5ImageNumber:06d}.h5".format(
-            prefix=prefix, h5FileNumber=h5FileNumber, h5ImageNumber=h5ImageNumber)
+    h5DataFileName = "{prefix}_{h5FileNumber}_data_{h5ImageNumber:06d}.h5".format(
+        prefix=prefix, h5FileNumber=h5FileNumber, h5ImageNumber=h5ImageNumber
+    )
     h5DataFilePath = filePath.parent / h5DataFileName
     return h5MasterFilePath, h5DataFilePath, h5FileNumber
 
@@ -139,24 +143,24 @@ def mergeCbf(listPath, outputPath):
         else:
             image = fabio.open(imagePath)
             firstImage.data += image.data
-    header_contents = firstImage.header['_array_data.header_contents']
+    header_contents = firstImage.header["_array_data.header_contents"]
     list_header_contents = header_contents.split("\n")
     index = 0
     done = False
     while not done:
         line = list_header_contents[index]
-        if line.startswith('# Angle_increment'):
-            list_angle_increment = line.split(' ')
+        if line.startswith("# Angle_increment"):
+            list_angle_increment = line.split(" ")
             angle_increment = float(list_angle_increment[2])
             new_angle_increment = angle_increment * no_images
             list_angle_increment[2] = str(new_angle_increment)
-            new_line = ' '.join(list_angle_increment)
+            new_line = " ".join(list_angle_increment)
             list_header_contents[index] = new_line
             done = True
         else:
             index += 1
     new_header_contents = "\n".join(list_header_contents)
-    firstImage.header['_array_data.header_contents'] = new_header_contents
+    firstImage.header["_array_data.header_contents"] = new_header_contents
     firstImage.write(outputPath)
     return
 
@@ -164,7 +168,7 @@ def mergeCbf(listPath, outputPath):
 def mergeCbfInDirectory(cbfDirectory, prefix=None, newPrefix=None):
     path_to_dir = pathlib.Path(cbfDirectory)
     index = None
-    list_dir = [ str(path) for path in list(path_to_dir.glob("*.cbf"))]
+    list_dir = [str(path) for path in list(path_to_dir.glob("*.cbf"))]
     list_dir.sort()
     list_of_image_lists = []
     listImage = None
@@ -173,7 +177,6 @@ def mergeCbfInDirectory(cbfDirectory, prefix=None, newPrefix=None):
             image_no = getImageNumber(cbf_file)
             if index is None or index != image_no:
                 print("Starting image: {0}".format(cbf_file))
-                startImageNo = image_no
                 index = image_no
                 if listImage is not None:
                     list_of_image_lists.append(listImage)
@@ -194,8 +197,7 @@ def mergeCbfInDirectory(cbfDirectory, prefix=None, newPrefix=None):
             old_run_number = new_run_Number
             image_number = 1
         new_cbf_path = "{0}/{1}_{2}_{3:04d}.cbf".format(
-            directory, pre_prefix, new_run_Number, image_number)
+            directory, pre_prefix, new_run_Number, image_number
+        )
         mergeCbf(list_image, new_cbf_path)
         image_number += 1
-
-

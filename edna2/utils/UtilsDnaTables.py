@@ -19,9 +19,9 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__authors__ = ['O. Svensson']
-__license__ = 'MIT'
-__date__ = '21/04/2019'
+__authors__ = ["O. Svensson"]
+__license__ = "MIT"
+__date__ = "21/04/2019"
 
 # Corresponding EDNA code:
 # https://github.com/olofsvensson/edna-mx
@@ -38,9 +38,9 @@ logger = UtilsLogging.getLogger()
 def getDict(dnaTablesPath):
     with open(str(dnaTablesPath)) as f:
         dnaTables = f.read()
-    if not '</dna_tables>' in dnaTables:
+    if "</dna_tables>" not in dnaTables:
         # Fix for bug in MOSFLM
-        dnaTables += '</dna_tables>'
+        dnaTables += "</dna_tables>"
     orderedDictDnaTables = xmltodict.parse(dnaTables)
     dictDnaTables = json.loads(json.dumps(orderedDictDnaTables))
     return dictDnaTables
@@ -48,37 +48,37 @@ def getDict(dnaTablesPath):
 
 def getTables(dictDnaTables, tableName):
     listTables = []
-    listTable = dictDnaTables['dna_tables']['table']
+    listTable = dictDnaTables["dna_tables"]["table"]
     for table in listTable:
-        if tableName == table['@name']:
+        if tableName == table["@name"]:
             listTables.append(table)
     return listTables
 
 
 def getListParam(table):
-    if isinstance(table['list'], list):
-        listParam = table['list']
+    if isinstance(table["list"], list):
+        listParam = table["list"]
     else:
-        listParam = [table['list']]
+        listParam = [table["list"]]
     return listParam
 
 
 def getItemValue(dictParameter, key):
     value = None
-    if isinstance(dictParameter['item'], list):
-        listItem = dictParameter['item']
+    if isinstance(dictParameter["item"], list):
+        listItem = dictParameter["item"]
     else:
-        listItem = [dictParameter['item']]
+        listItem = [dictParameter["item"]]
     for item in listItem:
-        if item['@name'] == key:
-            value = item['#text']
+        if item["@name"] == key:
+            value = item["#text"]
     return _convertFromString(value)
 
 
 def _convertFromString(value):
     if value is not None:
         try:
-            if '.' in value:
+            if "." in value:
                 value = float(value)
             else:
                 value = int(value)
@@ -91,11 +91,11 @@ def _convertFromString(value):
 def getListValue(listParameter, key1, key2):
     value = None
     for dictParameter in listParameter:
-        if dictParameter['@name'] == key1:
-            if isinstance(dictParameter['item'], list):
-                for item in dictParameter['item']:
-                    if item['@name'] == key2:
-                        value = item['#text']
+        if dictParameter["@name"] == key1:
+            if isinstance(dictParameter["item"], list):
+                for item in dictParameter["item"]:
+                    if item["@name"] == key2:
+                        value = item["#text"]
             else:
-                value = dictParameter['item']['#text']
+                value = dictParameter["item"]["#text"]
     return _convertFromString(value)

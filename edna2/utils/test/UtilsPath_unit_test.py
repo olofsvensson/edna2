@@ -19,9 +19,9 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__authors__ = ['O. Svensson']
-__license__ = 'MIT'
-__date__ = '21/04/2019'
+__authors__ = ["O. Svensson"]
+__license__ = "MIT"
+__date__ = "21/04/2019"
 
 
 import unittest
@@ -30,103 +30,150 @@ from edna2.utils import UtilsPath
 
 
 class UtilsTestUnitTest(unittest.TestCase):
-
     def test_createPyarchFilePath(self):
+        self.assertEqual("None", str(UtilsPath.createPyarchFilePath("/")), "/")
+        self.assertEqual("None", str(UtilsPath.createPyarchFilePath("/data")), "/data")
         self.assertEqual(
-            'None',
-            str(UtilsPath.createPyarchFilePath('/')),
-            '/')
+            "None",
+            str(UtilsPath.createPyarchFilePath("/data/visitor")),
+            "/data/visitor",
+        )
         self.assertEqual(
-            'None',
-            str(UtilsPath.createPyarchFilePath('/data')),
-            '/data')
+            "None",
+            str(UtilsPath.createPyarchFilePath("/data/visitor/mx415/id14eh2")),
+            "/data/visitor/mx415/id14eh2",
+        )
         self.assertEqual(
-            'None',
-            str(UtilsPath.createPyarchFilePath('/data/visitor')),
-            '/data/visitor')
+            "/data/pyarch/2010/id14eh2/mx415/20100212",
+            str(UtilsPath.createPyarchFilePath("/data/visitor/mx415/id14eh2/20100212")),
+            "/data/visitor/mx415/id14eh2/20100212",
+        )
         self.assertEqual(
-            'None',
-            str(UtilsPath.createPyarchFilePath('/data/visitor/mx415/id14eh2')),
-            '/data/visitor/mx415/id14eh2')
+            "/data/pyarch/2010/id14eh2/mx415/20100212/1",
+            str(
+                UtilsPath.createPyarchFilePath("/data/visitor/mx415/id14eh2/20100212/1")
+            ),
+            "/data/visitor/mx415/id14eh2/20100212/1",
+        )
         self.assertEqual(
-            '/data/pyarch/2010/id14eh2/mx415/20100212',
-            str(UtilsPath.createPyarchFilePath('/data/visitor/mx415/id14eh2/20100212')),
-            '/data/visitor/mx415/id14eh2/20100212')
-        self.assertEqual(
-            '/data/pyarch/2010/id14eh2/mx415/20100212/1',
-            str(UtilsPath.createPyarchFilePath('/data/visitor/mx415/id14eh2/20100212/1')),
-            '/data/visitor/mx415/id14eh2/20100212/1')
-        self.assertEqual(
-            '/data/pyarch/2010/id14eh2/mx415/20100212/1/2',
-            str(UtilsPath.createPyarchFilePath('/data/visitor/mx415/id14eh2/20100212/1/2')),
-            '/data/visitor/mx415/id14eh2/20100212/1/2')
+            "/data/pyarch/2010/id14eh2/mx415/20100212/1/2",
+            str(
+                UtilsPath.createPyarchFilePath(
+                    "/data/visitor/mx415/id14eh2/20100212/1/2"
+                )
+            ),
+            "/data/visitor/mx415/id14eh2/20100212/1/2",
+        )
         # Test with inhouse account...
+        self.assertEqual("None", str(UtilsPath.createPyarchFilePath("/")), "/")
+        self.assertEqual("None", str(UtilsPath.createPyarchFilePath("/data")), "/data")
         self.assertEqual(
-            'None',
-            str(UtilsPath.createPyarchFilePath('/')),
-            '/')
+            "None",
+            str(UtilsPath.createPyarchFilePath("/data/id23eh2")),
+            "/data/id23eh2",
+        )
         self.assertEqual(
-            'None',
-            str(UtilsPath.createPyarchFilePath('/data')),
-            '/data')
+            "None",
+            str(UtilsPath.createPyarchFilePath("/data/id23eh2/inhouse")),
+            "/data/id23eh2/inhouse",
+        )
         self.assertEqual(
-            'None',
-            str(UtilsPath.createPyarchFilePath('/data/id23eh2')),
-            '/data/id23eh2')
+            "None",
+            str(UtilsPath.createPyarchFilePath("/data/id23eh2/inhouse/opid232")),
+            "/data/id23eh2/inhouse/opid232",
+        )
         self.assertEqual(
-            'None',
-            str(UtilsPath.createPyarchFilePath('/data/id23eh2/inhouse')),
-            '/data/id23eh2/inhouse')
+            "/data/pyarch/2010/id23eh2/opid232/20100525",
+            str(
+                UtilsPath.createPyarchFilePath("/data/id23eh2/inhouse/opid232/20100525")
+            ),
+            "/data/id23eh2/inhouse/opid232/20100525",
+        )
         self.assertEqual(
-            'None',
-            str(UtilsPath.createPyarchFilePath('/data/id23eh2/inhouse/opid232')),
-            '/data/id23eh2/inhouse/opid232')
+            "/data/pyarch/2010/id23eh2/opid232/20100525/1",
+            str(
+                UtilsPath.createPyarchFilePath(
+                    "/data/id23eh2/inhouse/opid232/20100525/1"
+                )
+            ),
+            "/data/id23eh2/inhouse/opid232/20100525/1",
+        )
         self.assertEqual(
-            '/data/pyarch/2010/id23eh2/opid232/20100525',
-            str(UtilsPath.createPyarchFilePath('/data/id23eh2/inhouse/opid232/20100525')),
-            '/data/id23eh2/inhouse/opid232/20100525')
+            "/data/pyarch/2010/id23eh2/opid232/20100525/1/2",
+            str(
+                UtilsPath.createPyarchFilePath(
+                    "/data/id23eh2/inhouse/opid232/20100525/1/2"
+                )
+            ),
+            "/data/id23eh2/inhouse/opid232/20100525/1/2",
+        )
         self.assertEqual(
-            '/data/pyarch/2010/id23eh2/opid232/20100525/1',
-            str(UtilsPath.createPyarchFilePath('/data/id23eh2/inhouse/opid232/20100525/1')),
-            '/data/id23eh2/inhouse/opid232/20100525/1')
-        self.assertEqual(
-            '/data/pyarch/2010/id23eh2/opid232/20100525/1/2',
-            str(UtilsPath.createPyarchFilePath('/data/id23eh2/inhouse/opid232/20100525/1/2')),
-            '/data/id23eh2/inhouse/opid232/20100525/1/2')
-        self.assertEqual(
-            '/data/pyarch/2014/id30a1/opid30a1/20140717/RAW_DATA/opid30a1_1_dnafiles',
-            str(UtilsPath.createPyarchFilePath('/data/id30a1/inhouse/opid30a1/20140717/RAW_DATA/opid30a1_1_dnafiles')),
-            '/data/id30a1/inhouse/opid30a1/20140717/RAW_DATA/opid30a1_1_dnafiles')
+            "/data/pyarch/2014/id30a1/opid30a1/20140717/RAW_DATA/opid30a1_1_dnafiles",
+            str(
+                UtilsPath.createPyarchFilePath(
+                    "/data/id30a1/inhouse/opid30a1/20140717/RAW_DATA/opid30a1_1_dnafiles"
+                )
+            ),
+            "/data/id30a1/inhouse/opid30a1/20140717/RAW_DATA/opid30a1_1_dnafiles",
+        )
         # Visitor
         self.assertEqual(
-            'None',
-            str(UtilsPath.createPyarchFilePath('/data/visitor/mx415/id30a3')),
-            '/data/visitor/mx415/id30a3')
+            "None",
+            str(UtilsPath.createPyarchFilePath("/data/visitor/mx415/id30a3")),
+            "/data/visitor/mx415/id30a3",
+        )
         self.assertEqual(
-            '/data/pyarch/2010/id30a3/mx415/20100212',
-            str(UtilsPath.createPyarchFilePath('/data/visitor/mx415/id30a3/20100212')),
-            '/data/visitor/mx415/id30a3/20100212')
+            "/data/pyarch/2010/id30a3/mx415/20100212",
+            str(UtilsPath.createPyarchFilePath("/data/visitor/mx415/id30a3/20100212")),
+            "/data/visitor/mx415/id30a3/20100212",
+        )
         self.assertEqual(
-            '/data/pyarch/2010/id30a3/mx415/20100212/1',
-            str(UtilsPath.createPyarchFilePath('/data/visitor/mx415/id30a3/20100212/1')),
-            '/data/visitor/mx415/id30a3/20100212/1')
+            "/data/pyarch/2010/id30a3/mx415/20100212/1",
+            str(
+                UtilsPath.createPyarchFilePath("/data/visitor/mx415/id30a3/20100212/1")
+            ),
+            "/data/visitor/mx415/id30a3/20100212/1",
+        )
         self.assertEqual(
-            '/data/pyarch/2010/id30a3/mx415/20100212/1/2',
-            str(UtilsPath.createPyarchFilePath('/data/visitor/mx415/id30a3/20100212/1/2')),
-            '/data/visitor/mx415/id30a3/20100212/1/2')
+            "/data/pyarch/2010/id30a3/mx415/20100212/1/2",
+            str(
+                UtilsPath.createPyarchFilePath(
+                    "/data/visitor/mx415/id30a3/20100212/1/2"
+                )
+            ),
+            "/data/visitor/mx415/id30a3/20100212/1/2",
+        )
         self.assertEqual(
-            '/data/pyarch/2010/id30a3/opid232/20100525',
-            str(UtilsPath.createPyarchFilePath('/data/id30a3/inhouse/opid232/20100525')),
-            '/data/id30a3/inhouse/opid232/20100525')
+            "/data/pyarch/2010/id30a3/opid232/20100525",
+            str(
+                UtilsPath.createPyarchFilePath("/data/id30a3/inhouse/opid232/20100525")
+            ),
+            "/data/id30a3/inhouse/opid232/20100525",
+        )
         self.assertEqual(
-            '/data/pyarch/2010/id30a3/opid232/20100525/1',
-            str(UtilsPath.createPyarchFilePath('/data/id30a3/inhouse/opid232/20100525/1')),
-            '/data/id30a3/inhouse/opid232/20100525/1')
+            "/data/pyarch/2010/id30a3/opid232/20100525/1",
+            str(
+                UtilsPath.createPyarchFilePath(
+                    "/data/id30a3/inhouse/opid232/20100525/1"
+                )
+            ),
+            "/data/id30a3/inhouse/opid232/20100525/1",
+        )
         self.assertEqual(
-            '/data/pyarch/2010/id30a3/opid232/20100525/1/2',
-            str(UtilsPath.createPyarchFilePath('/data/id30a3/inhouse/opid232/20100525/1/2')),
-            '/data/id30a3/inhouse/opid232/20100525/1/2')
+            "/data/pyarch/2010/id30a3/opid232/20100525/1/2",
+            str(
+                UtilsPath.createPyarchFilePath(
+                    "/data/id30a3/inhouse/opid232/20100525/1/2"
+                )
+            ),
+            "/data/id30a3/inhouse/opid232/20100525/1/2",
+        )
         self.assertEqual(
-            '/data/pyarch/2014/id30a3/opid30a1/20140717/RAW_DATA/opid30a1_1_dnafiles',
-            str(UtilsPath.createPyarchFilePath('/data/id30a3/inhouse/opid30a1/20140717/RAW_DATA/opid30a1_1_dnafiles')),
-            '/data/id30a3/inhouse/opid30a1/20140717/RAW_DATA/opid30a1_1_dnafiles')
+            "/data/pyarch/2014/id30a3/opid30a1/20140717/RAW_DATA/opid30a1_1_dnafiles",
+            str(
+                UtilsPath.createPyarchFilePath(
+                    "/data/id30a3/inhouse/opid30a1/20140717/RAW_DATA/opid30a1_1_dnafiles"
+                )
+            ),
+            "/data/id30a3/inhouse/opid30a1/20140717/RAW_DATA/opid30a1_1_dnafiles",
+        )

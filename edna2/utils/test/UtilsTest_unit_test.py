@@ -30,16 +30,13 @@ from edna2.utils import UtilsTest
 
 
 class UtilsTestUnitTest(unittest.TestCase):
-
     def setUp(self):
-        self.inData1 = {
-            "image": "$EDNA2_TESTDATA_IMAGES/ref-2m_RNASE_1_0001.cbf"
-        }
+        self.inData1 = {"image": "$EDNA2_TESTDATA_IMAGES/ref-2m_RNASE_1_0001.cbf"}
         self.inData2 = {
             "images": [
                 "$EDNA2_TESTDATA_IMAGES/ref-2m_RNASE_1_0001.cbf",
-                "$EDNA2_TESTDATA_IMAGES/ref-2m_RNASE_1_0002.cbf"
-                ]
+                "$EDNA2_TESTDATA_IMAGES/ref-2m_RNASE_1_0002.cbf",
+            ]
         }
 
     def test_getTestdataPath(self):
@@ -48,16 +45,25 @@ class UtilsTestUnitTest(unittest.TestCase):
 
     def test_substitute(self):
         # One unix path
-        newInData1 = UtilsTest.substitute(self.inData1, "$EDNA2_TESTDATA_IMAGES", "/data")
+        newInData1 = UtilsTest.substitute(
+            self.inData1, "$EDNA2_TESTDATA_IMAGES", "/data"
+        )
         self.assertEqual(newInData1["image"], "/data/ref-2m_RNASE_1_0001.cbf")
         # Two unix paths
-        newInData2 = UtilsTest.substitute(self.inData2, "$EDNA2_TESTDATA_IMAGES", "/data")
+        newInData2 = UtilsTest.substitute(
+            self.inData2, "$EDNA2_TESTDATA_IMAGES", "/data"
+        )
         self.assertEqual(newInData2["images"][0], "/data/ref-2m_RNASE_1_0001.cbf")
         self.assertEqual(newInData2["images"][1], "/data/ref-2m_RNASE_1_0002.cbf")
 
     def test_getSearchStringFileNames(self):
-        listFileNames1 = UtilsTest.getSearchStringFileNames("$EDNA2_TESTDATA_IMAGES", self.inData1)
+        listFileNames1 = UtilsTest.getSearchStringFileNames(
+            "$EDNA2_TESTDATA_IMAGES", self.inData1
+        )
         self.assertEqual(listFileNames1, ["ref-2m_RNASE_1_0001.cbf"])
-        listFileNames2 = UtilsTest.getSearchStringFileNames("$EDNA2_TESTDATA_IMAGES", self.inData2)
-        self.assertEqual(listFileNames2, ["ref-2m_RNASE_1_0001.cbf", "ref-2m_RNASE_1_0002.cbf"])
- 
+        listFileNames2 = UtilsTest.getSearchStringFileNames(
+            "$EDNA2_TESTDATA_IMAGES", self.inData2
+        )
+        self.assertEqual(
+            listFileNames2, ["ref-2m_RNASE_1_0001.cbf", "ref-2m_RNASE_1_0002.cbf"]
+        )

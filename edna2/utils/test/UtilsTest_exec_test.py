@@ -31,7 +31,6 @@ from edna2.utils import UtilsTest
 
 
 class UtilsTestExecTest(unittest.TestCase):
-
     def test_loadTestImages(self):
         imageFileName = "FAE_1_1_00001.cbf"
         pathImage = UtilsTest.getTestImageDirPath() / imageFileName
@@ -41,8 +40,6 @@ class UtilsTestExecTest(unittest.TestCase):
         self.assertTrue(pathImage.exists())
 
     def test_substitueTestData(self):
-        inData = {
-                  "image": "$EDNA2_TESTDATA_IMAGES/ref-2m_RNASE_1_0001.cbf"
-                  }
+        inData = {"image": "$EDNA2_TESTDATA_IMAGES/ref-2m_RNASE_1_0001.cbf"}
         newInData = UtilsTest.substitueTestData(inData)
         self.assertTrue(os.path.exists(newInData["image"]))

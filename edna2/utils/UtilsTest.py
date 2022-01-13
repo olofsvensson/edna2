@@ -51,11 +51,12 @@ def __timeoutDuringDownload():
     Function called after a timeout in the download part, raises RuntimeError.
     """
     raise RuntimeError(
-        "Could not automatically download test images!\n" +
-        "If you are behind a firewall," +
-        "please set the environment variable http_proxy.\n" +
-        "Otherwise please try to download the images manually from\n" +
-        "http://www.edna-site.org/data/tests/images")
+        "Could not automatically download test images!\n"
+        + "If you are behind a firewall,"
+        + "please set the environment variable http_proxy.\n"
+        + "Otherwise please try to download the images manually from\n"
+        + "http://www.edna-site.org/data/tests/images"
+    )
 
 
 def getTestdataPath():
@@ -93,30 +94,32 @@ def loadTestImage(imageFileName):
     if imageFileName.endswith(".h5"):
         imagePath = imageDirPath / imageFileName
         hasOverlap = imagePath.name.startswith("ref-")
-        h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(imagePath, hasOverlap=hasOverlap)
+        h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(
+            imagePath, hasOverlap=hasOverlap
+        )
         listImagePath = [h5MasterFilePath, h5DataFilePath]
     else:
         listImagePath = [imageDirPath / imageFileName]
     for imagePath in listImagePath:
         if not imagePath.exists():
             logger.info(
-                "Trying to download image %s" % str(imagePath) +
-                ", timeout set to %d s" % MAX_DOWNLOAD_TIME
+                "Trying to download image %s" % str(imagePath)
+                + ", timeout set to %d s" % MAX_DOWNLOAD_TIME
             )
             if "http_proxy" in os.environ:
-                dictProxies = {'http': os.environ["http_proxy"]}
+                dictProxies = {"http": os.environ["http_proxy"]}
                 proxy_handler = ProxyHandler(dictProxies)
                 opener = build_opener(proxy_handler).open
             else:
                 opener = urlopen
 
-            timer = threading.Timer(MAX_DOWNLOAD_TIME + 1,
-                                    __timeoutDuringDownload)
+            timer = threading.Timer(MAX_DOWNLOAD_TIME + 1, __timeoutDuringDownload)
             timer.start()
-            data = opener("%s/%s" % (URL_EDNA_SITE, imagePath.name),
-                          data=None,
-                          timeout=MAX_DOWNLOAD_TIME
-                          ).read()
+            data = opener(
+                "%s/%s" % (URL_EDNA_SITE, imagePath.name),
+                data=None,
+                timeout=MAX_DOWNLOAD_TIME,
+            ).read()
             timer.cancel()
 
             try:
@@ -130,11 +133,12 @@ def loadTestImage(imageFileName):
             logger.info("Image %s successfully downloaded." % imagePath)
         else:
             raise RuntimeError(
-                "Could not automatically download test image %r!\n" +
-                "If you are behind a firewall, " +
-                "please set the environment variable http_proxy.\n" +
-                "Otherwise please try to download the images manually from\n" +
-                "http://www.edna-site.org/data/tests/images" % imageFileName)
+                "Could not automatically download test image %r!\n"
+                + "If you are behind a firewall, "
+                + "please set the environment variable http_proxy.\n"
+                + "Otherwise please try to download the images manually from\n"
+                + "http://www.edna-site.org/data/tests/images" % imageFileName
+            )
 
 
 def substitute(data, searchString, substituteString):
@@ -159,8 +163,7 @@ def getSearchStringFileNames(searchString, data):
     return listFileNames
 
 
-def substitueTestData(inData, loadTestImages=True,
-                      taskDataPath=None, tmpDir=None):
+def substitueTestData(inData, loadTestImages=True, taskDataPath=None, tmpDir=None):
     # $EDNA2_TESTDATA_IMAGES
     searchString = "$EDNA2_TESTDATA_IMAGES"
     substituteString = getTestImageDirPath().as_posix()
@@ -188,18 +191,16 @@ def loadAndSubstitueTestData(dataPath, loadTestImages=True, tmpDir=None):
     with open(str(dataPath)) as f:
         inData = json.loads(f.read())
     taskDataPath = dataPath.parent
-    return substitueTestData(inData,
-                             loadTestImages=loadTestImages,
-                             taskDataPath=taskDataPath,
-                             tmpDir=tmpDir)
+    return substitueTestData(
+        inData, loadTestImages=loadTestImages, taskDataPath=taskDataPath, tmpDir=tmpDir
+    )
 
 
 def createTestTmpDirectory(testName):
-    return tempfile.mkdtemp(prefix=testName+'_')
+    return tempfile.mkdtemp(prefix=testName + "_")
 
 
 def prepareTestDataPath(modulePath):
-    dataPath = pathlib.Path(modulePath).parent / 'data'
+    dataPath = pathlib.Path(modulePath).parent / "data"
     os.chdir(str(getTestRunPath()))
     return dataPath
-    

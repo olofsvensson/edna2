@@ -19,9 +19,9 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__authors__ = ['O. Svensson']
-__license__ = 'MIT'
-__date__ = '21/04/2019'
+__authors__ = ["O. Svensson"]
+__license__ = "MIT"
+__date__ = "21/04/2019"
 
 # Corresponding EDNA code:
 # https://github.com/olofsvensson/edna-mx
@@ -37,28 +37,35 @@ from edna2.utils import UtilsLogging
 
 logger = UtilsLogging.getLogger()
 
-DEFAULT_TIMEOUT = 120 # s
+DEFAULT_TIMEOUT = 120  # s
 
 
 def getWorkingDirectory(task, inData, workingDirectorySuffix=None):
-    parentDirectory = inData.get('workingDirectory', None)
+    parentDirectory = inData.get("workingDirectory", None)
     if parentDirectory is None:
         parentDirectory = os.getcwd()
     parentDirectory = pathlib.Path(parentDirectory)
     if workingDirectorySuffix is None:
         # Create unique directory
         workingDirectory = tempfile.mkdtemp(
-            prefix=task.__class__.__name__ + '_',
-            dir=parentDirectory)
+            prefix=task.__class__.__name__ + "_", dir=parentDirectory
+        )
         workingDirectory = pathlib.Path(workingDirectory)
     else:
         # Here we assume that the user knows what he is doing and there's no
         # race condition for creating the working directory!
-        workingDirectoryName = task.__class__.__name__ + '_' + str(workingDirectorySuffix)
+        workingDirectoryName = (
+            task.__class__.__name__ + "_" + str(workingDirectorySuffix)
+        )
         workingDirectory = parentDirectory / workingDirectoryName
         index = 1
         while workingDirectory.exists():
-            workingDirectoryName = task.__class__.__name__ + '_' + str(workingDirectorySuffix) + '_{0:02d}'.format(index)
+            workingDirectoryName = (
+                task.__class__.__name__
+                + "_"
+                + str(workingDirectorySuffix)
+                + "_{0:02d}".format(index)
+            )
             workingDirectory = parentDirectory / workingDirectoryName
             index += 1
         workingDirectory.mkdir(mode=0o775, parents=True, exist_ok=False)
@@ -76,15 +83,21 @@ def createPyarchFilePath(filePath):
         filePath = pathlib.Path(filePath)
     listOfDirectories = filePath.parts
     if UtilsConfig.isEMBL():
-        if 'p13' in listOfDirectories[0:3] or 'P13' in listOfDirectories[0:3]:
-            pyarchFilePath = os.path.join('/data/ispyb/p13',
-                                          *listOfDirectories[4:])
+        if "p13" in listOfDirectories[0:3] or "P13" in listOfDirectories[0:3]:
+            pyarchFilePath = os.path.join("/data/ispyb/p13", *listOfDirectories[4:])
         else:
-            pyarchFilePath = os.path.join('/data/ispyb/p14',
-                                          *listOfDirectories[4:])
+            pyarchFilePath = os.path.join("/data/ispyb/p14", *listOfDirectories[4:])
         return pyarchFilePath
-    listBeamlines = ['bm07', 'id23eh1', 'id23eh2', 'id29', 'id30a1',
-                     'id30a2', 'id30a3', 'id30b']
+    listBeamlines = [
+        "bm07",
+        "id23eh1",
+        "id23eh2",
+        "id29",
+        "id30a1",
+        "id30a2",
+        "id30a3",
+        "id30b",
+    ]
     # Check that we have at least four levels of directories:
     if len(listOfDirectories) > 5:
         dataDirectory = listOfDirectories[1]
@@ -95,35 +108,37 @@ def createPyarchFilePath(filePath):
         year = fifthDirectory[0:4]
         proposal = None
         beamline = None
-        if dataDirectory == 'data' and secondDirectory == 'gz':
-            if thirdDirectory == 'visitor':
+        if dataDirectory == "data" and secondDirectory == "gz":
+            if thirdDirectory == "visitor":
                 proposal = fourthDirectory
                 beamline = fifthDirectory
-            elif fourthDirectory == 'inhouse':
+            elif fourthDirectory == "inhouse":
                 proposal = fifthDirectory
                 beamline = thirdDirectory
             else:
                 raise RuntimeError(
-                    'Illegal path for UtilsPath.createPyarchFilePath: ' +
-                    '{0}'.format(filePath))
+                    "Illegal path for UtilsPath.createPyarchFilePath: "
+                    + "{0}".format(filePath)
+                )
             listOfRemainingDirectories = listOfDirectories[6:]
-        elif dataDirectory == 'data' and secondDirectory == 'visitor':
+        elif dataDirectory == "data" and secondDirectory == "visitor":
             proposal = listOfDirectories[3]
             beamline = listOfDirectories[4]
             listOfRemainingDirectories = listOfDirectories[5:]
-        elif dataDirectory == 'data' and secondDirectory in listBeamlines:
+        elif dataDirectory == "data" and secondDirectory in listBeamlines:
             beamline = secondDirectory
             proposal = listOfDirectories[4]
             listOfRemainingDirectories = listOfDirectories[5:]
         if proposal is not None and beamline is not None:
-            pyarchFilePath = pathlib.Path('/data/pyarch') / year / beamline
+            pyarchFilePath = pathlib.Path("/data/pyarch") / year / beamline
             pyarchFilePath = pyarchFilePath / proposal
             for directory in listOfRemainingDirectories:
                 pyarchFilePath = pyarchFilePath / directory
     if pyarchFilePath is None:
         logger.warning(
-            'UtilsPath.createPyarchFilePath: path not converted for' +
-            ' pyarch: %s ' % filePath)
+            "UtilsPath.createPyarchFilePath: path not converted for"
+            + " pyarch: %s " % filePath
+        )
     else:
         pyarchFilePath = pyarchFilePath.as_posix()
     return pyarchFilePath
@@ -135,7 +150,7 @@ def waitForFile(file, expectedSize=None, timeOut=DEFAULT_TIMEOUT):
     hasTimedOut = False
     shouldContinue = True
     fileDir = filePath.parent
-    if os.name != 'nt' and fileDir.exists():
+    if os.name != "nt" and fileDir.exists():
         # Patch provided by Sebastien 2018/02/09 for forcing NFS cache:
         # logger.debug("NFS cache clear, doing os.fstat on directory {0}".format(fileDir))
         fd = os.open(fileDir.as_posix(), os.O_DIRECTORY)
@@ -157,11 +172,11 @@ def waitForFile(file, expectedSize=None, timeOut=DEFAULT_TIMEOUT):
         while shouldContinue and not hasTimedOut:
             # Sleep 1 s
             time.sleep(1)
-            if os.name != 'nt' and fileDir.exists():
+            if os.name != "nt" and fileDir.exists():
                 # Patch provided by Sebastien 2018/02/09 for forcing NFS cache:
                 # logger.debug("NFS cache clear, doing os.fstat on directory {0}".format(fileDir))
                 fd = os.open(fileDir.as_posix(), os.O_DIRECTORY)
-                statResult = os.fstat(fd)
+                statResult = os.fstat(fd) # noqa F841
                 os.close(fd)
                 # logger.debug("Results of os.fstat: {0}".format(statResult))
             timeElapsed = time.time() - timeStart

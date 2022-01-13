@@ -23,19 +23,14 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "21/04/2019"
 
-
-import unittest
-
 from edna2.utils import UtilsLogging
 
 
-class UtilsLoggingExecTest(unittest.TestCase):
-
-    def test_logging(self):
-        logger = UtilsLogging.getLogger('DEBUG')
-        logger.debug("Test message debug")
-        logger.info("Test message info")
-        logger.warning("Test message warning")
-        logger.error("Test message error")
-        logger.critical("Test message critical")
-        logger.fatal("Test message fatal")
+def test_logging():
+    logger = UtilsLogging.getLogger("DEBUG")
+    logger.debug("Test message debug")
+    logger.info("Test message info")
+    logger.warning("Test message warning")
+    logger.error("Test message error")
+    logger.critical("Test message critical")
+    logger.fatal("Test message fatal")

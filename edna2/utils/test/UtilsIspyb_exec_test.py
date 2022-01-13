@@ -24,7 +24,6 @@ __license__ = "MIT"
 __date__ = "21/04/2019"
 
 
-import os
 import string
 import random
 import unittest
@@ -34,22 +33,29 @@ from edna2.utils import UtilsConfig
 
 
 class UtilsIspybExecTest(unittest.TestCase):
-
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run control dozor test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run control dozor test with default config",
+    )
     def test_findDataCollectionFromFileLocationAndFileName(self):
         firstImagePath = "/data/id30a2/inhouse/opid30a2/20200907/RAW_DATA/MeshScan_10/mesh-opid30a2_1_0001.cbf"
-        dataCollection = UtilsIspyb.findDataCollectionFromFileLocationAndFileName(firstImagePath)
+        dataCollection = UtilsIspyb.findDataCollectionFromFileLocationAndFileName(
+            firstImagePath
+        )
         self.assertEqual(2483117, dataCollection.dataCollectionId)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run control dozor test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run control dozor test with default config",
+    )
     def test_setImageQualityIndicatorsPlot(self):
         dataCollectionId = 2483117
         letters = string.ascii_lowercase
-        filePlot = ''.join(random.choice(letters) for i in range(10))
-        fileCsv = ''.join(random.choice(letters) for i in range(10))
-        dataCollectionId2 = UtilsIspyb.setImageQualityIndicatorsPlot(dataCollectionId, filePlot, fileCsv)
+        filePlot = "".join(random.choice(letters) for i in range(10))
+        fileCsv = "".join(random.choice(letters) for i in range(10))
+        dataCollectionId2 = UtilsIspyb.setImageQualityIndicatorsPlot(
+            dataCollectionId, filePlot, fileCsv
+        )
         self.assertEqual(dataCollectionId, dataCollectionId2)
         # dataCollection = UtilsIspyb.findDataCollection(dataCollectionId)
         # print(dataCollection)
