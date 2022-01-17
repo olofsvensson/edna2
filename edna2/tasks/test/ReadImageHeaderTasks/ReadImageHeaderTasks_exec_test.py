@@ -26,20 +26,18 @@ from edna2.tasks.ReadImageHeader import ReadImageHeader
 
 
 class ReadImageHeaderTasksExecTest(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
     def test_executeReadImageHeaderTaskk(self):
-        referenceDataPath = self.dataPath / 'ControlReadImageHeader.json'
+        referenceDataPath = self.dataPath / "ControlReadImageHeader.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         readImageHeader = ReadImageHeader(inData=inData)
         readImageHeader.execute()
         self.assertTrue(readImageHeader.isSuccess())
-
 
     def test_execute_ReadImageHeader_pilatus2m(self):
-        referenceDataPath = self.dataPath / 'ReadImageHeader_Pilatus2M.json'
+        referenceDataPath = self.dataPath / "ReadImageHeader_Pilatus2M.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         readImageHeader = ReadImageHeader(inData=inData)
         readImageHeader.execute()
@@ -47,10 +45,12 @@ class ReadImageHeaderTasksExecTest(unittest.TestCase):
         outData = readImageHeader.outData
         self.assertIsNotNone(outData)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run dozor test_execute_ReadImageHeader_eiger4m with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run dozor test_execute_ReadImageHeader_eiger4m with default config",
+    )
     def test_execute_ReadImageHeader_eiger4m(self):
-        referenceDataPath = self.dataPath / 'ReadImageHeader_Eiger4M.json'
+        referenceDataPath = self.dataPath / "ReadImageHeader_Eiger4M.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         readImageHeader = ReadImageHeader(inData=inData)
         readImageHeader.execute()
@@ -58,11 +58,12 @@ class ReadImageHeaderTasksExecTest(unittest.TestCase):
         outData = readImageHeader.outData
         self.assertIsNotNone(outData)
 
-
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run dozor test_execute_ReadImageHeader_eiger4m with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run dozor test_execute_ReadImageHeader_eiger4m with default config",
+    )
     def test_execute_ReadImageHeader_eiger16m(self):
-        referenceDataPath = self.dataPath / 'ReadImageHeader_Eiger16M.json'
+        referenceDataPath = self.dataPath / "ReadImageHeader_Eiger16M.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         readImageHeader = ReadImageHeader(inData=inData)
         readImageHeader.execute()
@@ -70,11 +71,12 @@ class ReadImageHeaderTasksExecTest(unittest.TestCase):
         outData = readImageHeader.outData
         self.assertIsNotNone(outData)
 
-
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run dozor test_execute_ReadImageHeader_eiger4m with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run dozor test_execute_ReadImageHeader_eiger4m with default config",
+    )
     def test_execute_ReadImageHeader_eiger16m_cbf(self):
-        referenceDataPath = self.dataPath / 'ReadImageHeader_Eiger16M_cbf.json'
+        referenceDataPath = self.dataPath / "ReadImageHeader_Eiger16M_cbf.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         readImageHeader = ReadImageHeader(inData=inData)
         readImageHeader.execute()

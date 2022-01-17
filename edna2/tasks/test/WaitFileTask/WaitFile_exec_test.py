@@ -34,16 +34,15 @@ logger = UtilsLogging.getLogger()
 
 
 class MXWaitFileExecTest(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
     def test_WaitFile(self):
-        referenceDataPath = self.dataPath / 'WaitFile_reference.json'
+        referenceDataPath = self.dataPath / "WaitFile_reference.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         waitFile = WaitFileTask(inData=inData)
         waitFile.execute()
         outData = waitFile.outData
         logger.info(outData)
-        self.assertFalse(outData['timedOut'])
-        self.assertEqual(outData['finalSize'], 8389120)
+        self.assertFalse(outData["timedOut"])
+        self.assertEqual(outData["finalSize"], 8389120)

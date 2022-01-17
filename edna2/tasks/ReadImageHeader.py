@@ -66,12 +66,11 @@ DICT_SUFFIX_TO_IMAGE = {
     SUFFIX_Pilatus6M: "Pilatus6M",
     SUFFIX_Eiger4M: "Eiger4M",
     SUFFIX_Eiger9M: "Eiger9M",
-    SUFFIX_Eiger16M: "Eiger16M"
+    SUFFIX_Eiger16M: "Eiger16M",
 }
 
 
 class ReadImageHeader(AbstractTask):
-
     def run(self, inData):
         listImagePath = inData["imagePath"]
         isFastMesh = inData.get("isFastMesh", False)
@@ -79,27 +78,24 @@ class ReadImageHeader(AbstractTask):
         listSubWedge = []
         for imagePath in listImagePath:
             imageSuffix = os.path.splitext(imagePath)[1][1:]
-            if imageSuffix == 'cbf':
+            if imageSuffix == "cbf":
                 subWedge = self.createCBFHeaderData(imagePath)
-            elif imageSuffix == 'h5':
+            elif imageSuffix == "h5":
                 skipNumberOfImages = inData.get("skipNumberOfImages", False)
                 subWedge = self.createHdf5HeaderData(
                     imagePath,
                     skipNumberOfImages,
                     isFastMesh=isFastMesh,
-                    hasOverlap=hasOverlap
+                    hasOverlap=hasOverlap,
                 )
             else:
                 raise RuntimeError(
-                    '{0} cannot read image header from images with extension {1}'.format(
-                        self.__class__.__name__,
-                        imageSuffix
+                    "{0} cannot read image header from images with extension {1}".format(
+                        self.__class__.__name__, imageSuffix
                     )
                 )
             listSubWedge.append(subWedge)
-        outData = {
-            "subWedge": listSubWedge
-        }
+        outData = {"subWedge": listSubWedge}
         return outData
 
     @classmethod
@@ -108,115 +104,116 @@ class ReadImageHeader(AbstractTask):
         Returns an dictionary with the contents of a CBF image header.
         """
         dictHeader = None
-        with open(filePath, 'rb') as f:
-            logger.info('Reading header from image ' + filePath)
+        with open(filePath, "rb") as f:
+            logger.info("Reading header from image " + filePath)
             f.seek(0, 0)
             doContinue = True
             iMax = 60
             index = 0
             while doContinue:
-                line = f.readline().decode('utf-8')
+                line = f.readline().decode("utf-8")
                 index += 1
-                if '_array_data.header_contents' in line:
+                if "_array_data.header_contents" in line:
                     dictHeader = {}
-                if '_array_data.data' in line or index > iMax:
+                if "_array_data.data" in line or index > iMax:
                     doContinue = False
-                if dictHeader is not None and line[0] == '#':
+                if dictHeader is not None and line[0] == "#":
                     # Check for date
-                    strTmp = line[2:].replace('\r\n', '')
-                    if line[6] == '/' and line[10] == '/':
-                        dictHeader['DateTime'] = strTmp
+                    strTmp = line[2:].replace("\r\n", "")
+                    if line[6] == "/" and line[10] == "/":
+                        dictHeader["DateTime"] = strTmp
                     else:
-                        strKey = strTmp.split(' ')[0]
-                        strValue = strTmp.replace(strKey, '')[1:]
+                        strKey = strTmp.split(" ")[0]
+                        strValue = strTmp.replace(strKey, "")[1:]
                         dictHeader[strKey] = strValue
         return dictHeader
 
     @classmethod
     def createCBFHeaderData(cls, imagePath):
         # Waiting for file
-        timedOut, finalSize = UtilsPath.waitForFile(imagePath, expectedSize=100000, timeOut=DEFAULT_TIME_OUT)
+        timedOut, finalSize = UtilsPath.waitForFile(
+            imagePath, expectedSize=100000, timeOut=DEFAULT_TIME_OUT
+        )
         if timedOut:
             errorMessage = "Timeout when waiting for image %s" % imagePath
             logger.error(errorMessage)
             raise BaseException(errorMessage)
         dictHeader = cls.readCBFHeader(imagePath)
-        detector = dictHeader['Detector:']
-        if 'PILATUS 3M' in detector or 'PILATUS3 2M' in detector or \
-                'PILATUS 2M' in detector or 'PILATUS2 3M' in detector:
-            detectorName = 'PILATUS2 3M'
-            detectorType = 'pilatus2m'
+        detector = dictHeader["Detector:"]
+        if (
+            "PILATUS 3M" in detector
+            or "PILATUS3 2M" in detector
+            or "PILATUS 2M" in detector
+            or "PILATUS2 3M" in detector
+        ):
+            detectorName = "PILATUS2 3M"
+            detectorType = "pilatus2m"
             numberPixelX = 1475
             numberPixelY = 1679
-        elif 'PILATUS 6M' in detector or 'PILATUS3 6M' in detector:
-            detectorName = 'PILATUS2 6M'
-            detectorType = 'pilatus6m'
+        elif "PILATUS 6M" in detector or "PILATUS3 6M" in detector:
+            detectorName = "PILATUS2 6M"
+            detectorType = "pilatus6m"
             numberPixelX = 2463
             numberPixelY = 2527
-        elif 'eiger' in detector.lower() and '4m' in detector.lower():
-            detectorName = 'EIGER 4M'
-            detectorType = 'eiger4m'
+        elif "eiger" in detector.lower() and "4m" in detector.lower():
+            detectorName = "EIGER 4M"
+            detectorType = "eiger4m"
             numberPixelX = 2070
             numberPixelY = 2167
-        elif 'eiger2' in detector.lower() and '16m' in detector.lower():
-            detectorName = 'EIGER2 16M'
-            detectorType = 'eiger16m'
+        elif "eiger2" in detector.lower() and "16m" in detector.lower():
+            detectorName = "EIGER2 16M"
+            detectorType = "eiger16m"
             numberPixelX = 4148
             numberPixelY = 4362
         else:
             raise RuntimeError(
-                '{0} cannot read image header from images with dector type {1}'.format(
-                    cls.__class__.__name__,
-                    detector
+                "{0} cannot read image header from images with dector type {1}".format(
+                    cls.__class__.__name__, detector
                 )
             )
         experimentalCondition = {}
-        detector = {
-            'numberPixelX': numberPixelX,
-            'numberPixelY': numberPixelY
-        }
+        detector = {"numberPixelX": numberPixelX, "numberPixelY": numberPixelY}
         # Pixel size
-        listPixelSizeXY = dictHeader['Pixel_size'].split(' ')
-        detector['pixelSizeX'] = float(listPixelSizeXY[0]) * 1000
-        detector['pixelSizeY'] = float(listPixelSizeXY[3]) * 1000
+        listPixelSizeXY = dictHeader["Pixel_size"].split(" ")
+        detector["pixelSizeX"] = float(listPixelSizeXY[0]) * 1000
+        detector["pixelSizeY"] = float(listPixelSizeXY[3]) * 1000
         # Beam position
-        listBeamPosition = dictHeader['Beam_xy'].replace('(', ' ').replace(')', ' ').replace(',', ' ').split()
-        detector['beamPositionX'] = float(listBeamPosition[0]) * \
-                                    detector['pixelSizeX']
-        detector['beamPositionY'] = float(listBeamPosition[1]) * \
-                                    detector['pixelSizeY']
-        distance = float(dictHeader['Detector_distance'].split(' ')[0]) * 1000
-        detector['distance'] = distance
-        detector['serialNumber'] = dictHeader['Detector:']
-        detector['name'] = detectorName
-        detector['type'] = detectorType
-        experimentalCondition['detector'] = detector
+        listBeamPosition = (
+            dictHeader["Beam_xy"]
+            .replace("(", " ")
+            .replace(")", " ")
+            .replace(",", " ")
+            .split()
+        )
+        detector["beamPositionX"] = float(listBeamPosition[0]) * detector["pixelSizeX"]
+        detector["beamPositionY"] = float(listBeamPosition[1]) * detector["pixelSizeY"]
+        distance = float(dictHeader["Detector_distance"].split(" ")[0]) * 1000
+        detector["distance"] = distance
+        detector["serialNumber"] = dictHeader["Detector:"]
+        detector["name"] = detectorName
+        detector["type"] = detectorType
+        experimentalCondition["detector"] = detector
         # Beam object
         beam = {
-            'wavelength': float(dictHeader['Wavelength'].split(' ')[0]),
-            'exposureTime': float(dictHeader['Exposure_time'].split(' ')[0])
+            "wavelength": float(dictHeader["Wavelength"].split(" ")[0]),
+            "exposureTime": float(dictHeader["Exposure_time"].split(" ")[0]),
         }
-        experimentalCondition['beam'] = beam
+        experimentalCondition["beam"] = beam
         # Goniostat object
         goniostat = {}
-        rotationAxisStart = float(dictHeader['Start_angle'].split(' ')[0])
-        oscillationWidth = float(dictHeader['Angle_increment'].split(' ')[0])
-        goniostat['rotationAxisStart'] = rotationAxisStart
-        goniostat['rotationAxisEnd'] = rotationAxisStart + oscillationWidth
-        goniostat['oscillationWidth'] = oscillationWidth
-        experimentalCondition['goniostat'] = goniostat
+        rotationAxisStart = float(dictHeader["Start_angle"].split(" ")[0])
+        oscillationWidth = float(dictHeader["Angle_increment"].split(" ")[0])
+        goniostat["rotationAxisStart"] = rotationAxisStart
+        goniostat["rotationAxisEnd"] = rotationAxisStart + oscillationWidth
+        goniostat["oscillationWidth"] = oscillationWidth
+        experimentalCondition["goniostat"] = goniostat
         # Create the image object
-        image = {
-            'path': imagePath
-        }
-        if 'DateTime' in dictHeader:
-            image['date'] = dictHeader['DateTime']
+        image = {"path": imagePath}
+        if "DateTime" in dictHeader:
+            image["date"] = dictHeader["DateTime"]
         imageNumber = UtilsImage.getImageNumber(imagePath)
-        image['number'] = imageNumber
-        subWedge = {
-            'experimentalCondition': experimentalCondition,
-            'image': [image]
-        }
+        image["number"] = imageNumber
+        subWedge = {"experimentalCondition": experimentalCondition, "image": [image]}
         return subWedge
 
     @classmethod
@@ -224,41 +221,57 @@ class ReadImageHeader(AbstractTask):
         """
         Returns an dictionary with the contents of an Eiger Hdf5 image header.
         """
-        logger.info('Reading header from image ' + str(filePath))
-        f = h5py.File(filePath, 'r')
+        logger.info("Reading header from image " + str(filePath))
+        f = h5py.File(filePath, "r")
         dictHeader = {
-            'wavelength': f['entry']['instrument']['beam']['incident_wavelength'][()],
-            'beam_center_x': f['entry']['instrument']['detector']['beam_center_x'][()],
-            'beam_center_y': f['entry']['instrument']['detector']['beam_center_y'][()],
-            'count_time':  f['entry']['instrument']['detector']['count_time'][()],
-            'detector_distance': f['entry']['instrument']['detector']['detector_distance'][()],
-            'translation': list(f['entry']['instrument']['detector']['geometry']['translation']['distances']),
-            'x_pixel_size': f['entry']['instrument']['detector']['x_pixel_size'][()],
-            'y_pixel_size': f['entry']['instrument']['detector']['y_pixel_size'][()],
-            'omega_range_average': f['entry']['sample']['goniometer']['omega_range_average'][()],
-            'detector_number': f['entry']['instrument']['detector']['detector_number'][()].decode('utf-8'),
-            'description': f['entry']['instrument']['detector']['description'][()].decode('utf-8'),
-            'data_collection_date': f['entry']['instrument']['detector']['detectorSpecific']['data_collection_date'][()].decode('utf-8'),
-            'data': list(f['entry']['data'])
+            "wavelength": f["entry"]["instrument"]["beam"]["incident_wavelength"][()],
+            "beam_center_x": f["entry"]["instrument"]["detector"]["beam_center_x"][()],
+            "beam_center_y": f["entry"]["instrument"]["detector"]["beam_center_y"][()],
+            "count_time": f["entry"]["instrument"]["detector"]["count_time"][()],
+            "detector_distance": f["entry"]["instrument"]["detector"][
+                "detector_distance"
+            ][()],
+            "translation": list(
+                f["entry"]["instrument"]["detector"]["geometry"]["translation"][
+                    "distances"
+                ]
+            ),
+            "x_pixel_size": f["entry"]["instrument"]["detector"]["x_pixel_size"][()],
+            "y_pixel_size": f["entry"]["instrument"]["detector"]["y_pixel_size"][()],
+            "omega_range_average": f["entry"]["sample"]["goniometer"][
+                "omega_range_average"
+            ][()],
+            "detector_number": f["entry"]["instrument"]["detector"]["detector_number"][
+                ()
+            ].decode("utf-8"),
+            "description": f["entry"]["instrument"]["detector"]["description"][
+                ()
+            ].decode("utf-8"),
+            "data_collection_date": f["entry"]["instrument"]["detector"][
+                "detectorSpecific"
+            ]["data_collection_date"][()].decode("utf-8"),
+            "data": list(f["entry"]["data"]),
         }
         # 'Old' Eiger files have just one entry for 'omega'
-        omega = f['entry']['sample']['goniometer']['omega'][()]
+        omega = f["entry"]["sample"]["goniometer"]["omega"][()]
         if type(omega) == numpy.float32:
-            dictHeader['omega_start'] = float(omega)
+            dictHeader["omega_start"] = float(omega)
         else:
-            dictHeader['omega_start'] = float(omega[0])
+            dictHeader["omega_start"] = float(omega[0])
         f.close()
         return dictHeader
 
     @classmethod
-    def createHdf5HeaderData(cls, imagePath, skipNumberOfImages=False, hasOverlap=False, isFastMesh=True):
+    def createHdf5HeaderData(
+        cls, imagePath, skipNumberOfImages=False, hasOverlap=False, isFastMesh=True
+    ):
         h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(
-            pathlib.Path(imagePath),
-            isFastMesh=isFastMesh,
-            hasOverlap=hasOverlap
+            pathlib.Path(imagePath), isFastMesh=isFastMesh, hasOverlap=hasOverlap
         )
         # Waiting for file
-        timedOut, finalSize = UtilsPath.waitForFile(h5MasterFilePath, expectedSize=2000000, timeOut=DEFAULT_TIME_OUT)
+        timedOut, finalSize = UtilsPath.waitForFile(
+            h5MasterFilePath, expectedSize=2000000, timeOut=DEFAULT_TIME_OUT
+        )
         if timedOut:
             errorMessage = "Timeout when waiting for image %s" % imagePath
             logger.error(errorMessage)
@@ -271,86 +284,98 @@ class ReadImageHeader(AbstractTask):
                 dictHeader = cls.readHdf5Header(h5MasterFilePath)
                 noTrialsLeft = 0
             except Exception as e:
-                logger.warning("Cannot read header from {0}, no trials left: {1}".format(h5MasterFilePath, noTrialsLeft))
+                logger.warning(
+                    "Cannot read header from {0}, no trials left: {1}".format(
+                        h5MasterFilePath, noTrialsLeft
+                    )
+                )
                 time.sleep(5)
                 noTrialsLeft -= 1
         if dictHeader is None:
             raise RuntimeError("Cannot read header from {0}!".format(h5MasterFilePath))
-        description = dictHeader['description']
-        if 'Eiger 4M' in description:
-            detectorName = 'EIGER 4M'
-            detectorType = 'eiger4m'
+        description = dictHeader["description"]
+        if "Eiger 4M" in description:
+            detectorName = "EIGER 4M"
+            detectorType = "eiger4m"
             numberPixelX = 2070
             numberPixelY = 2167
-        elif 'eiger' in description.lower() and '16M' in description:
-            detectorName = 'EIGER 16M'
-            detectorType = 'eiger16m'
+        elif "eiger" in description.lower() and "16M" in description:
+            detectorName = "EIGER 16M"
+            detectorType = "eiger16m"
             numberPixelX = 4148
             numberPixelY = 4362
         else:
             raise RuntimeError(
-                '{0} cannot read image header from images with detector type {1}'.format(
-                    cls.__class__.__name__,
-                    description
+                "{0} cannot read image header from images with detector type {1}".format(
+                    cls.__class__.__name__, description
                 )
             )
         # Find out size of data set
-        prefix = str(h5MasterFilePath).split('master')[0]
+        prefix = str(h5MasterFilePath).split("master")[0]
         listDataImage = []
         noImages = 0
         if not skipNumberOfImages:
-            for data in dictHeader['data']:
-                dataFilePath = prefix + data + '.h5'
+            for data in dictHeader["data"]:
+                dataFilePath = prefix + data + ".h5"
                 timedOut, finalSize = UtilsPath.waitForFile(
-                    dataFilePath, expectedSize=100000, timeOut=DEFAULT_TIME_OUT)
+                    dataFilePath, expectedSize=100000, timeOut=DEFAULT_TIME_OUT
+                )
                 if timedOut:
-                    raise RuntimeError('Timeout waiting for file {0}'.format(dataFilePath))
+                    raise RuntimeError(
+                        "Timeout waiting for file {0}".format(dataFilePath)
+                    )
                 # listDataImage.append({
                 #     'path': dataFilePath
                 # })
-                f = h5py.File(dataFilePath, 'r')
-                dataShape = f['entry']['data']['data'].shape
+                f = h5py.File(dataFilePath, "r")
+                dataShape = f["entry"]["data"]["data"].shape
                 noImages += dataShape[0]
                 f.close()
         experimentalCondition = {}
         # Pixel size and beam position
         detector = {
-            'numberPixelX': int(numberPixelX),
-            'numberPixelY': int(numberPixelY),
-            'pixelSizeX': round(dictHeader['x_pixel_size'] * 1000, 3),
-            'pixelSizeY': round(dictHeader['y_pixel_size'] * 1000, 3),
-            'beamPositionX': round(float(dictHeader['beam_center_x'] * dictHeader['x_pixel_size'] * 1000), 3),
-            'beamPositionY': round(float(dictHeader['beam_center_y'] * dictHeader['y_pixel_size'] * 1000), 3),
-            'distance': round(float(dictHeader['detector_distance']) * 1000, 3),
-            'serialNumber': dictHeader['detector_number'],
-            'name': detectorName,
-            'type': detectorType
+            "numberPixelX": int(numberPixelX),
+            "numberPixelY": int(numberPixelY),
+            "pixelSizeX": round(dictHeader["x_pixel_size"] * 1000, 3),
+            "pixelSizeY": round(dictHeader["y_pixel_size"] * 1000, 3),
+            "beamPositionX": round(
+                float(dictHeader["beam_center_x"] * dictHeader["x_pixel_size"] * 1000),
+                3,
+            ),
+            "beamPositionY": round(
+                float(dictHeader["beam_center_y"] * dictHeader["y_pixel_size"] * 1000),
+                3,
+            ),
+            "distance": round(float(dictHeader["detector_distance"]) * 1000, 3),
+            "serialNumber": dictHeader["detector_number"],
+            "name": detectorName,
+            "type": detectorType,
         }
-        experimentalCondition['detector'] = detector
+        experimentalCondition["detector"] = detector
         # Beam object
         beam = {
-            'wavelength': round(float(dictHeader['wavelength']), 6),
-            'exposureTime': round(float(dictHeader['count_time']), 6)
+            "wavelength": round(float(dictHeader["wavelength"]), 6),
+            "exposureTime": round(float(dictHeader["count_time"]), 6),
         }
-        experimentalCondition['beam'] = beam
+        experimentalCondition["beam"] = beam
         # Goniostat object
         goniostat = {}
-        rotationAxisStart = round(float(dictHeader['omega_start']), 4)
-        oscillationWidth = round(float(dictHeader['omega_range_average']), 4)
-        goniostat['rotationAxisStart'] = rotationAxisStart
-        goniostat['rotationAxisEnd'] = rotationAxisStart + oscillationWidth * noImages
-        goniostat['oscillationWidth'] = oscillationWidth
-        experimentalCondition['goniostat'] = goniostat
+        rotationAxisStart = round(float(dictHeader["omega_start"]), 4)
+        oscillationWidth = round(float(dictHeader["omega_range_average"]), 4)
+        goniostat["rotationAxisStart"] = rotationAxisStart
+        goniostat["rotationAxisEnd"] = rotationAxisStart + oscillationWidth * noImages
+        goniostat["oscillationWidth"] = oscillationWidth
+        experimentalCondition["goniostat"] = goniostat
         # Create the image object
         masterImage = {
-            'path': imagePath,
-            'date': dictHeader['data_collection_date'],
-            'number': 1
+            "path": imagePath,
+            "date": dictHeader["data_collection_date"],
+            "number": 1,
         }
         # imageNumber = UtilsImage.getImageNumber(imagePath)
         # image['number'] = imageNumber
         subWedge = {
-            'experimentalCondition': experimentalCondition,
-            'image': [masterImage] + listDataImage
+            "experimentalCondition": experimentalCondition,
+            "image": [masterImage] + listDataImage,
         }
         return subWedge

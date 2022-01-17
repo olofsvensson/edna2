@@ -27,8 +27,6 @@ __date__ = "21/04/2019"
 # https://github.com/olofsvensson/edna-mx
 # mxPluginExec/plugins/EDPluginMXWaitFile-v1.1/plugins/EDPluginMXWaitFilev1_1.py
 
-import os
-import time
 import pathlib
 
 from edna2.tasks.AbstractTask import AbstractTask
@@ -39,7 +37,7 @@ from edna2.utils import UtilsLogging
 
 logger = UtilsLogging.getLogger()
 
-DEFAULT_TIMEOUT = 120 # s
+DEFAULT_TIMEOUT = 120  # s
 
 
 class WaitFileTask(AbstractTask):
@@ -49,17 +47,16 @@ class WaitFileTask(AbstractTask):
 
     def run(self, inData):
         # Wait for file if it's not already on disk'
-        if not "file" in inData:
+        if "file" not in inData:
             raise BaseException("No expected file path in input!")
         filePath = pathlib.Path(self.inData["file"])
-        expectedSize = inData.get('expectedSize', None)
-        configTimeOut = UtilsConfig.get(self, 'timeOut', DEFAULT_TIMEOUT)
-        timeOut = inData.get('timeOut', configTimeOut)
-        hasTimedOut, finalSize = UtilsPath.waitForFile(filePath, expectedSize=expectedSize, timeOut=timeOut)
-        outData = {
-            "timedOut": hasTimedOut
-        }
+        expectedSize = inData.get("expectedSize", None)
+        configTimeOut = UtilsConfig.get(self, "timeOut", DEFAULT_TIMEOUT)
+        timeOut = inData.get("timeOut", configTimeOut)
+        hasTimedOut, finalSize = UtilsPath.waitForFile(
+            filePath, expectedSize=expectedSize, timeOut=timeOut
+        )
+        outData = {"timedOut": hasTimedOut}
         if finalSize is not None:
             outData["finalSize"] = finalSize
         return outData
-
