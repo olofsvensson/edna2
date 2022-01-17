@@ -19,7 +19,6 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import os
-import json
 from builtins import RuntimeError
 
 import numpy
@@ -31,7 +30,6 @@ import pathlib
 import matplotlib.pyplot as plt
 
 from edna2.tasks.AbstractTask import AbstractTask
-from edna2.tasks.H5ToCBFTask import H5ToCBFTask
 from edna2.tasks.ReadImageHeader import ReadImageHeader
 from edna2.tasks.ISPyBTasks import ISPyBRetrieveDataCollection
 
@@ -563,7 +561,6 @@ class ControlDozor(AbstractTask):
         overlap = inData.get("overlap", self.overlap)
         if overlap != 0:
             self.hasOverlap = True
-        startImageNo = inData.get("startNo", sorted(dictImage.keys())[0])
         logger.debug("ExecDozor batch size: {0}".format(batchSize))
         listAllBatches = self.createListOfBatches(
             dictImage.keys(), batchSize, self.hasOverlap
@@ -777,17 +774,7 @@ class ControlDozor(AbstractTask):
                     outDataDozor["imageDozor"][0]["number"] = imageNumberOrig
         return outDataDozor, detectorType
 
-    def makePlot(self, dataCollectionId, outDataImageDozor, workingDirectory):
-        minImageNumber = None
-        maxImageNumber = None
-        minAngle = None
-        maxAngle = None
-        minDozorValue = None
-        maxDozorValue = None
-        minResolution = None
-        maxResolution = None
-        plotFileName = "dozor_{0}.png".format(dataCollectionId)
-        csvFileName = "dozor_{0}.csv".format(dataCollectionId)
+    def createGnuPlotFile(self, workingDirectory, csvFileName, outDataImageDozor):
         with open(str(workingDirectory / csvFileName), "w") as gnuplotFile:
             gnuplotFile.write("# Data directory: {0}\n".format(self.directory))
             gnuplotFile.write(
@@ -814,46 +801,76 @@ class ControlDozor(AbstractTask):
                         imageQualityIndicators["dozorVisibleResolution"],
                     )
                 )
-                if (
-                    minImageNumber is None
-                    or minImageNumber > imageQualityIndicators["number"]
-                ):
-                    minImageNumber = imageQualityIndicators["number"]
-                    minAngle = imageQualityIndicators["angle"]
-                if (
-                    maxImageNumber is None
-                    or maxImageNumber < imageQualityIndicators["number"]
-                ):
-                    maxImageNumber = imageQualityIndicators["number"]
-                    maxAngle = imageQualityIndicators["angle"]
-                if (
-                    minDozorValue is None
-                    or minDozorValue > imageQualityIndicators["dozorScore"]
-                ):
-                    minDozorValue = imageQualityIndicators["dozorScore"]
-                if (
-                    maxDozorValue is None
-                    or maxDozorValue < imageQualityIndicators["dozorScore"]
-                ):
-                    maxDozorValue = imageQualityIndicators["dozorScore"]
 
-                # Min resolution: the higher the value the lower the resolution
-                if (
-                    minResolution is None
-                    or minResolution < imageQualityIndicators["dozorVisibleResolution"]
-                ):
-                    # Disregard resolution worse than 10.0
-                    if imageQualityIndicators["dozorVisibleResolution"] < 10.0:
-                        minResolution = imageQualityIndicators["dozorVisibleResolution"]
+    def determineMinMaxParameters(self, outDataImageDozor):
+        minImageNumber = None
+        maxImageNumber = None
+        minAngle = None
+        maxAngle = None
+        minDozorValue = None
+        maxDozorValue = None
+        minResolution = None
+        maxResolution = None
+        for imageQualityIndicators in outDataImageDozor["imageQualityIndicators"]:
+            if (
+                minImageNumber is None
+                or minImageNumber > imageQualityIndicators["number"]
+            ):
+                minImageNumber = imageQualityIndicators["number"]
+                minAngle = imageQualityIndicators["angle"]
+            if (
+                maxImageNumber is None
+                or maxImageNumber < imageQualityIndicators["number"]
+            ):
+                maxImageNumber = imageQualityIndicators["number"]
+                maxAngle = imageQualityIndicators["angle"]
+            if (
+                minDozorValue is None
+                or minDozorValue > imageQualityIndicators["dozorScore"]
+            ):
+                minDozorValue = imageQualityIndicators["dozorScore"]
+            if (
+                maxDozorValue is None
+                or maxDozorValue < imageQualityIndicators["dozorScore"]
+            ):
+                maxDozorValue = imageQualityIndicators["dozorScore"]
 
-                # Max resolution: the lower the number the better the resolution
-                if (
-                    maxResolution is None
-                    or maxResolution > imageQualityIndicators["dozorVisibleResolution"]
-                ):
-                    maxResolution = imageQualityIndicators["dozorVisibleResolution"]
+            # Min resolution: the higher the value the lower the resolution
+            if (
+                minResolution is None
+                or minResolution < imageQualityIndicators["dozorVisibleResolution"]
+            ):
+                # Disregard resolution worse than 10.0
+                if imageQualityIndicators["dozorVisibleResolution"] < 10.0:
+                    minResolution = imageQualityIndicators["dozorVisibleResolution"]
+            # Max resolution: the lower the number the better the resolution
+            if (
+                maxResolution is None
+                or maxResolution > imageQualityIndicators["dozorVisibleResolution"]
+            ):
+                maxResolution = imageQualityIndicators["dozorVisibleResolution"]
+        plotDict = {
+            "minImageNumber": minImageNumber,
+            "maxImageNumber": maxImageNumber,
+            "minAngle": minAngle,
+            "maxAngle": maxAngle,
+            "minDozorValue": minDozorValue,
+            "maxDozorValue": maxDozorValue,
+            "minResolution": minResolution,
+            "maxResolution": maxResolution,
+        }
+        return plotDict
 
+    def determinePlotParameters(self, plotDict):
         xtics = ""
+        minImageNumber = plotDict["minImageNumber"]
+        maxImageNumber = plotDict["maxImageNumber"]
+        minAngle = plotDict["minAngle"]
+        maxAngle = plotDict["maxAngle"]
+        minResolution = plotDict["minResolution"]
+        maxResolution = plotDict["maxResolution"]
+        minDozorValue = plotDict["minDozorValue"]
+        maxDozorValue = plotDict["maxDozorValue"]
         if minImageNumber is not None and minImageNumber == maxImageNumber:
             minAngle -= 1.0
             maxAngle += 1.0
@@ -865,22 +882,38 @@ class ControlDozor(AbstractTask):
             minAngle -= deltaAngle * 0.1 / noImages
             maxAngle += deltaAngle * 0.1 / noImages
             xtics = "1"
-
         if maxResolution is None or maxResolution > 0.8:
             maxResolution = 0.8
         else:
             maxResolution = int(maxResolution * 10.0) / 10.0
-
         if minResolution is None or minResolution < 4.5:
             minResolution = 4.5
         else:
             minResolution = int(minResolution * 10.0) / 10.0 + 1
-
         if maxDozorValue < 0.001 and minDozorValue < 0.001:
             yscale = "set yrange [-0.5:0.5]\n    set ytics 1"
         else:
             yscale = "set autoscale  y"
+        plotDict = {
+            "xtics": xtics,
+            "yscale": yscale,
+            "minImageNumber": minImageNumber,
+            "maxImageNumber": maxImageNumber,
+            "minAngle": minAngle,
+            "maxAngle": maxAngle,
+            "minDozorValue": minDozorValue,
+            "maxDozorValue": maxDozorValue,
+            "minResolution": minResolution,
+            "maxResolution": maxResolution,
+        }
+        return plotDict
 
+    def makePlot(self, dataCollectionId, outDataImageDozor, workingDirectory):
+        plotFileName = "dozor_{0}.png".format(dataCollectionId)
+        csvFileName = "dozor_{0}.csv".format(dataCollectionId)
+        self.createGnuPlotFile(workingDirectory, csvFileName, outDataImageDozor)
+        plotDict = self.determineMinMaxParameters(outDataImageDozor)
+        plotDict = self.determinePlotParameters(plotDict)
         gnuplotScript = """#
 set terminal png
 set output '{dozorPlotFileName}'
@@ -906,14 +939,14 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
             title=self.template.replace("%04d", "####"),
             dozorPlotFileName=plotFileName,
             dozorCsvFileName=csvFileName,
-            minImageNumber=minImageNumber,
-            maxImageNumber=maxImageNumber,
-            minAngle=minAngle,
-            maxAngle=maxAngle,
-            minResolution=minResolution,
-            maxResolution=maxResolution,
-            xtics=xtics,
-            yscale=yscale,
+            minImageNumber=plotDict["minImageNumber"],
+            maxImageNumber=plotDict["maxImageNumber"],
+            minAngle=plotDict["minAngle"],
+            maxAngle=plotDict["maxAngle"],
+            minResolution=plotDict["minResolution"],
+            maxResolution=plotDict["maxResolution"],
+            xtics=plotDict["xtics"],
+            yscale=plotDict["yscale"],
         )
         pathGnuplotScript = str(workingDirectory / "gnuplot.sh")
         with open(pathGnuplotScript, "w") as f:
@@ -1049,214 +1082,3 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
                     newListAllBatches.append([batch])
             listAllBatches = newListAllBatches
         return listAllBatches
-
-    @classmethod
-    def convertToCBF(
-        cls,
-        dictImage,
-        listAllBatches,
-        doRadiationDamage=False,
-        hasOverlap=False,
-        cbfTempDir=None,
-    ):
-        # Find start and end image number
-        startImage = None
-        endImage = None
-        for image in dictImage:
-            if startImage is None or startImage > image:
-                startImage = image
-            if endImage is None or endImage < image:
-                endImage = image
-        # Check if we are dealing with characterisation images
-        newDict = {}
-        hasHdf5Prefix = True
-        if hasOverlap or startImage == endImage:
-            hasHdf5Prefix = False
-            for imageNumber in dictImage:
-                inDataH5ToCBF = {
-                    "hdf5File": startImage,
-                    "hdf5ImageNumber": imageNumber,
-                    "forcedOutputImageNumber": imageNumber,
-                }
-                if cbfTempDir is not None:
-                    inDataH5ToCBF["forcedOutputDirectory"] = cbfTempDir
-                h5ToCBF = H5ToCBFTask(inData=inDataH5ToCBF)
-                h5ToCBF.execute()
-                outDataH5ToCBF = json.loads(h5ToCBF.outData().open().read())
-                newDict["image"] = outDataH5ToCBF["outputCBFFile"]
-        else:
-            listH5ToCBF = []
-            directory = os.path.dirname(dictImage[listAllBatches[0][0]])
-            for batch in listAllBatches:
-                if doRadiationDamage:
-                    inDataH5ToCBF = {
-                        "hdf5File": dictImage[batch[0]],
-                        "hdf5ImageNumber": batch[0],
-                        "startImageNumber": listAllBatches[0][0],
-                        "endImageNumber": listAllBatches[0][-1],
-                    }
-                else:
-                    inDataH5ToCBF = {
-                        "hdf5File": dictImage[startImage],
-                        "hdf5ImageNumber": 1,
-                        "startImageNumber": batch[0],
-                        "endImageNumber": batch[-1],
-                    }
-                if cbfTempDir is not None:
-                    inDataH5ToCBF["forcedOutputDirectory"] = cbfTempDir
-                h5ToCBF = H5ToCBFTask(inData=inDataH5ToCBF)
-                if doRadiationDamage:
-                    h5ToCBF.execute()
-                    if (
-                        h5ToCBF.outData is not None
-                        and h5ToCBF.outData["outputCBFFileTemplate"] is not None
-                    ):
-                        outputCBFFileTemplate = h5ToCBF.outData["outputCBFFileTemplate"]
-                        for newImageNumber in batch:
-                            oldImageNumber = newImageNumber - batch[0] + 1
-                            oldPath = os.path.join(
-                                directory,
-                                outputCBFFileTemplate.path.value.replace(
-                                    "######", "{0:06d}".format(oldImageNumber)
-                                ),
-                            )
-                            newPath = os.path.join(
-                                directory,
-                                outputCBFFileTemplate.path.value.replace(
-                                    "######", "{0:04d}".format(newImageNumber)
-                                ),
-                            )
-                            os.rename(oldPath, newPath)
-                            # newDict[newImageNumber] = XSDataFile(XSDataString(newPath))
-                    hasHdf5Prefix = False
-                else:
-                    h5ToCBF.start()
-                    listH5ToCBF.append(h5ToCBF)
-            for h5ToCBF in listH5ToCBF:
-                h5ToCBF.join()
-                outDataH5ToCBF = h5ToCBF.outData
-                if "outputCBFFileTemplate" in outDataH5ToCBF:
-                    template = outDataH5ToCBF["outputCBFFileTemplate"]
-                    template = template.replace("######", "{0:06d}")
-                    for image in dictImage:
-                        newDict[image] = template.format(image)
-        return newDict, hasHdf5Prefix
-
-
-#
-#    def sendMessageToMXCuBE(self, _strMessage, level="info"):
-#        if self._oServerProxy is not None:
-#            self.DEBUG("Sending message to mxCuBE: {0}".format(_strMessage))
-#            try:
-#                for strMessage in _strMessage.split("\n"):
-#                    if strMessage != "":
-#                        self._oServerProxy.log_message("EDNA | ExecDozor: " + _strMessage, level)
-#            except:
-#                self.DEBUG("Sending message to mxCuBE failed!")
-#
-#    def sendResultToMXCuBE(self, _batchData):
-#        if self._oServerProxy is not None:
-#            self.DEBUG("Sending ExecDozor results to mxCuBE")
-#            try:
-#                self._oServerProxy.dozor_batch_processed(_batchData)
-#            except:
-#                pass
-#
-#    def setStatusToMXCuBE(self, status):
-#        if self._oServerProxy is not None:
-#            self.DEBUG("Sending dozor status %s to mxCuBE" % status)
-#            try:
-#                self._oServerProxy.dozor_status_changed(status)
-#            except:
-#                pass
-
-# This is the old 'parseOutput' method that I kept in case we have to go back
-# to the previous version of Dozor:
-#
-#     def parseOutput(self, inData, output, workingDir=None):
-#         """
-#         This method parses the output of dozor
-#         """
-#         resultDozor = {
-#             'imageDozor': []
-#         }
-#         # Skip the four first lines
-#         listOutput = output.split('\n')[6:]
-#
-#         for line in listOutput:
-#             # Remove '|'
-#             listLine = shlex.split(line.replace('|', ' '))
-#             if len(listLine) > 0 and listLine[0].isdigit():
-#                 imageDozor = {}
-#                 imageNumber = int(listLine[0])
-#                 overlap = inData.get('overlap', 0.0)
-#                 angle = inData['startingAngle'] + \
-#                         (imageNumber - inData['firstImageNumber']) * \
-#                         (inData['oscillationRange'] - overlap) + \
-#                         inData['oscillationRange'] / 2.0
-#                 imageDozor['number'] = imageNumber
-#                 imageDozor['angle'] = angle
-#                 imageDozor['spotsNumOf'] = None
-#                 imageDozor['spotsIntAver'] = None
-#                 imageDozor['spotsResolution'] = None
-#                 imageDozor['mainScore'] = None
-#                 imageDozor['spotScore'] = None
-#                 imageDozor['visibleResolution'] = 40
-#                 try:
-#                     if listLine[4].startswith('-') or len(listLine) < 11:
-#                         imageDozor['spotsNumOf'] = \
-#                             int(listLine[1])
-#                         imageDozor['spotsIntAver'] = \
-#                         imageDozor['spotsResolution'] = \
-#                             self.parseDouble(listLine[3])
-#                         imageDozor['mainScore'] = \
-#                             self.parseDouble(listLine[7])
-#                         imageDozor['spotScore'] = \
-#                             self.parseDouble(listLine[8])
-#                         imageDozor['visibleResolution'] = \
-#                             self.parseDouble(listLine[9])
-#                     else:
-#                         imageDozor['spotsNumOf'] = \
-#                             int(listLine[1])
-#                         imageDozor['spotsIntAver'] = \
-#                             self.parseDouble(listLine[2])
-#                         imageDozor['spotsResolution'] = \
-#                             self.parseDouble(listLine[3])
-#                         imageDozor['powderWilsonScale'] = \
-#                             self.parseDouble(listLine[4])
-#                         imageDozor['powderWilsonBfactor'] = \
-#                             self.parseDouble(listLine[5])
-#                         imageDozor['powderWilsonResolution'] = \
-#                             self.parseDouble(listLine[6])
-#                         imageDozor['powderWilsonCorrelation'] = \
-#                             self.parseDouble(listLine[7])
-#                         imageDozor['powderWilsonRfactor'] = \
-#                             self.parseDouble(listLine[8])
-#                         imageDozor['mainScore'] = \
-#                             self.parseDouble(listLine[9])
-#                         imageDozor['spotScore'] = \
-#                             self.parseDouble(listLine[10])
-#                         imageDozor['visibleResolution'] = \
-#                             self.parseDouble(listLine[11])
-#                 except:
-#                     pass
-#                 # ExecDozor spot file
-#                 if workingDir is not None:
-#                     spotFile = os.path.join(str(workingDir),
-#                                             '%05d.spot' % imageDozor['number'])
-#                     if os.path.exists(spotFile):
-#                         imageDozor['spotFile'] = spotFile
-# #                #print imageDozor['marshal()
-#                 resultDozor['imageDozor'].append(imageDozor)
-#             elif line.startswith('h'):
-#                 resultDozor['halfDoseTime'] = line.split('=')[1].split()[0]
-#
-#         # Check if mtv plot file exists
-#         if workingDir is not None:
-#             mtvFileName = 'dozor_rd.mtv'
-#             mtvFilePath = os.path.join(str(workingDir), mtvFileName)
-#             if os.path.exists(mtvFilePath):
-#                 resultDozor['plotmtvFile'] = mtvFilePath
-#                 resultDozor['pngPlots'] = self.generatePngPlots(mtvFilePath,
-#                                                                 workingDir)
-#         return resultDozor
