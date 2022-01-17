@@ -54,9 +54,8 @@ class ImageQualityIndicatorsUnitTest(unittest.TestCase):
         )
         self.assertEqual(h5MasterFilePath1, h5MasterFilePath1Reference, "masterPath1")
         self.assertEqual(h5DataFilePath1, h5DataFilePath1Reference, "dataPath1")
-        #
-        # fast mesh
-        #
+
+    def testGetH5FilePath_fastMesh(self):
         filePath2 = pathlib.Path(
             "/data/id30a3/inhouse/opid30a3/20171017/RAW_DATA/"
             + "mesh2/MeshScan_02/mesh-opid30a3_2_0021.cbf"

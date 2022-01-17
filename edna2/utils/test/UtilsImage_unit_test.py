@@ -32,6 +32,7 @@ from edna2.utils import UtilsImage
 class UtilsImageUnitTest(unittest.TestCase):
     def setUp(self):
         self.imageFileName = "ref-testscale_1_0001.img"
+        self.imageFileName2 = "ref-testscale_1_12345.img"
         self.imageFileNameH5 = "mesh-local-user_0_1_000001.h5"
 
     def test_getPrefix(self):
@@ -49,6 +50,11 @@ class UtilsImageUnitTest(unittest.TestCase):
     def test_getTemplateHash(self):
         template = UtilsImage.getTemplate(self.imageFileName)
         templateReference = "ref-testscale_1_####.img"
+        self.assertEqual(templateReference, template)
+
+    def test_getTemplateHash2(self):
+        template = UtilsImage.getTemplate(self.imageFileName2)
+        templateReference = "ref-testscale_1_#####.img"
         self.assertEqual(templateReference, template)
 
     def test_getTemplateQuestionMark(self):

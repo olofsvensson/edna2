@@ -753,8 +753,10 @@ class ControlDozor(AbstractTask):
             template = "{0}_?????.{1}".format(prefix, suffix)
         elif hasHdf5Prefix:
             template = "{0}_{1}_??????.{2}".format(prefix, h5FileNumber, suffix)
-        else:
+        elif imageNumber < 10000:
             template = "{0}_????.{1}".format(prefix, suffix)
+        else:
+            template = "{0}_?????.{1}".format(prefix, suffix)
         inDataDozor["nameTemplateImage"] = os.path.join(
             os.path.dirname(subWedge["image"][0]["path"]), template
         )

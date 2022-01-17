@@ -29,6 +29,7 @@ __date__ = "10/05/2019"
 #      EDPluginControlImageQualityIndicatorsv1_4.py
 
 import os
+import re
 import time
 import pathlib
 
@@ -36,14 +37,6 @@ from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.WaitFileTask import WaitFileTask
 from edna2.tasks.ControlDozor import ControlDozor
 from edna2.tasks.PhenixTasks import DistlSignalStrengthTask
-
-try:
-    from edna2.tasks.CrystfelTasks import ExeCrystFEL
-    from edna2.lib.autocryst.src.run_crystfel import AutoCrystFEL
-
-    crystFelImportFailed = False
-except ImportError:
-    crystFelImportFailed = True
 
 from edna2.utils import UtilsImage
 from edna2.utils import UtilsConfig
@@ -60,6 +53,60 @@ class ImageQualityIndicators(AbstractTask):
     This task controls the plugins that generate image quality indicators.
     """
 
+    def __init__(self, inData, workingDirectorySuffix=None):
+        AbstractTask.__init__(self, inData, workingDirectorySuffix)
+        self.beamline = None
+        self.directory = None
+        self.template = None
+        self.doSubmit = None
+        self.doDozorM = None
+        self.doDistlSignalStrength = None
+        self.isFastMesh = None
+        self.listImage = None
+        self.batchSize = None
+        self.minImageSize = None
+        self.waitFileTimeout = None
+
+    def run(self, inData):
+        listImageQualityIndicators = []
+        listControlDozorAllFile = []
+        # Initialize parameters
+        self.init(inData)
+        # Set up batch list
+        listOfBatches = self.createBatchList(inData)
+        outData = dict()
+        listDozorTask, listDistlTask = self.runDozorAndDistl(listOfBatches)
+        if not self.isFailure():
+            listDisltResult = self.synchronizeDislt(listDistlTask)
+            (
+                listImageQualityIndicators,
+                listControlDozorAllFile,
+            ) = self.synchronizeDozor(listDozorTask, listDisltResult)
+            # Assemble all controlDozorAllFiles into one
+            if self.doDozorM:
+                imageQualityIndicatorsDozorAllFile = self.createDozorAllFile(
+                    listControlDozorAllFile
+                )
+                outData["dozorAllFile"] = imageQualityIndicatorsDozorAllFile
+        outData["imageQualityIndicators"] = listImageQualityIndicators
+        return outData
+
+    def init(self, inData):
+        self.beamline = inData.get("beamline", None)
+        self.doSubmit = inData.get("doSubmit", False)
+        self.doDozorM = inData.get("doDozorM", False)
+        self.doDistlSignalStrength = inData.get("doDistlSignalStrength", False)
+        self.isFastMesh = inData.get("fastMesh", False)
+        self.listImage = inData.get("image", [])
+        self.batchSize = inData.get("batchSize", 1)
+        # Configurations
+        self.minImageSize = UtilsConfig.get(
+            self, "minImageSize", defaultValue=DEFAULT_MIN_IMAGE_SIZE
+        )
+        self.waitFileTimeOut = UtilsConfig.get(
+            self, "waitFileTimeOut", defaultValue=DEFAULT_WAIT_FILE_TIMEOUT
+        )
+
     def getInDataSchema(self):
         return {
             "type": "object",
@@ -68,7 +115,6 @@ class ImageQualityIndicators(AbstractTask):
                 "doDozorM": {"type": "boolean"},
                 "doDistlSignalStrength": {"type": "boolean"},
                 "doIndexing": {"type": "boolean"},
-                "doCrystfel": {"type": "boolean"},
                 "doUploadToIspyb": {"type": "boolean"},
                 "processDirectory": {"type": "string"},
                 "image": {
@@ -99,104 +145,72 @@ class ImageQualityIndicators(AbstractTask):
             },
         }
 
-    def run(self, inData):
-        beamline = inData.get("beamline", None)
-        doSubmit = inData.get("doSubmit", False)
-        doDozorM = inData.get("doDozorM", False)
-        batchSize = inData.get("batchSize", 1)
-        doDistlSignalStrength = inData.get("doDistlSignalStrength", False)
-        if crystFelImportFailed:
-            doCrystfel = False
-        else:
-            doCrystfel = inData.get("doCrystfel", True)
-        isFastMesh = inData.get("fastMesh", False)
-        # Loop through all the incoming reference images
-        listImage = inData.get("image", [])
-        if len(listImage) == 0:
-            directory = pathlib.Path(inData["directory"])
-            template = inData["template"]
+    def createBatchList(self, inData):
+        listOfBatches = []
+        listOfImagesInBatch = []
+        if len(self.listImage) == 0:
+            self.directory = pathlib.Path(inData["directory"])
+            self.template = inData["template"]
             startNo = inData["startNo"]
             endNo = inData["endNo"]
-            listImage = []
             for index in range(startNo, endNo + 1):
-                imageName = template.replace("####", "{0:04d}".format(index))
-                imagePath = directory / imageName
-                listImage.append(str(imagePath))
+                listOfImagesInBatch.append(index)
+                if len(listOfImagesInBatch) == self.batchSize or index == 9999:
+                    listOfBatches.append(listOfImagesInBatch)
+                    listOfImagesInBatch = []
         else:
-            firstImage = listImage[0]
-            lastImage = listImage[-1]
-            directory = pathlib.Path(firstImage).parent
-            template = UtilsImage.getTemplate(firstImage)
-            startNo = UtilsImage.getImageNumber(firstImage)
-            endNo = UtilsImage.getImageNumber(lastImage)
-        outData = dict()
-        listImageQualityIndicators = []
-        listcrystfel_output = []
-        listDistlTask = []
-        listDozorTask = []
-        listCrystFELTask = []
-        listOfImagesInBatch = []
-        listOfAllBatches = []
-        listOfAllH5Files = []
-        listControlDozorAllFile = []
-        self.listH5FilePath = []
-        detectorType = None
-        # Configurations
-        minImageSize = UtilsConfig.get(
-            self, "minImageSize", defaultValue=DEFAULT_MIN_IMAGE_SIZE
-        )
-        waitFileTimeOut = UtilsConfig.get(
-            self, "waitFileTimeOut", defaultValue=DEFAULT_WAIT_FILE_TIMEOUT
-        )
-        # Process data in batches
-        for image in listImage:
-            listOfImagesInBatch.append(pathlib.Path(image))
-            if len(listOfImagesInBatch) == batchSize:
-                listOfAllBatches.append(listOfImagesInBatch)
-                listOfImagesInBatch = []
+            firstImage = pathlib.Path(self.listImage[0])
+            self.directory = firstImage.parent
+            self.template = UtilsImage.getTemplate(firstImage)
+            for image in self.listImage:
+                imageNo = UtilsImage.getImageNumber(image)
+                listOfImagesInBatch.append(imageNo)
+                if len(listOfImagesInBatch) == self.batchSize:
+                    listOfBatches.append(listOfImagesInBatch)
+                    listOfImagesInBatch = []
         if len(listOfImagesInBatch) > 0:
-            listOfAllBatches.append(listOfImagesInBatch)
-            listOfImagesInBatch = []
-        if UtilsImage.getSuffix(pathlib.Path(listImage[0])) == "h5":
-            for image in listImage:
-                listOfAllH5Files.append(pathlib.Path(image))
+            listOfBatches.append(listOfImagesInBatch)
+        return listOfBatches
+
+    def runDozorAndDistl(self, listOfBatches):
         #
         # Loop over batches:
         # - Wait for all files in batch
-        # - Run Dozor and Crystfel (if required) in parallel
+        # - Run Dozor and DistlSignalStrength (if required) in parallel
         #
-        # Check if we should run CrystFEL:
-
-        for listOfImagesInBatch in listOfAllBatches:
+        listDistlTask = []
+        listDozorTask = []
+        template4d = re.sub("#+", "{0:04d}", self.template)
+        for listOfImagesInBatch in listOfBatches:
             listOfH5FilesInBatch = []
-            for imagePath in listOfImagesInBatch:
+            for imageNo in listOfImagesInBatch:
                 # First wait for images
+                imagePath = self.directory / template4d.format(imageNo)
                 self.waitForImagePath(
                     imagePath=imagePath,
-                    batchSize=batchSize,
-                    isFastMesh=isFastMesh,
-                    minImageSize=minImageSize,
-                    waitFileTimeOut=waitFileTimeOut,
+                    batchSize=self.batchSize,
+                    isFastMesh=self.isFastMesh,
+                    minImageSize=self.minImageSize,
+                    waitFileTimeOut=self.waitFileTimeOut,
                     listofH5FilesInBatch=listOfH5FilesInBatch,
                 )
             if not self.isFailure():
                 # Determine start and end image no
-                pathToFirstImage = listOfImagesInBatch[0]
-                pathToLastImage = listOfImagesInBatch[-1]
-                batchStartNo = UtilsImage.getImageNumber(pathToFirstImage)
-                batchEndNo = UtilsImage.getImageNumber(pathToLastImage)
+                batchStartNo = listOfImagesInBatch[0]
+                batchEndNo = listOfImagesInBatch[-1]
+                dozorTemplate = self.template
                 # Run Control Dozor
                 inDataControlDozor = {
-                    "template": template,
-                    "directory": directory,
+                    "template": dozorTemplate,
+                    "directory": self.directory,
                     "startNo": batchStartNo,
                     "endNo": batchEndNo,
-                    "batchSize": batchSize,
-                    "doSubmit": doSubmit,
-                    "doDozorM": doDozorM,
+                    "batchSize": self.batchSize,
+                    "doSubmit": self.doSubmit,
+                    "doDozorM": self.doDozorM,
                 }
-                if beamline is not None:
-                    inDataControlDozor["beamline"] = beamline
+                if self.beamline is not None:
+                    inDataControlDozor["beamline"] = self.beamline
                 controlDozor = ControlDozor(
                     inDataControlDozor,
                     workingDirectorySuffix="{0:04d}_{1:04d}".format(
@@ -205,153 +219,88 @@ class ImageQualityIndicators(AbstractTask):
                 )
                 controlDozor.start()
                 listDozorTask.append(
-                    (
-                        controlDozor,
-                        inDataControlDozor,
-                        list(listOfImagesInBatch),
-                        listOfH5FilesInBatch,
-                    )
+                    (controlDozor, inDataControlDozor, list(listOfImagesInBatch))
                 )
                 # Check if we should run distl.signalStrength
-                if doDistlSignalStrength:
-                    for image in listOfImagesInBatch:
-                        inDataDistl = {"referenceImage": str(image)}
+                if self.doDistlSignalStrength:
+                    for imageNo in listOfImagesInBatch:
+                        imagePath = self.directory / template4d.format(imageNo)
+                        inDataDistl = {"referenceImage": str(imagePath)}
                         distlTask = DistlSignalStrengthTask(
                             inData=inDataDistl,
-                            workingDirectorySuffix=UtilsImage.getImageNumber(image),
+                            workingDirectorySuffix=imageNo,
                         )
                         distlTask.start()
-                        listDistlTask.append((image, distlTask))
+                        listDistlTask.append((imagePath, distlTask))
+        return listDozorTask, listDistlTask
 
-        if not self.isFailure():
-            # listIndexing = []
-            listDistlResult = []
-            # Synchronize all image quality indicator plugins and upload to ISPyB
-            for (image, distlTask) in listDistlTask:
-                imageQualityIndicators = {}
-                if distlTask is not None:
-                    distlTask.join()
-                    if distlTask.isSuccess():
-                        outDataDistl = distlTask.outData
-                        if outDataDistl is not None:
-                            imageQualityIndicators = outDataDistl[
-                                "imageQualityIndicators"
-                            ]
-                imageQualityIndicators["image"] = str(image)
-                listDistlResult.append(imageQualityIndicators)
-            for (
-                controlDozor,
-                inDataControlDozor,
-                listBatch,
-                listH5FilePath,
-            ) in listDozorTask:
-                controlDozor.join()
-                # Check that we got at least one result
-                if len(controlDozor.outData["imageQualityIndicators"]) == 0:
-                    # Run the dozor plugin again, this time synchronously
-                    firstImage = listBatch[0].name
-                    lastImage = listBatch[-1].name
-                    logger.warning(
-                        "No dozor results! Re-executing Dozor for"
-                        + " images {0} to {1}".format(firstImage, lastImage)
-                    )
-                    time.sleep(5)
-                    controlDozor = ControlDozor(inDataControlDozor)
-                    controlDozor.execute()
-                listOutDataControlDozor = list(
-                    controlDozor.outData["imageQualityIndicators"]
+    def synchronizeDislt(self, listDistlTask):
+        listDistlResult = []
+        # Synchronize all image quality indicator plugins and upload to ISPyB
+        for (image, distlTask) in listDistlTask:
+            imageQualityIndicators = {}
+            if distlTask is not None:
+                distlTask.join()
+                if distlTask.isSuccess():
+                    outDataDistl = distlTask.outData
+                    if outDataDistl is not None:
+                        imageQualityIndicators = outDataDistl["imageQualityIndicators"]
+            imageQualityIndicators["image"] = str(image)
+            listDistlResult.append(imageQualityIndicators)
+        return listDistlResult
+
+    def synchronizeDozor(self, listDozorTask, listDistlResult):
+        listImageQualityIndicators = []
+        listControlDozorAllFile = []
+        for (
+            controlDozor,
+            inDataControlDozor,
+            listBatch,
+        ) in listDozorTask:
+            controlDozor.join()
+            # Check that we got at least one result
+            if len(controlDozor.outData["imageQualityIndicators"]) == 0:
+                # Run the dozor plugin again, this time synchronously
+                firstImage = listBatch[0].name
+                lastImage = listBatch[-1].name
+                logger.warning(
+                    "No dozor results! Re-executing Dozor for"
+                    + " images {0} to {1}".format(firstImage, lastImage)
                 )
-                if detectorType is None:
-                    detectorType = controlDozor.outData["detectorType"]
-                if doDistlSignalStrength:
-                    for outDataControlDozor in listOutDataControlDozor:
-                        for distlResult in listDistlResult:
-                            if outDataControlDozor["image"] == distlResult["image"]:
-                                imageQualityIndicators = dict(outDataControlDozor)
-                                imageQualityIndicators.update(distlResult)
-                                listImageQualityIndicators.append(
-                                    imageQualityIndicators
-                                )
-                else:
-                    listImageQualityIndicators += listOutDataControlDozor
-                # Check if dozorm
-                if doDozorM:
-                    listControlDozorAllFile.append(controlDozor.outData["dozorAllFile"])
-
-        if not self.isFailure() and doCrystfel:
-            # Select only the strongest images to be run by CrystFEL
-            listIndicatorsSorted = sorted(
-                listImageQualityIndicators, key=lambda k: k["dozorScore"]
-            )[::-1]
-            listForCrystFEL = [
-                k["image"]
-                for k in listIndicatorsSorted[0: min(200, len(listIndicatorsSorted))]
-            ]
-            batchSize = 20
-            if len(listForCrystFEL) % batchSize == 0:
-                file_chunk = int(len(listForCrystFEL) / batchSize)
-            else:
-                file_chunk = int(len(listForCrystFEL) / batchSize) + 1
-            for jj in range(file_chunk):
-                start = batchSize * jj
-                stop = batchSize * (jj + 1)
-                try:
-                    images = listForCrystFEL[start:stop]
-                except IndexError:
-                    stop = start + (len(listForCrystFEL) - stop)
-                    images = listForCrystFEL[start:stop]
-
-                inDataCrystFEL = {
-                    "doCBFtoH5": False,
-                    "cbfFileInfo": {
-                        "directory": directory,
-                        "template": template,
-                        "batchSize": batchSize,
-                        "listofImages": images,
-                    },
-                    "doSubmit": doSubmit,
-                }
-                crystfel = ExeCrystFEL(inData=inDataCrystFEL)
-                crystfel.start()
-                listCrystFELTask.append(crystfel)
-
-            masterstream = str(self.getWorkingDirectory() / "alltogether.stream")
-            if not self.isFailure():
-                for crystfel in listCrystFELTask:
-                    crystfel.join()
-                    if crystfel.isSuccess():
-                        catcommand = "cat %s >> %s" % (
-                            crystfel.outData["streamfile"],
-                            masterstream,
-                        )
-                        AutoCrystFEL.run_as_command(catcommand)
-
-            if not self.isFailure() and os.path.exists(masterstream):
-                crystfel_outdata = AutoCrystFEL.report_stats(masterstream)
-                crystfel_outdata["number of DozorHits"] = len(listForCrystFEL)
-                AutoCrystFEL.write_cell_file(crystfel_outdata)
-                listcrystfel_output.append(crystfel_outdata)
-            else:
-                logger.error("CrystFEL did not run properly")
-        # Assemble all controlDozorAllFiles into one
-        if doDozorM:
-            imageQualityIndicatorsDozorAllFile = str(
-                self.getWorkingDirectory() / "dozor_all"
+                time.sleep(5)
+                controlDozor = ControlDozor(inDataControlDozor)
+                controlDozor.execute()
+            listOutDataControlDozor = list(
+                controlDozor.outData["imageQualityIndicators"]
             )
-            os.system("touch {0}".format(imageQualityIndicatorsDozorAllFile))
-            for controlDozorAllFile in listControlDozorAllFile:
-                command = (
-                    "cat "
-                    + controlDozorAllFile
-                    + " >> "
-                    + imageQualityIndicatorsDozorAllFile
-                )
-                os.system(command)
-            outData["dozorAllFile"] = imageQualityIndicatorsDozorAllFile
+            if self.doDistlSignalStrength:
+                for outDataControlDozor in listOutDataControlDozor:
+                    for distlResult in listDistlResult:
+                        if outDataControlDozor["image"] == distlResult["image"]:
+                            imageQualityIndicators = dict(outDataControlDozor)
+                            imageQualityIndicators.update(distlResult)
+                            listImageQualityIndicators.append(imageQualityIndicators)
+            else:
+                listImageQualityIndicators += listOutDataControlDozor
+            # Check if dozorm
+            if self.doDozorM:
+                listControlDozorAllFile.append(controlDozor.outData["dozorAllFile"])
+        return listImageQualityIndicators, listControlDozorAllFile
 
-        outData["imageQualityIndicators"] = listImageQualityIndicators
-        outData["crystfel_results"] = listcrystfel_output
-        return outData
+    def createDozorAllFile(self, listControlDozorAllFile):
+        imageQualityIndicatorsDozorAllFile = str(
+            self.getWorkingDirectory() / "dozor_all"
+        )
+        os.system("touch {0}".format(imageQualityIndicatorsDozorAllFile))
+        for controlDozorAllFile in listControlDozorAllFile:
+            command = (
+                "cat "
+                + controlDozorAllFile
+                + " >> "
+                + imageQualityIndicatorsDozorAllFile
+            )
+            os.system(command)
+        return imageQualityIndicatorsDozorAllFile
 
     @classmethod
     def getH5FilePath(cls, filePath, batchSize=1, isFastMesh=False):
