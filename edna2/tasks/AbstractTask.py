@@ -253,7 +253,7 @@ class AbstractTask():  # noqa R0904
         with open(str(commandLinePath), "w") as f:
             f.write(commandLine)
         if doSubmit:
-            self.submitCommandLine(self, commandLine, jobName, partition, ignoreErrors)
+            self.submitCommandLine(commandLine, jobName, partition, ignoreErrors)
         else:
             pipes = subprocess.Popen(
                 commandLine,
