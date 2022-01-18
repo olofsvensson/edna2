@@ -1,0 +1,12 @@
+{
+	"doDistlSignalStrength": false,
+	"doCrystfel": false,
+	"doIndexing": false,
+	"doUploadToIspyb": false,
+	"directory": "/scisoft/pxsoft/data/EDNA2_IQI/id23eh2/RSEGP2",
+	"template": "mesh-RSEGFP2_2um-RSEGP2_0_####.cbf",
+	"startNo": 9900,
+	"endNo": 10205,
+    "batchSize": 50,
+    "fastMesh": true
+}

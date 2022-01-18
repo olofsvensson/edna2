@@ -34,7 +34,7 @@ from edna2.tasks.ImageQualityIndicators import ImageQualityIndicators
 logger = UtilsLogging.getLogger()
 
 
-class ImageQualityIndicatorsPilatus2MExecTest(unittest.TestCase):
+class ImageQualityIndicatorsPilatusRSEGP2ExecTest(unittest.TestCase):
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
