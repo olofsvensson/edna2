@@ -183,22 +183,27 @@ class ImageQualityIndicators(AbstractTask):
         template4d = re.sub("#+", "{0:04d}", self.template)
         for listOfImagesInBatch in listOfBatches:
             listOfH5FilesInBatch = []
-            for imageNo in listOfImagesInBatch:
-                # First wait for images
-                imagePath = self.directory / template4d.format(imageNo)
-                self.waitForImagePath(
-                    imagePath=imagePath,
-                    batchSize=self.batchSize,
-                    isFastMesh=self.isFastMesh,
-                    minImageSize=self.minImageSize,
-                    waitFileTimeOut=self.waitFileTimeOut,
-                    listofH5FilesInBatch=listOfH5FilesInBatch,
-                )
+            imageNo = listOfImagesInBatch[-1]
+            # Wait for last image
+            imagePath = self.directory / template4d.format(imageNo)
+            logger.debug("Waiting for path: {0}".format(imagePath))
+            self.waitForImagePath(
+                imagePath=imagePath,
+                batchSize=self.batchSize,
+                isFastMesh=self.isFastMesh,
+                minImageSize=self.minImageSize,
+                waitFileTimeOut=self.waitFileTimeOut,
+                listofH5FilesInBatch=listOfH5FilesInBatch,
+            )
+            logger.debug("Done waiting for path: {0}".format(imagePath))
             if not self.isFailure():
                 # Determine start and end image no
                 batchStartNo = listOfImagesInBatch[0]
                 batchEndNo = listOfImagesInBatch[-1]
                 dozorTemplate = self.template
+                logger.debug("Before sleeping 2 s, start no = {0}".format(batchStartNo))
+                time.sleep(2)
+                logger.debug("After sleeping 2 s, start no = {0}".format(batchStartNo))
                 # Run Control Dozor
                 inDataControlDozor = {
                     "template": dozorTemplate,
@@ -358,6 +363,7 @@ class ImageQualityIndicators(AbstractTask):
                 logger.error(errorMessage)
                 self.setFailure()
         else:
+            os.system("ls {0}".format(os.path.dirname(imagePath)))
             if not imagePath.exists():
                 logger.info("Waiting for file {0}".format(imagePath))
                 inDataWaitFileTask = {
