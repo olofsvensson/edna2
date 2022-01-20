@@ -336,6 +336,9 @@ class ImageQualityIndicators(AbstractTask):
         waitFileTimeOut,
         listofH5FilesInBatch,
     ):
+        # Force an 'ls' in parent directory - this sometimes helps to 'unblock'
+        # the file system
+        os.system("ls {0}".format(os.path.dirname(imagePath)))
         # If Eiger, just wait for the h5 file
         if imagePath.suffix == ".h5":
             h5MasterFilePath, h5DataFilePath, hdf5ImageNumber = self.getH5FilePath(
@@ -363,7 +366,6 @@ class ImageQualityIndicators(AbstractTask):
                 logger.error(errorMessage)
                 self.setFailure()
         else:
-            os.system("ls {0}".format(os.path.dirname(imagePath)))
             if not imagePath.exists():
                 logger.info("Waiting for file {0}".format(imagePath))
                 inDataWaitFileTask = {
