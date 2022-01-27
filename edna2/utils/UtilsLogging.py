@@ -24,8 +24,10 @@ __license__ = "MIT"
 __date__ = "21/04/2019"
 
 import os
-import logging
+import time
 import graypy
+import logging
+import logging.handlers
 
 from edna2.utils import UtilsConfig
 
@@ -48,17 +50,21 @@ def addStreamHandler(logger):
 
 def addFileHandler(logger):
     logPath = UtilsConfig.get("Logging", "log_file_path")
+    if "DATE" in logPath:
+        logPath = logPath.replace(
+            "DATE", time.strftime("%Y-%m-%d", time.localtime(time.time()))
+        )
     if logPath is not None:
         if not os.path.exists(os.path.dirname(logPath)):
             os.makedirs(os.path.dirname(logPath))
-        maxBytes = int(UtilsConfig.get("Logging", "log_file_maxbytes", 1e6))
-        backupCount = int(UtilsConfig.get("Logging", "log_file_backupCount", 10))
+        maxBytes = int(UtilsConfig.get("Logging", "log_file_maxbytes", 1e7))
+        backupCount = int(UtilsConfig.get("Logging", "log_file_backupCount", 0))
         fileHandler = logging.handlers.RotatingFileHandler(
             logPath, maxBytes=maxBytes, backupCount=backupCount
         )
         logFileFormat = UtilsConfig.get("Logging", "log_file_format")
         if logFileFormat is None:
-            logFileFormat = "%(asctime)s %(levelname)-8s %(message)s"
+            logFileFormat = "%(asctime)s %(module)-20s %(funcName)-15s %(levelname)-8s %(message)s"
         formatter = logging.Formatter(logFileFormat)
         fileHandler.setFormatter(formatter)
         logger.addHandler(fileHandler)
