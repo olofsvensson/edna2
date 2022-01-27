@@ -50,11 +50,11 @@ def addStreamHandler(logger):
 
 def addFileHandler(logger):
     logPath = UtilsConfig.get("Logging", "log_file_path")
-    if "DATE" in logPath:
-        logPath = logPath.replace(
-            "DATE", time.strftime("%Y-%m-%d", time.localtime(time.time()))
-        )
     if logPath is not None:
+        if "DATE" in logPath:
+            logPath = logPath.replace(
+                "DATE", time.strftime("%Y-%m-%d", time.localtime(time.time()))
+            )
         if not os.path.exists(os.path.dirname(logPath)):
             os.makedirs(os.path.dirname(logPath))
         maxBytes = int(UtilsConfig.get("Logging", "log_file_maxbytes", 1e7))
