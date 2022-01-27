@@ -64,7 +64,9 @@ def addFileHandler(logger):
         )
         logFileFormat = UtilsConfig.get("Logging", "log_file_format")
         if logFileFormat is None:
-            logFileFormat = "%(asctime)s %(module)-20s %(funcName)-15s %(levelname)-8s %(message)s"
+            logFileFormat = (
+                "%(asctime)s %(module)-20s %(funcName)-15s %(levelname)-8s %(message)s"
+            )
         formatter = logging.Formatter(logFileFormat)
         fileHandler.setFormatter(formatter)
         logger.addHandler(fileHandler)
