@@ -81,7 +81,7 @@ def createPyarchFilePath(filePath):
     pyarchFilePath = None
     if isinstance(filePath, str):
         filePath = pathlib.Path(filePath)
-    listOfDirectories = filePath.parts
+    listOfDirectories = list(filePath.parts)
     if UtilsConfig.isEMBL():
         if "p13" in listOfDirectories[0:3] or "P13" in listOfDirectories[0:3]:
             pyarchFilePath = os.path.join("/data/ispyb/p13", *listOfDirectories[4:])
@@ -98,6 +98,15 @@ def createPyarchFilePath(filePath):
         "id30a3",
         "id30b",
     ]
+
+    if (
+        "data" in listOfDirectories
+        and len(listOfDirectories) > 5
+        and listOfDirectories[1] != "data"
+    ):
+        while listOfDirectories[1] != "data" and len(listOfDirectories) > 5:
+            del listOfDirectories[1]
+
     # Check that we have at least four levels of directories:
     if len(listOfDirectories) > 5:
         dataDirectory = listOfDirectories[1]
@@ -176,7 +185,7 @@ def waitForFile(file, expectedSize=None, timeOut=DEFAULT_TIMEOUT):
                 # Patch provided by Sebastien 2018/02/09 for forcing NFS cache:
                 # logger.debug("NFS cache clear, doing os.fstat on directory {0}".format(fileDir))
                 fd = os.open(fileDir.as_posix(), os.O_DIRECTORY)
-                statResult = os.fstat(fd) # noqa F841
+                statResult = os.fstat(fd)  # noqa F841
                 os.close(fd)
                 # logger.debug("Results of os.fstat: {0}".format(statResult))
             timeElapsed = time.time() - timeStart

@@ -177,3 +177,11 @@ class UtilsTestUnitTest(unittest.TestCase):
             ),
             "/data/id30a3/inhouse/opid30a1/20140717/RAW_DATA/opid30a1_1_dnafiles",
         )
+        # Test with different prefix...:
+        self.assertEqual(
+            "/data/pyarch/2010/id23eh2/opid232/20100525",
+            str(
+                UtilsPath.createPyarchFilePath("/mnt/multipath-shares/data/id23eh2/inhouse/opid232/20100525")
+            ),
+            "/data/id23eh2/inhouse/opid232/20100525",
+        )
