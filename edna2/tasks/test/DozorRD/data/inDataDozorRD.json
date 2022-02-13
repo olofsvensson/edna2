@@ -1,0 +1,12 @@
+{
+    "list_dozor_all": [
+		"$EDNA2_TESTDATA_IMAGES/20kev_001",
+		"$EDNA2_TESTDATA_IMAGES/20kev_002",
+		"$EDNA2_TESTDATA_IMAGES/20kev_003",
+		"$EDNA2_TESTDATA_IMAGES/20kev_004",
+		"$EDNA2_TESTDATA_IMAGES/20kev_005"
+    ],
+	"wavelength": 0.873128,
+	"exposureTime": 0.01,
+	"numberOfImages": 12
+}
