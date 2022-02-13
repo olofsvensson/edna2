@@ -115,7 +115,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 "wedgeNumber": {"type": "integer"},
                 "radiationDamage": {"type": "boolean"},
                 "overlap": {"type": "number"},
-                "doDozorM": {"type": "boolean"},
+                "doDozorM": {"type": "boolean"}
             },
         }
 
@@ -505,7 +505,12 @@ class ControlDozor(AbstractTask):
         return {
             "type": "object",
             "properties": {
-                "dataCollectionId": {"type": "integer"},
+                "dataCollectionId": {
+                    "anyOf": [
+                        {"type": "integer"},
+                        {"type": "null"}
+                    ]
+                },
                 "processDirectory": {"type": "string"},
                 "image": {
                     "type": "array",
@@ -622,7 +627,7 @@ class ControlDozor(AbstractTask):
             dozorPlotPath, dozorCsvPath = self.makePlot(
                 inData["dataCollectionId"], outData, self.getWorkingDirectory()
             )
-            doIspybUpload = inData.get("doISPyBUpload", False)
+            doIspybUpload = inData.get("doIspybUpload", False)
             if doIspybUpload:
                 self.storeDataOnPyarch(
                     inData["dataCollectionId"],
@@ -648,8 +653,9 @@ class ControlDozor(AbstractTask):
         return outData
 
     def determineBatchsize(self, inData):
-        if "dataCollectionId" in inData:
-            ispybInData = {"dataCollectionId": inData["dataCollectionId"]}
+        dataCollectionId = inData.get("dataCollectionId", None)
+        if dataCollectionId is not None:
+            ispybInData = {"dataCollectionId": dataCollectionId}
             ispybTask = ISPyBRetrieveDataCollection(inData=ispybInData)
             ispybTask.execute()
             dataCollection = ispybTask.outData

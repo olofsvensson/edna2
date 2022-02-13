@@ -66,6 +66,8 @@ class ImageQualityIndicators(AbstractTask):
         self.batchSize = None
         self.minImageSize = None
         self.waitFileTimeout = None
+        self.doIspybUpload = None
+        self.dataCollectionId = None
 
     def run(self, inData):
         listImageQualityIndicators = []
@@ -99,6 +101,8 @@ class ImageQualityIndicators(AbstractTask):
         self.isFastMesh = inData.get("fastMesh", False)
         self.listImage = inData.get("image", [])
         self.batchSize = inData.get("batchSize", 1)
+        self.doIspybUpload = inData.get("doIspybUpload", False)
+        self.dataCollectionId = inData.get("dataCollectionId", None)
         # Configurations
         self.minImageSize = UtilsConfig.get(
             self, "minImageSize", defaultValue=DEFAULT_MIN_IMAGE_SIZE
@@ -115,7 +119,7 @@ class ImageQualityIndicators(AbstractTask):
                 "doDozorM": {"type": "boolean"},
                 "doDistlSignalStrength": {"type": "boolean"},
                 "doIndexing": {"type": "boolean"},
-                "doUploadToIspyb": {"type": "boolean"},
+                "doIspybUpload": {"type": "boolean"},
                 "processDirectory": {"type": "string"},
                 "image": {
                     "type": "array",
@@ -128,6 +132,12 @@ class ImageQualityIndicators(AbstractTask):
                 "template": {"type": "string"},
                 "startNo": {"type": "integer"},
                 "endNo": {"type": "integer"},
+                "dataCollectionId": {
+                    "anyOf": [
+                      {"type": "integer"},
+                      {"type": "null"}
+                    ]
+                }
             },
         }
 
@@ -213,6 +223,8 @@ class ImageQualityIndicators(AbstractTask):
                     "batchSize": self.batchSize,
                     "doSubmit": self.doSubmit,
                     "doDozorM": self.doDozorM,
+                    "doIspybUpload": self.doIspybUpload,
+                    "dataCollectionId": self.dataCollectionId
                 }
                 if self.beamline is not None:
                     inDataControlDozor["beamline"] = self.beamline
