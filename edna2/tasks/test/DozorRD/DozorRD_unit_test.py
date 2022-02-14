@@ -54,4 +54,5 @@ class DozorRDUnitTest(unittest.TestCase):
             "sumIntensity": 2.218,
             "average": 26.735,
         }
-        assert dictResult == dictRef
+        for key, value in dictRef.items():
+            assert dictResult[key] == value
