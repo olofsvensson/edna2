@@ -76,6 +76,7 @@ class AbstractTask():  # noqa R0904
         self._workingDirectorySuffix = workingDirectorySuffix
         self._workingDirectory = None
         self._logFileName = None
+        self._errorLogFileName = None
         self._schemaPath = pathlib.Path(__file__).parents[1] / "schema"
         self._persistInOutData = True
         self._oldDir = os.getcwd()
@@ -167,10 +168,27 @@ class AbstractTask():  # noqa R0904
     def getLogFileName(self):
         return self._logFileName
 
+    def getErrorLogPath(self):
+        if self._errorLogFileName is None:
+            self._errorLogFileName = self.__class__.__name__ + ".error.txt"
+        errorLogPath = self._workingDirectory / self._errorLogFileName
+        return errorLogPath
+
+    def setErrorLogFileName(self, errorLogFileName):
+        self._errorLogFileName = errorLogFileName
+
+    def getErrorLogFileName(self):
+        return self._errorLogFileName
+
     def getLog(self):
         with open(str(self.getLogPath())) as f:
             log = f.read()
         return log
+
+    def getErrorLog(self):
+        with open(str(self.getErrorLogPath())) as f:
+            errorLog = f.read()
+        return errorLog
 
     def submitCommandLine(self, commandLine, jobName, partition, ignoreErrors):
         workingDir = str(self._workingDirectory)
@@ -238,10 +256,10 @@ class AbstractTask():  # noqa R0904
     ):
         if logPath is None:
             logPath = self.getLogPath()
-        logFileName = os.path.basename(logPath)
-        # Fix problem with /mntdirect
         jobName = self.__class__.__name__
-        errorLogFileName = jobName + ".err.txt"
+        logFileName = os.path.basename(logPath)
+        errorLogPath = self.getErrorLogPath()
+        errorLogFileName = os.path.basename(errorLogPath)
         commandLine += " 1>{0} 2>{1}".format(logFileName, errorLogFileName)
         if listCommand is not None:
             commandLine += " << EOF-EDNA2\n"
@@ -275,7 +293,6 @@ class AbstractTask():  # noqa R0904
                             commandLine.split(" ")[0]
                         )
                     )
-                errorLogFileName = jobName + ".err.txt"
                 errorLogPath = self._workingDirectory / errorLogFileName
                 with open(str(errorLogPath), "w") as f:
                     f.write(str(stderr, "utf-8"))
