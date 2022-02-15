@@ -619,7 +619,7 @@ class ControlDozor(AbstractTask):
                 command = "cat " + dozorAllFile + " >> " + controlDozorAllFile
                 os.system(command)
         # Make plot if we have a data collection id
-        if "dataCollectionId" in inData:
+        if "dataCollectionId" in inData and inData["dataCollectionId"] is not None:
             if "processDirectory" in inData:
                 processDirectory = pathlib.Path(inData["processDirectory"])
             else:
