@@ -278,8 +278,8 @@ class ImageQualityIndicators(AbstractTask):
             # Check that we got at least one result
             if len(controlDozor.outData["imageQualityIndicators"]) == 0:
                 # Run the dozor plugin again, this time synchronously
-                firstImage = listBatch[0].name
-                lastImage = listBatch[-1].name
+                firstImage = listBatch[0]
+                lastImage = listBatch[-1]
                 logger.warning(
                     "No dozor results! Re-executing Dozor for"
                     + " images {0} to {1}".format(firstImage, lastImage)
