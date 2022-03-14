@@ -73,7 +73,7 @@ class DozorRD(AbstractTask):  # pylint: disable=too-many-instance-attributes
         commandLine = "dozorrd dozorrd.dat"
         for index, dozor_all_file in enumerate(inData["list_dozor_all"]):
             os.symlink(
-                dozor_all_file, str(self.getWorkingDirectory() / "d_00{0}".format(index + 1))
+                dozor_all_file, str(self.getWorkingDirectory() / "d_{0:03d}".format(index + 1))
             )
         commands = self.generateCommands(inData)
         with open(str(self.getWorkingDirectory() / "dozorrd.dat"), "w") as f:
