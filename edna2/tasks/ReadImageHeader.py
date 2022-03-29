@@ -71,6 +71,7 @@ DICT_SUFFIX_TO_IMAGE = {
 
 
 class ReadImageHeader(AbstractTask):
+
     def run(self, inData):
         listImagePath = inData["imagePath"]
         isFastMesh = inData.get("isFastMesh", False)
