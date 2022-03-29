@@ -1,0 +1,66 @@
+[
+    {
+        "experimentalCondition": {
+            "detector": {
+                "numberPixelX": 2463,
+                "numberPixelY": 2527,
+                "pixelSizeX": 0.17200000000000001,
+                "pixelSizeY": 0.17200000000000001,
+                "beamPositionX": 212.62812000000002,
+                "beamPositionY": 223.46756000000002,
+                "distance": 611.325,
+                "serialNumber": "PILATUS3 6M, S/N 60-0128, ESRF ID30",
+                "name": "PILATUS2 6M",
+                "type": "pilatus6m"
+            },
+            "beam": {
+                "wavelength": 0.976253,
+                "exposureTime": 0.05
+            },
+            "goniostat": {
+                "rotationAxisStart": 174.5034,
+                "rotationAxisEnd": 174.8034,
+                "oscillationWidth": 0.3
+            }
+        },
+        "image": [
+            {
+                "path": "/data/id30b/inhouse/mxihr3/20220314/RAW_DATA/GST/GST-GST2/RadiationDamage_01/GST2_1_0001.cbf",
+                "date": "2022/Mar/14 16:26:48",
+                "number": 1
+            }
+        ]
+    },
+    {
+        "experimentalCondition": {
+            "detector": {
+                "numberPixelX": 2463,
+                "numberPixelY": 2527,
+                "pixelSizeX": 0.17200000000000001,
+                "pixelSizeY": 0.17200000000000001,
+                "beamPositionX": 212.62812000000002,
+                "beamPositionY": 223.46756000000002,
+                "distance": 611.325,
+                "serialNumber": "PILATUS3 6M, S/N 60-0128, ESRF ID30",
+                "name": "PILATUS2 6M",
+                "type": "pilatus6m"
+            },
+            "beam": {
+                "wavelength": 0.976253,
+                "exposureTime": 0.05
+            },
+            "goniostat": {
+                "rotationAxisStart": 174.8034,
+                "rotationAxisEnd": 175.10340000000002,
+                "oscillationWidth": 0.3
+            }
+        },
+        "image": [
+            {
+                "path": "/data/id30b/inhouse/mxihr3/20220314/RAW_DATA/GST/GST-GST2/RadiationDamage_01/GST2_1_0002.cbf",
+                "date": "2022/Mar/14 16:26:48",
+                "number": 2
+            }
+        ]
+    }
+]

@@ -1,0 +1,25 @@
+{
+    "detector": {
+        "numberPixelX": 2463,
+        "numberPixelY": 2527,
+        "pixelSizeX": 0.17200000000000001,
+        "pixelSizeY": 0.17200000000000001,
+        "beamPositionX": 212.62812000000002,
+        "beamPositionY": 223.46756000000002,
+        "distance": 611.325,
+        "serialNumber": "PILATUS3 6M, S/N 60-0128, ESRF ID30",
+        "name": "PILATUS2 6M",
+        "type": "pilatus6m",
+        "twoTheta": 77.0
+    },
+    "beam": {
+        "wavelength": 0.976253,
+        "exposureTime": 0.05
+    },
+    "goniostat": {
+        "rotationAxisStart": 174.5034,
+        "rotationAxisEnd": 174.8034,
+        "oscillationWidth": 0.3,
+        "rotationAxis": "OMEGA"
+    }
+}
