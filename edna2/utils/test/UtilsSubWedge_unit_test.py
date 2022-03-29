@@ -24,12 +24,9 @@ __license__ = "MIT"
 __date__ = "29/03/2022"
 
 
-import os
 import json
 import pathlib
 import unittest
-
-from black.strings import sub_twice
 
 from edna2.utils import UtilsSubWedge
 from edna2.utils import UtilsLogging
