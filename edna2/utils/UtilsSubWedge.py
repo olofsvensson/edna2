@@ -31,19 +31,21 @@ logger = UtilsLogging.getLogger()
 
 
 def subWedgeMerge(inData):
+    list_result_sub_wedge_merge = []
     # 1. Sort the incoming subwedges in groupes of similar experimental conditions
-    listSubWedgeSorted = sortSubWedgesOnExperimentalCondition(inData)
+    list_sub_wedge_sorted = sortSubWedgesOnExperimentalCondition(inData)
 
     # 2. Merge subwedges which are adjascent with respect to the orientation matrix
-    for listSubWedge in listSubWedgeSorted:
-        listSubWedgeMerged = mergeListOfSubWedgesWithAdjascentRotationAxis(
-            listSubWedge
+    for list_sub_wedge in list_sub_wedge_sorted:
+        list_sub_wedge_merged = mergeListOfSubWedgesWithAdjascentRotationAxis(
+            list_sub_wedge
         )
-        index = 1
-        for subWedge in listSubWedgeMerged:
-            subWedge["setSubWedgeNumber"] = index
-            index = index + 1
-        # self.__list_resultsSubWedgeMerge.extend(listSubWedgeMerged)
+        for index, sub_wedge in enumerate(list_sub_wedge_merged):
+            sub_wedge["subWedgeNumber"] = index + 1
+        list_result_sub_wedge_merge += list_sub_wedge_merged
+    return list_result_sub_wedge_merge
+
+
 
 
 def compareTwoValues(value1, value2, tolerance=0.001):
