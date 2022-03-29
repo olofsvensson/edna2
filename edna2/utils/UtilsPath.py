@@ -50,6 +50,7 @@ def getWorkingDirectory(task, inData, workingDirectorySuffix=None):
         workingDirectory = tempfile.mkdtemp(
             prefix=task.__class__.__name__ + "_", dir=parentDirectory
         )
+        os.chmod(workingDirectory, 0o755)
         workingDirectory = pathlib.Path(workingDirectory)
     else:
         # Here we assume that the user knows what he is doing and there's no
