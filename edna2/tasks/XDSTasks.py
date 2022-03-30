@@ -685,3 +685,30 @@ class XDSIntegration(XDSTask):
                 "bkgpixCbf": str(workingDirectory / "BKGPIX.cbf"),
             }
         return outData
+
+
+class XDSIndexAndIntegration(XDSTask):
+    def generateXDS_INP(self, inData):
+        listXDS_INP = XDSTask.generateXDS_INP(inData)
+        listXDS_INP.insert(0, "JOB= XYCORR INIT IDXREF COLSPOT DEFPIX INTEGRATE CORRECT")
+        dictImageLinks = self.generateImageLinks(inData, self.getWorkingDirectory())
+        listXDS_INP.append(
+            "NAME_TEMPLATE_OF_DATA_FRAMES= {0}".format(dictImageLinks["template"])
+        )
+        listXDS_INP.append(
+            "DATA_RANGE= {0} {1}".format(
+                dictImageLinks["dataRange"][0], dictImageLinks["dataRange"][1]
+            )
+        )
+        return listXDS_INP
+
+    @staticmethod
+    def parseXDSOutput(workingDirectory):
+        outData = {}
+        if (workingDirectory / "XDS_ASCII.HKL").exists():
+            outData = {
+                "xdsAsciiHkl": str(workingDirectory / "XDS_ASCII.HKL"),
+                "correctLp": str(workingDirectory / "CORRECT.LP"),
+                "bkgpixCbf": str(workingDirectory / "BKGPIX.cbf"),
+            }
+        return outData
