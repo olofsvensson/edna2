@@ -87,6 +87,17 @@ class XDSTask(AbstractTask):
                 os.symlink(str(h5MasterFilePath), h5MasterFile)
                 os.symlink(str(h5DataFilePath), h5DataFile)
             template = h5MasterFile.replace("master", "??????")
+            lowestXDSImageNumber = None
+            highestXDSImageNumber = None
+            for subwedge in inData["subWedge"]:
+                image_list = subwedge["image"]
+                for image_dict in image_list:
+                    image_path = image_dict["path"]
+                    image_number = UtilsImage.getImageNumber(image_path)
+                    if lowestXDSImageNumber is None or lowestXDSImageNumber > image_number:
+                        lowestXDSImageNumber = image_number
+                    if highestXDSImageNumber is None or highestXDSImageNumber < image_number:
+                        highestXDSImageNumber = image_number
         else:
             template = "%s_xdslink_?????.%s" % (prefix, suffix)
             xdsLowestImageNumberGlobal = 1
@@ -126,7 +137,7 @@ class XDSTask(AbstractTask):
                     # if xdsLowestImageNumberGlobal is None:
                     #     xdsLowestImageNumberGlobal = 1 + int((imageOscillationStart - oscillationStartMin) / oscillationRange)
                     xdsImageNumber = xdsLowestImageNumberGlobal + int(
-                        (imageOscillationStart - oscillationStartMin) / oscillationRange
+                        (imageOscillationStart - oscillationStartMin) / oscillationRange + 0.5
                     )
                     print(
                         xdsImageNumber,
@@ -694,6 +705,12 @@ class XDSIndexAndIntegration(XDSTask):
         dictImageLinks = self.generateImageLinks(inData, self.getWorkingDirectory())
         listXDS_INP.append(
             "NAME_TEMPLATE_OF_DATA_FRAMES= {0}".format(dictImageLinks["template"])
+        )
+        listXDS_INP.append("BACKGROUND_RANGE= 1 4")
+        listXDS_INP.append(
+            "SPOT_RANGE= {0} {1}".format(
+                dictImageLinks["dataRange"][0], dictImageLinks["dataRange"][1]
+            )
         )
         listXDS_INP.append(
             "DATA_RANGE= {0} {1}".format(

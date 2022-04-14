@@ -311,6 +311,8 @@ class ReadImageHeader(AbstractTask):
                     cls.__class__.__name__, description
                 )
             )
+        # Image number
+        image_number = UtilsImage.getImageNumber(imagePath)
         # Find out size of data set
         prefix = str(h5MasterFilePath).split("master")[0]
         listDataImage = []
@@ -363,12 +365,14 @@ class ReadImageHeader(AbstractTask):
         goniostat = {}
         rotationAxisStart = round(float(dictHeader["omega_start"]), 4)
         oscillationWidth = round(float(dictHeader["omega_range_average"]), 4)
+        # Offset for the image number
+        rotationAxisStart += (image_number - 1)*oscillationWidth
         goniostat["rotationAxisStart"] = rotationAxisStart
-        goniostat["rotationAxisEnd"] = rotationAxisStart + oscillationWidth * noImages
+        goniostat["rotationAxisEnd"] = rotationAxisStart + oscillationWidth
         goniostat["oscillationWidth"] = oscillationWidth
         experimentalCondition["goniostat"] = goniostat
         # Create the image object
-        masterImage = {
+        image_dict = {
             "path": imagePath,
             "date": dictHeader["data_collection_date"],
             "number": 1,
@@ -377,6 +381,6 @@ class ReadImageHeader(AbstractTask):
         # image['number'] = imageNumber
         subWedge = {
             "experimentalCondition": experimentalCondition,
-            "image": [masterImage] + listDataImage,
+            "image": [image_dict],
         }
         return subWedge

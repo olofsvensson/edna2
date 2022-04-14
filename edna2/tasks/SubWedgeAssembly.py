@@ -37,6 +37,14 @@ class SubWedgeAssembly(AbstractTask):
     def run(self, inData):
         sub_wedge_merge = []
         list_image_path = inData["imagePath"]
+        if "fastCharacterisation" in inData:
+            is_fast_characterisation = True
+            list_subwedge_angles = inData["fastCharacterisation"]["listSubWedgeAngles"]
+            no_images_in_subwedge = inData["fastCharacterisation"]["noImagesInSubWedge"]
+        else:
+            is_fast_characterisation = False
+            list_subwedge_angles = None
+            no_images_in_subwedge = None
         sub_wedge_number = 1
         input_read_image_header = {
             "imagePath": list_image_path
@@ -44,8 +52,16 @@ class SubWedgeAssembly(AbstractTask):
         read_image_header = ReadImageHeader(inData=input_read_image_header)
         read_image_header.execute()
         if read_image_header.isSuccess():
-            list_sub_wedge = read_image_header.outData["subWedge"]
-            for index, sub_wedge in enumerate(list_sub_wedge):
-                sub_wedge["subWedgeNumber"] = index + 1
-            sub_wedge_merge = UtilsSubWedge.subWedgeMerge(list_sub_wedge)
+            list_subwedge = read_image_header.outData["subWedge"]
+            for index_subwedge, subwedge in enumerate(list_subwedge):
+                if is_fast_characterisation:
+                    # Modify the start angle
+                    index_angle = int(index_subwedge / no_images_in_subwedge)
+                    angle_subwedge = list_subwedge_angles[index_angle]
+                    goniostat = subwedge["experimentalCondition"]["goniostat"]
+                    goniostat["rotationAxisStart"] = (goniostat["rotationAxisStart"] + angle_subwedge) % 360
+                    goniostat["rotationAxisEnd"] = (goniostat["rotationAxisEnd"] + angle_subwedge) % 360
+                else:
+                    subwedge["subWedgeNumber"] = index_subwedge + 1
+            sub_wedge_merge = UtilsSubWedge.subWedgeMerge(list_subwedge)
         return sub_wedge_merge
