@@ -29,6 +29,10 @@ class ReadImageHeaderTasksExecTest(unittest.TestCase):
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run test with default config",
+    )
     def test_executeReadImageHeaderTask_id23eh1_1(self):
         referenceDataPath = self.dataPath / "id23eh1_1.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
