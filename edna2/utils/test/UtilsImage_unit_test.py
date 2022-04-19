@@ -83,13 +83,13 @@ class UtilsImageUnitTest(unittest.TestCase):
 
     def test_splitPrefixRunNumber(self):
         path = pathlib.Path(
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0001.cbf"
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0001.cbf"
         )
         pre_prefix, run_number = UtilsImage.splitPrefixRunNumber(path)
         self.assertEqual(pre_prefix, "PsPL7C-252")
         self.assertEqual(run_number, 1)
         path = pathlib.Path(
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/Ps_PL_7C-2_52_1_0001.cbf"
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/Ps_PL_7C-2_52_1_0001.cbf"
         )
         pre_prefix, run_number = UtilsImage.splitPrefixRunNumber(path)
         self.assertEqual(pre_prefix, "Ps_PL_7C-2_52")
@@ -97,89 +97,89 @@ class UtilsImageUnitTest(unittest.TestCase):
 
     def tes_mergeCbfInDirectory(self):
         for number in range(8, 9):
-            cbfDirectory = "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX{0}".format(
+            cbfDirectory = "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX{0}".format(
                 number
             )
             UtilsImage.mergeCbfInDirectory(cbfDirectory)
 
     def tes_mergeCbf(self):
         listPath = [
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0001.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0002.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0003.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0004.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0005.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0006.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0007.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0008.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0009.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0010.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0001.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0002.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0003.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0004.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0005.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0006.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0007.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0008.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0009.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0010.cbf",
         ]
         outputPath = (
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0001.cbf"
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0001.cbf"
         )
         UtilsImage.mergeCbf(listPath, outputPath)
         listPath = [
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0450.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0451.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0452.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0453.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0454.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0455.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0456.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0457.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0458.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0459.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0450.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0451.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0452.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0453.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0454.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0455.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0456.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0457.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0458.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0459.cbf",
         ]
         outputPath = (
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0002.cbf"
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0002.cbf"
         )
         UtilsImage.mergeCbf(listPath, outputPath)
         listPath = [
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0900.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0901.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0902.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0903.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0904.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0905.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0906.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0907.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0908.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0909.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0900.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0901.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0902.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0903.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0904.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0905.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0906.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0907.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0908.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_0909.cbf",
         ]
         outputPath = (
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0003.cbf"
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0003.cbf"
         )
         UtilsImage.mergeCbf(listPath, outputPath)
         listPath = [
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1350.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1351.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1352.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1353.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1354.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1355.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1356.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1357.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1358.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1359.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1350.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1351.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1352.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1353.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1354.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1355.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1356.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1357.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1358.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1359.cbf",
         ]
         outputPath = (
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0004.cbf"
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0004.cbf"
         )
         UtilsImage.mergeCbf(listPath, outputPath)
         listPath = [
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1800.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1801.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1802.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1803.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1804.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1805.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1806.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1807.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1808.cbf",
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1809.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1800.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1801.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1802.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1803.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1804.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1805.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1806.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1807.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1808.cbf",
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_1_1809.cbf",
         ]
         outputPath = (
-            "/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0005.cbf"
+            "/data/scisoft/pxsoft/data/EDNA2_INDEXING/id23eh1/EX1/PsPL7C-252_3_0005.cbf"
         )
         UtilsImage.mergeCbf(listPath, outputPath)

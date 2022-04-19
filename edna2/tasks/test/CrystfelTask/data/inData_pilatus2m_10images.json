@@ -2,7 +2,7 @@
     "imageQualityIndicators": [
         {
             "number": 1,
-            "image": "/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0001.cbf",
+            "image": "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0001.cbf",
             "angle": 0.025,
             "dozorSpotsNumOf": 1096,
             "dozorSpotsIntAver": 244.0,
@@ -19,7 +19,7 @@
         },
         {
             "number": 2,
-            "image": "/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0002.cbf",
+            "image": "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0002.cbf",
             "angle": 0.07500000000000001,
             "dozorSpotsNumOf": 1131,
             "dozorSpotsIntAver": 292.0,
@@ -36,7 +36,7 @@
         },
         {
             "number": 3,
-            "image": "/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0003.cbf",
+            "image": "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0003.cbf",
             "angle": 0.125,
             "dozorSpotsNumOf": 1113,
             "dozorSpotsIntAver": 275.0,
@@ -53,7 +53,7 @@
         },
         {
             "number": 4,
-            "image": "/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0004.cbf",
+            "image": "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0004.cbf",
             "angle": 0.17500000000000002,
             "dozorSpotsNumOf": 1133,
             "dozorSpotsIntAver": 285.0,
@@ -70,7 +70,7 @@
         },
         {
             "number": 5,
-            "image": "/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0005.cbf",
+            "image": "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0005.cbf",
             "angle": 0.225,
             "dozorSpotsNumOf": 1176,
             "dozorSpotsIntAver": 265.0,
@@ -87,7 +87,7 @@
         },
         {
             "number": 6,
-            "image": "/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0006.cbf",
+            "image": "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0006.cbf",
             "angle": 0.275,
             "dozorSpotsNumOf": 1133,
             "dozorSpotsIntAver": 294.0,
@@ -104,7 +104,7 @@
         },
         {
             "number": 7,
-            "image": "/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0007.cbf",
+            "image": "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0007.cbf",
             "angle": 0.32500000000000007,
             "dozorSpotsNumOf": 1166,
             "dozorSpotsIntAver": 255.0,
@@ -121,7 +121,7 @@
         },
         {
             "number": 8,
-            "image": "/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0008.cbf",
+            "image": "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0008.cbf",
             "angle": 0.37500000000000006,
             "dozorSpotsNumOf": 1194,
             "dozorSpotsIntAver": 284.0,
@@ -138,7 +138,7 @@
         },
         {
             "number": 9,
-            "image": "/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0009.cbf",
+            "image": "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0009.cbf",
             "angle": 0.42500000000000004,
             "dozorSpotsNumOf": 1179,
             "dozorSpotsIntAver": 292.0,
@@ -155,7 +155,7 @@
         },
         {
             "number": 10,
-            "image": "/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0010.cbf",
+            "image": "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20141110/RAW_DATA/opid30a1/1-1-4/opid30a1_1_0010.cbf",
             "angle": 0.47500000000000003,
             "dozorSpotsNumOf": 1238,
             "dozorSpotsIntAver": 273.0,

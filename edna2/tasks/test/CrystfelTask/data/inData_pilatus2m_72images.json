@@ -3,7 +3,7 @@
         "doCBFtoH5": false,
         "doSubmit": true,
         "cbfFileInfo": {
-                "directory": "/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a2/inhouse/opid30a2/20191129/RAW_DATA/t1/MeshScan_05",
+                "directory": "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a2/inhouse/opid30a2/20191129/RAW_DATA/t1/MeshScan_05",
                 "template": "mesh-t1_1_####.cbf",
                 "startNo": 1,
                 "endNo": 72, 

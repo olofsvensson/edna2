@@ -46,7 +46,7 @@ class ImageQualityIndicatorsExecTest(unittest.TestCase):
     )
     @unittest.skipIf(
         not os.path.exists(
-            "/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a2/inhouse/opid30a2"
+            "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a2/inhouse/opid30a2"
             + "/20191129/RAW_DATA/t1/MeshScan_05/mesh-t1_1_0001.cbf"
         ),
         "Cannot find CBF file mesh-t1_1_0001.cbf",
