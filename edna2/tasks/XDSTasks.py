@@ -706,7 +706,14 @@ class XDSIndexAndIntegration(XDSTask):
         listXDS_INP.append(
             "NAME_TEMPLATE_OF_DATA_FRAMES= {0}".format(dictImageLinks["template"])
         )
-        listXDS_INP.append("BACKGROUND_RANGE= 1 4")
+        no_background_images = min(
+            (dictImageLinks["dataRange"][1] - dictImageLinks["dataRange"][0]),
+            4
+        )
+        listXDS_INP.append("BACKGROUND_RANGE= {0} {1}".format(
+            dictImageLinks["dataRange"][0],
+            dictImageLinks["dataRange"][0]+no_background_images-1
+        ))
         listXDS_INP.append(
             "SPOT_RANGE= {0} {1}".format(
                 dictImageLinks["dataRange"][0], dictImageLinks["dataRange"][1]

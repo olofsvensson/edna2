@@ -30,6 +30,7 @@ from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.SubWedgeAssembly import SubWedgeAssembly
 from edna2.tasks.XDSTasks import XDSIndexAndIntegration
 
+from edna2.utils import UtilsImage
 
 class RadiationDamageProcessing(AbstractTask):
     """
@@ -56,13 +57,27 @@ class RadiationDamageProcessing(AbstractTask):
         # First get the list of subWedges
         if "subWedge" in inData:
             list_sub_wedge = inData["subWedge"]
+            directory_prefix = ""
         else:
+            first_image = inData["imagePath"][0]
+            last_image = inData["imagePath"][-1]
+            prefix = UtilsImage.getPrefix(first_image)
+            first_image_number = UtilsImage.getImageNumber((first_image))
+            last_image_number = UtilsImage.getImageNumber((last_image))
+            directory_prefix = "{0}_{1}_{2}".format(
+                prefix, first_image_number, last_image_number
+            )
             list_sub_wedge = self.getListSubWedge(inData)
         indata_xds_integration = {
             "subWedge": list_sub_wedge
         }
-        xds_integration = XDSIndexAndIntegration(inData=indata_xds_integration)
+        xds_integration = XDSIndexAndIntegration(
+            inData=indata_xds_integration,
+            workingDirectorySuffix=directory_prefix,
+        )
         xds_integration.execute()
+        outData = xds_integration.outData
+        return outData
 
 
 
