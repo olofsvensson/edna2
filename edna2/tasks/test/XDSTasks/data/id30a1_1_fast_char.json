@@ -19,8 +19,8 @@
                     "exposureTime": 0.01
                 },
                 "goniostat": {
-                    "rotationAxisStart": 62.0,
-                    "rotationAxisEnd": 63.0,
+                    "rotationAxisStart": 0.0,
+                    "rotationAxisEnd": 1.0,
                     "oscillationWidth": 0.1
                 }
             },
@@ -97,8 +97,8 @@
                     "exposureTime": 0.01
                 },
                 "goniostat": {
-                    "rotationAxisStart": 153.0,
-                    "rotationAxisEnd": 154.0,
+                    "rotationAxisStart": 90.0,
+                    "rotationAxisEnd": 91.0,
                     "oscillationWidth": 0.1
                 }
             },
@@ -175,8 +175,8 @@
                     "exposureTime": 0.01
                 },
                 "goniostat": {
-                    "rotationAxisStart": 240.0,
-                    "rotationAxisEnd": 241.0,
+                    "rotationAxisStart": 180.0,
+                    "rotationAxisEnd": 181.0,
                     "oscillationWidth": 0.1
                 }
             },
@@ -253,8 +253,8 @@
                     "exposureTime": 0.01
                 },
                 "goniostat": {
-                    "rotationAxisStart": 331.0,
-                    "rotationAxisEnd": 332.0,
+                    "rotationAxisStart": 270.0,
+                    "rotationAxisEnd": 271.0,
                     "oscillationWidth": 0.1
                 }
             },
