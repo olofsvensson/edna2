@@ -1,0 +1,7 @@
+{
+	"fastCharacterisation": {
+		"listSubWedgeAngles": [0, 90, 180, 270],
+		"noImagesInSubWedge": 10,
+		"firstImagePath": "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20220414/RAW_DATA/DERA-M/DERA-M-EPF-OCl-Cin-x3/MXPressA_01/ref-fineslice-DERA-M-EPF-OCl-Cin-x3_1_0001.cbf"
+	}
+}

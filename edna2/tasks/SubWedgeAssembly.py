@@ -26,6 +26,7 @@ __date__ = "29/03/2022"
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.ReadImageHeader import ReadImageHeader
 
+from edna2.utils import UtilsImage
 from edna2.utils import UtilsLogging
 from edna2.utils import UtilsSubWedge
 
@@ -34,17 +35,28 @@ logger = UtilsLogging.getLogger()
 
 class SubWedgeAssembly(AbstractTask):
 
-    def run(self, inData):
+    def run(self, in_data):
         sub_wedge_merge = []
-        list_image_path = inData["imagePath"]
-        if "fastCharacterisation" in inData:
+        if "fastCharacterisation" in in_data:
             is_fast_characterisation = True
-            list_subwedge_angles = inData["fastCharacterisation"]["listSubWedgeAngles"]
-            no_images_in_subwedge = inData["fastCharacterisation"]["noImagesInSubWedge"]
-        else:
+            list_subwedge_angles = in_data["fastCharacterisation"]["listSubWedgeAngles"]
+            no_images_in_subwedge = in_data["fastCharacterisation"]["noImagesInSubWedge"]
+            first_image_path = in_data["fastCharacterisation"]["firstImagePath"]
+            image_number = 1
+            template = first_image_path.replace("0001", "{0:04d}")
+            list_image_path = []
+            for subwedge_angle in list_subwedge_angles:
+                for sub_wedge_image_number in range(no_images_in_subwedge):
+                    image_path = template.format(image_number)
+                    list_image_path.append(image_path)
+                    image_number += 1
+        elif "imagePath" in in_data:
+            list_image_path = in_data["imagePath"]
             is_fast_characterisation = False
             list_subwedge_angles = None
             no_images_in_subwedge = None
+        else:
+            raise RuntimeError("Neither 'imagePath' nor 'fastCharacterisation' in input data.")
         sub_wedge_number = 1
         input_read_image_header = {
             "imagePath": list_image_path
@@ -64,4 +76,7 @@ class SubWedgeAssembly(AbstractTask):
                 else:
                     subwedge["subWedgeNumber"] = index_subwedge + 1
             sub_wedge_merge = UtilsSubWedge.subWedgeMerge(list_subwedge)
-        return sub_wedge_merge
+        out_data = {
+            "subWedge": sub_wedge_merge
+        }
+        return out_data

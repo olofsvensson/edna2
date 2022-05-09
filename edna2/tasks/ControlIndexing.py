@@ -23,11 +23,11 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "14/04/2020"
 
-
+import os
 import numpy as np
 
 from edna2.tasks.AbstractTask import AbstractTask
-from edna2.tasks.ReadImageHeader import ReadImageHeader
+from edna2.tasks.SubWedgeAssembly import SubWedgeAssembly
 from edna2.tasks.ControlDozor import ControlDozor
 from edna2.tasks.XDSTasks import XDSIndexing
 from edna2.utils import UtilsImage
@@ -53,72 +53,81 @@ class ControlIndexing(AbstractTask):
             },
         }
 
-    def run(self, inData):
+    def run(self, in_data):
         outData = {}
         # First get the list of subWedges
-        if "subWedge" in inData:
-            listSubWedge = inData["subWedge"]
+        if "subWedge" in in_data:
+            list_sub_wedge = in_data["subWedge"]
         else:
-            listSubWedge = self.getListSubWedge(inData)
-        # Get list of spots from Dozor
-        listOutDataControlDozor = self.runControlDozor(listSubWedge)
-        listDozorSpotFile = []
-        for outDataControlDozor in listOutDataControlDozor:
-            if "dozorSpotFile" in outDataControlDozor["imageQualityIndicators"][0]:
-                dozorSpotFile = outDataControlDozor["imageQualityIndicators"][0][
-                    "dozorSpotFile"
-                ]
-                listDozorSpotFile.append(dozorSpotFile)
-        imageDict = listSubWedge[0]
+            list_sub_wedge = self.getListSubWedge(in_data)
+        # # Get list of spots from Dozor
+        # listOutDataControlDozor = self.runControlDozor(listSubWedge)
+        # listDozorSpotFile = []
+        # for outDataControlDozor in listOutDataControlDozor:
+        #     if "dozorSpotFile" in outDataControlDozor["imageQualityIndicators"][0]:
+        #         dozorSpotFile = outDataControlDozor["imageQualityIndicators"][0][
+        #             "dozorSpotFile"
+        #         ]
+        #         listDozorSpotFile.append(dozorSpotFile)
+        # imageDict = listSubWedge[0]
         # Run XDS indexing
-        xdsIndexinInData = {
-            "subWedge": listSubWedge,
-            "dozorSpotFile": listDozorSpotFile,
+        xds_indexin_in_data = {
+            "subWedge": list_sub_wedge
+            # "dozorSpotFile": listDozorSpotFile,
         }
-        xdsIndexingTask = XDSIndexing(
-            inData=xdsIndexinInData,
-            workingDirectorySuffix=UtilsImage.getPrefix(imageDict["image"][0]["path"]),
+        xds_indexing_task = XDSIndexing(
+            inData=xds_indexin_in_data
+            # workingDirectorySuffix=UtilsImage.getPrefix(imageDict["image"][0]["path"]),
         )
-        xdsIndexingTask.execute()
-        xparmXdsPath = None
-        if xdsIndexingTask.isSuccess():
-            xdsIndexingOutData = xdsIndexingTask.outData
-            xparmXdsPath = xdsIndexingOutData["xparmXdsPath"]
+        xds_indexing_task.execute()
+        xparm_path = None
+        spot_path = None
+        if xds_indexing_task.isSuccess():
+            xdsIndexingOutData = xds_indexing_task.outData
+            if os.path.exists(xdsIndexingOutData["xparmXdsPath"]):
+                xparm_path = xdsIndexingOutData["xparmXdsPath"]
+            if os.path.exists(xdsIndexingOutData["spotXdsPath"]):
+                spot_path = xdsIndexingOutData["spotXdsPath"]
             resultIndexing = ControlIndexing.getResultIndexingFromXds(
                 xdsIndexingOutData
             )
         outData = {
             "resultIndexing": resultIndexing,
-            "resultDozor": listOutDataControlDozor,
-            "xparmXdsPath": xparmXdsPath,
+            "xparmXdsPath": xparm_path,
+            "spotXdsPath": spot_path
         }
         return outData
 
     @staticmethod
-    def getListSubWedge(inData):
-        listSubWedge = None
+    def getListSubWedge(in_data):
+        list_sub_wedge = None
         # First check if we have data collection ids or image list
         # if "dataCollectionId" in inData:
         #     # TODO: get list of data collections from ISPyB
         #         logger.warning("Not implemented!")
         # el
-        if "imagePath" in inData:
-            listSubWedge = ControlIndexing.readImageHeaders(inData["imagePath"])
+        if "imagePath" in in_data or "fastCharacterisation":
+            # Read the header(s)
+            sub_wedge_assembly = SubWedgeAssembly(
+                inData=in_data
+                # workingDirectorySuffix=UtilsImage.getPrefix(listImagePath[0]),
+            )
+            sub_wedge_assembly.execute()
+            list_sub_wedge = sub_wedge_assembly.outData["subWedge"]
         else:
             raise RuntimeError("No dataCollectionId or imagePath in inData")
-        return listSubWedge
+        return list_sub_wedge
 
     @staticmethod
-    def readImageHeaders(listImagePath):
+    def readImageHeaders(in_data):
         # Read the header(s)
-        inDataReadImageHeader = {"imagePath": listImagePath}
-        readImageHeader = ReadImageHeader(
-            inData=inDataReadImageHeader,
-            workingDirectorySuffix=UtilsImage.getPrefix(listImagePath[0]),
+        sub_wedge_assembly = SubWedgeAssembly(
+            inData=in_data
+            # workingDirectorySuffix=UtilsImage.getPrefix(listImagePath[0]),
         )
-        readImageHeader.execute()
-        listSubWedge = readImageHeader.outData["subWedge"]
-        return listSubWedge
+        sub_wedge_assembly.execute()
+        list_sub_wedge = sub_wedge_assembly.outData["subWedge"]
+        return list_sub_wedge
 
     @staticmethod
     def runControlDozor(listSubWedge):

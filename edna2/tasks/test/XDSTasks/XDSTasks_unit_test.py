@@ -93,3 +93,9 @@ class XDSTasksUnitTest(unittest.TestCase):
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         imageLinks = XDSTask.generateImageLinks(inData)
         pprint.pprint(imageLinks)
+
+    def test_generateImageLinks_3(self):
+        referenceDataPath = self.dataPath / 'id30a1_1_fast_char.json'
+        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+        imageLinks = XDSTask.generateImageLinks(inData)
+        pprint.pprint(imageLinks)
