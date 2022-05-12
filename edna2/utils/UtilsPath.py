@@ -70,7 +70,7 @@ def getWorkingDirectory(task, inData, workingDirectorySuffix=None):
             workingDirectory = parentDirectory / workingDirectoryName
             index += 1
         workingDirectory.mkdir(mode=0o775, parents=True, exist_ok=False)
-
+    workingDirectory = UtilsPath.stripDataDirectoryPrefix(workingDirectory)
     return workingDirectory
 
 
@@ -207,3 +207,15 @@ def waitForFile(file, expectedSize=None, timeOut=DEFAULT_TIMEOUT):
                         shouldContinue = False
                     finalSize = fileSize
     return hasTimedOut, finalSize
+
+
+def stripDataDirectoryPrefix(data_directory):
+    """ Removes any paths before /data/..., e.g. /gpfs/easy/data/..."""
+    list_paths = str(data_directory).split(os.sep)
+    if "data" in list_paths:
+        while list_paths[1] != "data":
+            list_paths = [list_paths[0]] + list_paths[2:]
+        new_data_directory = os.sep.join(list_paths)
+    else:
+        new_data_directory = data_directory
+    return pathlib.Path(new_data_directory)
