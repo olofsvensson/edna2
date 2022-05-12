@@ -70,7 +70,7 @@ def getWorkingDirectory(task, inData, workingDirectorySuffix=None):
             workingDirectory = parentDirectory / workingDirectoryName
             index += 1
         workingDirectory.mkdir(mode=0o775, parents=True, exist_ok=False)
-    workingDirectory = UtilsPath.stripDataDirectoryPrefix(workingDirectory)
+    workingDirectory = stripDataDirectoryPrefix(workingDirectory)
     return workingDirectory
 
 
