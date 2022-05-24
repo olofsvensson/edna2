@@ -34,7 +34,7 @@ from edna2.tasks.ControlIndexing import ControlIndexing
 logger = UtilsLogging.getLogger()
 
 
-class ControlIndexing_id30a1_1_ExecTest(unittest.TestCase):
+class ControlIndexing_id30a1_3_ExecTest(unittest.TestCase):
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
@@ -42,7 +42,7 @@ class ControlIndexing_id30a1_1_ExecTest(unittest.TestCase):
         UtilsConfig.getSite() == "Default",
         "Cannot run indexing test with default config",
     )
-    def test_execute_ControlIndexing_id30a1_1(self):
+    def test_execute_ControlIndexing_id30a1_3(self):
         referenceDataPath = self.dataPath / "id30a1_3.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         controlIndexing = ControlIndexing(
