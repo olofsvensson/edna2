@@ -80,6 +80,7 @@ class ControlIndexing(AbstractTask):
             # workingDirectorySuffix=UtilsImage.getPrefix(imageDict["image"][0]["path"]),
         )
         xds_indexing_task.execute()
+        resultIndexing = None
         xparm_path = None
         spot_path = None
         if xds_indexing_task.isSuccess():
