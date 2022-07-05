@@ -425,11 +425,15 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
             index += 1
         index += 1
         while not listLines[index].startswith("-------"):
-            listScores = textwrap.wrap(listLines[index][5:], spacing)
-            if isFloat:
-                listScores = list(map(float, listScores))
-            else:
-                listScores = list(map(int, listScores))
+            # listScores = textwrap.wrap(listLines[index][5:], spacing)
+            listScores = []
+            for line_pos in range(0, len(listLines[index]), spacing):
+                sub_string = listLines[index][line_pos + 5:line_pos + spacing + 5].strip()
+                if sub_string != "":
+                    if isFloat:
+                        listScores.append(float(sub_string))
+                    else:
+                        listScores.append(int(sub_string))
             arrayValues.append(listScores)
             index += 1
         index += 1
