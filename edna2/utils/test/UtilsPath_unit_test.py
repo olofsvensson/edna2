@@ -189,4 +189,4 @@ class UtilsTestUnitTest(unittest.TestCase):
     def test_stripDataDirectoryPrefix(self):
         data_directory = "/gpfs/easy/data/id30a2/inhouse/opid30a2"
         new_data_directory = UtilsPath.stripDataDirectoryPrefix(data_directory)
-        self.assertEqual(new_data_directory, "/data/id30a2/inhouse/opid30a2")
+        self.assertEqual(str(new_data_directory), "/data/id30a2/inhouse/opid30a2")
