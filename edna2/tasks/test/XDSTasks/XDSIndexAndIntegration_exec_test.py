@@ -40,8 +40,9 @@ class XDSItegrationExecTest(unittest.TestCase):
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run test with default config')
+    # @unittest.skipIf(UtilsConfig.getSite() == 'Default',
+    #                  'Cannot run test with default config')
+    @unittest.skipIf(True, "Temporarily disabled due to missing test data")
     def test_execute_XDSIntegration(self):
         referenceDataPath = self.dataPath / 'id30a1_1_fast_char.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
