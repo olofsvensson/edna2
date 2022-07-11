@@ -40,6 +40,7 @@ class GetListAutoprocIntegrationExecTest(unittest.TestCase):
     @unittest.skipIf('ISPyB_token' not in os.environ,
                      'No ISPyB_token found in environment')
     def test_execute_getListAutoprocIntegration(self):
+        UtilsConfig.setSite('esrf_ispyb_valid')
         referenceDataPath = self.dataPath / \
             "GetListAutoprocIntegration.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
@@ -52,6 +53,7 @@ class GetListAutoprocIntegrationExecTest(unittest.TestCase):
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ispyb test with default config')
     def test_execute_getListAutoprocIntegration_invalidToken(self):
+        UtilsConfig.setSite('esrf_ispyb_valid')
         referenceDataPath = self.dataPath / \
             "GetListAutoprocIntegration.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)

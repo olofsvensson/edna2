@@ -38,6 +38,7 @@ class ISPyBFindDetectorByParamExecTest(unittest.TestCase):
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ispyb test with default config')
     def test_execute_ISPyBFindDetectorByParam(self):
+        UtilsConfig.setSite('esrf_ispyb_valid')
         referenceDataPath = self.dataPath / \
             "ISPyBFindDetectorByParam.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)

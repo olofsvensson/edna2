@@ -40,6 +40,7 @@ class GetListAutoprocAttachmentExecTest(unittest.TestCase):
     @unittest.skipIf('ISPyB_token' not in os.environ,
                      'No ISPyB_token found in environment')
     def test_execute_getListAutoprocAttachment(self):
+        UtilsConfig.setSite('esrf_ispyb_valid')
         referenceDataPath = self.dataPath / \
             "GetListAutoprocAttachment.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)

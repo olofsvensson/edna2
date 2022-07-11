@@ -38,6 +38,7 @@ class ISPyBRetrieveDataCollectionExecTest(unittest.TestCase):
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ispyb test with default config')
     def test_execute_ISPyBRetrieveDataCollection_image(self):
+        UtilsConfig.setSite('esrf_ispyb_valid')
         referenceDataPath = self.dataPath / \
             "ISPyBRetrieveDataCollection_image.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
@@ -49,6 +50,7 @@ class ISPyBRetrieveDataCollectionExecTest(unittest.TestCase):
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ispyb test with default config')
     def test_execute_ISPyBRetrieveDataCollection_dataCollectionId(self):
+        UtilsConfig.setSite('esrf_ispyb_valid')
         referenceDataPath = self.dataPath / \
             "ISPyBRetrieveDataCollection_dataCollectionId.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
