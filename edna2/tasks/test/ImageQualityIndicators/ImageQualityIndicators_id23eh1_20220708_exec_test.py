@@ -45,14 +45,15 @@ class ImageQualityIndicatorsExecTest(unittest.TestCase):
     )
     @unittest.skipIf(True, "Disabled")
     def test_execute(self):
-        referenceDataPath = self.dataPath / "id23eh2.json"
+        referenceDataPath = self.dataPath / "id23eh1_20220708.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         task = ImageQualityIndicators(inData=inData)
         task.execute()
         self.assertFalse(task.isFailure())
         outData = task.outData
         self.assertTrue("imageQualityIndicators" in outData)
-        self.assertEqual(4592, len(outData["imageQualityIndicators"]))
+        # self.assertTrue("resolution_limit" in outData["crystfel_results"][0])
+        # self.assertEqual(1116, len(outData["imageQualityIndicators"]))
 
 
 if __name__ == "__main__":

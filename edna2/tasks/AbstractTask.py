@@ -197,11 +197,12 @@ class AbstractTask():  # noqa R0904
         nodes = 1
         core = 10
         time = "1:00:00"
-        mem = 4000  # 4 Gb memory by default
+        mem = 16000  # 16 Gb memory by default
         script = "#!/bin/bash\n"
         script += '#SBATCH --job-name="{0}"\n'.format(jobName)
         if partition is not None:
             script += "#SBATCH --partition={0}\n".format(partition)
+        script += "#SBATCH --exclusive\n"
         script += "#SBATCH --mem={0}\n".format(mem)
         script += "#SBATCH --nodes={0}\n".format(nodes)
         script += "#SBATCH --nodes=1\n"  # Necessary for not splitting jobs! See ATF-57

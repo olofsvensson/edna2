@@ -211,9 +211,6 @@ class ImageQualityIndicators(AbstractTask):
                 batchStartNo = listOfImagesInBatch[0]
                 batchEndNo = listOfImagesInBatch[-1]
                 dozorTemplate = self.template
-                logger.debug("Before sleeping 2 s, start no = {0}".format(batchStartNo))
-                time.sleep(2)
-                logger.debug("After sleeping 2 s, start no = {0}".format(batchStartNo))
                 # Run Control Dozor
                 inDataControlDozor = {
                     "template": dozorTemplate,
@@ -350,7 +347,7 @@ class ImageQualityIndicators(AbstractTask):
     ):
         # Force an 'ls' in parent directory - this sometimes helps to 'unblock'
         # the file system
-        os.system("ls {0}".format(os.path.dirname(imagePath)))
+        os.system("ls {0} > /dev/null".format(os.path.dirname(imagePath)))
         # If Eiger, just wait for the h5 file
         if imagePath.suffix == ".h5":
             h5MasterFilePath, h5DataFilePath, hdf5ImageNumber = self.getH5FilePath(
@@ -372,7 +369,7 @@ class ImageQualityIndicators(AbstractTask):
                 logger.info("Waiting for file {0}".format(h5DataFilePath))
                 logger.debug("Wait file timeOut set to %f" % waitFileTimeOut)
                 waitFileTask.execute()
-                time.sleep(1)
+                time.sleep(0.1)
             if not os.path.exists(h5DataFilePath):
                 errorMessage = "Time-out while waiting for image %s" % h5DataFilePath
                 logger.error(errorMessage)
