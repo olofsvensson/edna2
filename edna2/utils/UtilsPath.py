@@ -155,58 +155,59 @@ def createPyarchFilePath(filePath):
 
 
 def waitForFile(file, expectedSize=None, timeOut=DEFAULT_TIMEOUT):
-    filePath = pathlib.Path(file)
-    finalSize = None
-    hasTimedOut = False
-    shouldContinue = True
-    fileDir = filePath.parent
-    if os.name != "nt" and fileDir.exists():
+    file_path = pathlib.Path(file)
+    final_size = None
+    has_timed_out = False
+    should_continue = True
+    file_dir = file_path.parent
+    if os.name != "nt" and file_dir.exists():
         # Patch provided by Sebastien 2018/02/09 for forcing NFS cache:
         # logger.debug("NFS cache clear, doing os.fstat on directory {0}".format(fileDir))
-        fd = os.open(fileDir.as_posix(), os.O_DIRECTORY)
-        statResult = os.fstat(fd)
+        fd = os.open(file_dir.as_posix(), os.O_DIRECTORY)
+        stat_result = os.fstat(fd)
         os.close(fd)
         # logger.debug("Results of os.fstat: {0}".format(statResult))
     # Check if file is there
-    if filePath.exists():
-        fileSize = filePath.stat().st_size
+    if file_path.exists():
+        file_size = file_path.stat().st_size
         if expectedSize is not None:
             # Check size
-            if fileSize > expectedSize:
-                shouldContinue = False
-        finalSize = fileSize
-    if shouldContinue:
-        logger.info("Waiting for file %s" % filePath)
+            if file_size > expectedSize:
+                should_continue = False
+        final_size = file_size
+    if should_continue:
+        logger.info("Waiting for file %s" % file_path)
         #
-        timeStart = time.time()
-        while shouldContinue and not hasTimedOut:
-            # Sleep 1 s
-            time.sleep(1)
-            if os.name != "nt" and fileDir.exists():
+        time_start = time.time()
+        while should_continue and not has_timed_out:
+            if os.name != "nt" and file_dir.exists():
                 # Patch provided by Sebastien 2018/02/09 for forcing NFS cache:
                 # logger.debug("NFS cache clear, doing os.fstat on directory {0}".format(fileDir))
-                fd = os.open(fileDir.as_posix(), os.O_DIRECTORY)
-                statResult = os.fstat(fd)  # noqa F841
+                fd = os.open(file_dir.as_posix(), os.O_DIRECTORY)
+                stat_result = os.fstat(fd)  # noqa F841
                 os.close(fd)
                 # logger.debug("Results of os.fstat: {0}".format(statResult))
-            timeElapsed = time.time() - timeStart
+            time_elapsed = time.time() - time_start
             # Check if time out
-            if timeElapsed > timeOut:
-                hasTimedOut = True
-                strWarning = "Timeout while waiting for file %s" % filePath
-                logger.warning(strWarning)
+            if time_elapsed > timeOut:
+                has_timed_out = True
+                str_warning = "Timeout while waiting for file %s" % file_path
+                logger.warning(str_warning)
             else:
                 # Check if file is there
-                if filePath.exists():
-                    fileSize = filePath.stat().st_size
+                if file_path.exists():
+                    file_size = file_path.stat().st_size
                     if expectedSize is not None:
                         # Check that it has right size
-                        if fileSize > expectedSize:
-                            shouldContinue = False
+                        if file_size > expectedSize:
+                            should_continue = False
                     else:
-                        shouldContinue = False
-                    finalSize = fileSize
-    return hasTimedOut, finalSize
+                        should_continue = False
+                    final_size = file_size
+            if should_continue:
+                # Sleep 1 s
+                time.sleep(1)
+    return has_timed_out, final_size
 
 
 def stripDataDirectoryPrefix(data_directory):
