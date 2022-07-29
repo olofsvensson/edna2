@@ -1,0 +1,7 @@
+{
+	"imagePath": [
+		"$EDNA2_TESTDATA_IMAGES/ab_test-eiger_1_0001.h5",
+		"$EDNA2_TESTDATA_IMAGES/ab_test-eiger_1_0002.h5"
+	],
+	"isFastMesh": true
+}
