@@ -21,15 +21,9 @@
 
 __authors__ = ["O. Svensson"]
 __license__ = "MIT"
-__date__ = "21/04/2019"
+__date__ = "01/08/2022"
 
-from setuptools import setup, find_packages
+import setuptools
 
-setup(name="edna2",
-      version='0.1',
-      packages=['edna2'],
-      install_requires=['matplotlib', 'suds', 'xmltodict', 'jsonschema',
-                        'graypy', 'h5py', 'fabio', 'numpy', 'scipy',
-                        'requests'],
-      )
-
+if __name__ == "__main__":
+    setuptools.setup()
