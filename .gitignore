@@ -3,10 +3,10 @@
 .settings
 venv/
 *.pyc
-testdata/
+tests/testdata/
 .idea/
 docs/build
-edna2/lib/autocryst/ext/build
+src/edna2/lib/autocryst/ext/build
 *.so
 .cache
 .pytest_cache

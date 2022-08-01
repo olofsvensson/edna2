@@ -1,4 +1,0 @@
-matplotlib
-suds-jurko
-xmltodict
-jsonschema

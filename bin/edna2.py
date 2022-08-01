@@ -27,19 +27,18 @@ __date__ = "13/05/2019"
 import os
 import sys
 import json
-import logging
 import pathlib
 import argparse
 
 # Set up PYTHONPATH
 
 filePath = pathlib.Path(__file__)
-if filePath.parent == pathlib.Path('.'):
+if filePath.parent == pathlib.Path("."):
     cwd = os.getcwd()
     projectHome = pathlib.Path(cwd).parent
 else:
     projectHome = filePath.parents[2]
-edna2TopLevelDir = projectHome / 'edna2'
+edna2TopLevelDir = projectHome / "src" / "edna2"
 sys.path.insert(0, str(edna2TopLevelDir))
 
 from edna2.utils import UtilsLogging
@@ -48,30 +47,31 @@ from edna2.utils import UtilsLogging
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument(action='store',
-                    dest='taskName',
-                    help='Name of EDNA2 task')
+parser.add_argument(action="store", dest="taskName", help="Name of EDNA2 task")
 
-parser.add_argument('--inData', action='store',
-                    dest='inData',
-                    help='Input data in JSON format')
+parser.add_argument(
+    "--inData", action="store", dest="inData", help="Input data in JSON format"
+)
 
-parser.add_argument('--inDataFile', action='store',
-                    dest='inDataFile',
-                    help='File with input data in JSON format')
+parser.add_argument(
+    "--inDataFile",
+    action="store",
+    dest="inDataFile",
+    help="File with input data in JSON format",
+)
 
-parser.add_argument('--outDataFile', action='store',
-                    dest='outDataFile',
-                    help='File where output data in JSON format will be stored')
+parser.add_argument(
+    "--outDataFile",
+    action="store",
+    dest="outDataFile",
+    help="File where output data in JSON format will be stored",
+)
 
-parser.add_argument('--debug', action='store_true',
-                    help='Debug log level')
+parser.add_argument("--debug", action="store_true", help="Debug log level")
 
-parser.add_argument('--warning', action='store_true',
-                    help='Warning log level')
+parser.add_argument("--warning", action="store_true", help="Warning log level")
 
-parser.add_argument('--error', action='store_true',
-                    help='Error log level')
+parser.add_argument("--error", action="store_true", help="Error log level")
 
 results = parser.parse_args()
 
@@ -97,16 +97,16 @@ else:
 # Set up logging
 
 if errorLogLevel:
-    logger = UtilsLogging.getLogger('ERROR')
+    logger = UtilsLogging.getLogger("ERROR")
 elif warningLogLevel:
-    logger = UtilsLogging.getLogger('WARNING')
+    logger = UtilsLogging.getLogger("WARNING")
 elif debugLogLevel:
-    logger = UtilsLogging.getLogger('DEBUG')
+    logger = UtilsLogging.getLogger("DEBUG")
 else:
-    logger = UtilsLogging.getLogger('INFO')
+    logger = UtilsLogging.getLogger("INFO")
 
 # Load and run EDNA2 task
-edna2 = __import__('edna2.tasks.{0}'.format(taskName))
+edna2 = __import__("edna2.tasks.{0}".format(taskName))
 tasks = getattr(edna2, "tasks")
 tasksModule = getattr(tasks, taskName)
 TaskClass = getattr(tasksModule, taskName)
@@ -120,5 +120,5 @@ else:
     if outDataFile is None:
         print(outData)
     else:
-        with open(str(outDataFile), 'w') as f:
+        with open(str(outDataFile), "w") as f:
             f.write(outData)
