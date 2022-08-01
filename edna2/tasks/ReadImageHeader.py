@@ -161,6 +161,11 @@ class ReadImageHeader(AbstractTask):
             detectorType = "eiger4m"
             numberPixelX = 2070
             numberPixelY = 2167
+        elif "eiger2" in detector.lower() and "9m" in detector.lower():
+            detectorName = "EIGER2 9M"
+            detectorType = "eiger9m"
+            numberPixelX = 3108
+            numberPixelY = 3262
         elif "eiger2" in detector.lower() and "16m" in detector.lower():
             detectorName = "EIGER2 16M"
             detectorType = "eiger16m"
@@ -300,6 +305,11 @@ class ReadImageHeader(AbstractTask):
             detectorType = "eiger4m"
             numberPixelX = 2070
             numberPixelY = 2167
+        elif "eiger2" in description.lower() and "9m" in description.lower():
+            detectorName = "EIGER2 9M"
+            detectorType = "eiger9m"
+            numberPixelX = 3108
+            numberPixelY = 3262
         elif "eiger" in description.lower() and "16M" in description:
             detectorName = "EIGER 16M"
             detectorType = "eiger16m"
