@@ -21,4 +21,6 @@
 
 __authors__ = ["O. Svensson"]
 __license__ = "MIT"
-__date__ = "21/04/2019"
+__date__ = "01/08/2022"
+
+__version__ = "1.0.0-rc.1"
