@@ -58,4 +58,3 @@ class ISPyBRetrieveDataCollectionExecTest(unittest.TestCase):
         iSPyBRetrieveDataCollection.execute()
         outData = iSPyBRetrieveDataCollection.outData
         self.assertEqual(outData['imagePrefix'], 'ref-ednatest')
-

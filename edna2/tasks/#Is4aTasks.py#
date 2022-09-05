@@ -19,9 +19,9 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__authors__ = ["G. Santoni, O. Svensson"]
+__authors__ = ["O. Svensson"]
 __license__ = "MIT"
-__date__ = "16/12/2019"
+__date__ = "10/05/2019"
 
 import json
 import shutil
@@ -29,6 +29,7 @@ import pprint
 
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.ISPyBTasks import GetListAutoprocessingResults
+
 
 class FindHklAsciiForMerge(AbstractTask):
     """
@@ -51,6 +52,22 @@ class FindHklAsciiForMerge(AbstractTask):
             }
         }
 
+    # def getOutDataSchema(self):
+    #     return {
+    #         "type": "object",
+    #         "required": ["dataForMerge"],
+    #         "properties": {
+    #             "dataForMerge": {
+    #                 "type": "object",
+    #                 "items": {
+    #                     "type": "object",
+    #                     "properties": {
+    #                         "spaceGroup": {"type": "string"}
+    #                     }
+    #                 }
+    #             }
+    #         }
+    #     }
 
     def run(self, inData):
         urlError = None
@@ -94,7 +111,6 @@ class FindHklAsciiForMerge(AbstractTask):
                                 attachmentId = autoProcAttachment['autoProcProgramAttachmentId']
                                 enumName = '{0:30s} {1}'.format(program, fileName)
                                 listEnumNames.append(enumName)
-                                
                                 enumValue = attachmentId
                                 listEnumValues.append(enumValue)
                 if urlError is None:
@@ -144,14 +160,142 @@ class FindHklAsciiForMerge(AbstractTask):
         return outData
 
 
-
-class HCACrystalMerge(AbstractTask):
+class FindPipelineForMerge(AbstractTask):
     """
-    Task to merge partial datasets from mesh and collect
-    Gets input list of files and runs automated HCA using ccCalc and ccCluster
-    """ 
-    
- 
+    This task receives a list of data collection IDs and returns a
+    json schema for EXI2
+    """
+
+    def getInDataSchema(self):
+    # def getOutDataSchema(self):
+    #     return {
+    #         "type": "object",
+    #         "required": ["dataForMerge"],
+    #         "properties": {
+    #             "dataForMerge": {
+    #                 "type": "object",
+    #                 "items": {
+    #                     "type": "object",
+    #                     "properties": {
+    #                         "spaceGroup": {"type": "string"}
+    #                     }
+    #                 }
+    #             }
+    #         }
+    #     }
+
+    def run(self, inData):
+        urlError = None
+        token = inData['token']
+        proposal = inData['proposal']
+        listDataCollectionId = inData['dataCollectionId']
+        inDataGetListAutoprocessingResults = {
+            'token': token,
+            'proposal': proposal,
+            'dataCollectionId': listDataCollectionId
+        }
+        getListAutoprocessingResults = GetListAutoprocessingResults(
+            inData=inDataGetListAutoprocessingResults
+        )
+        getListAutoprocessingResults.execute()
+        outDataAutoprocessing = getListAutoprocessingResults.outData
+        if 'error' in outDataAutoprocessing:
+            urlError = outDataAutoprocessing['error']
+        else:
+            index = 1
+            properties = {}
+            listOrder = []
+            dictEntry = {}
+            for dataCollection in outDataAutoprocessing['dataCollection']:
+                dataCollectionId = dataCollection['dataCollectionId']
+                listEnumValues = []
+                proteinAcronym = None
+                blSampleName = None
+                if 'error' in dataCollection['autoprocIntegration']:
+                    urlError = dataCollection['autoprocIntegration']['error']
+                else:
+                    for autoProcResult in dataCollection['autoprocIntegration']:
+                        if len(autoProcResult['autoprocAttachment']) > 0:
+                            if proteinAcronym is None:
+                                proteinAcronym = autoProcResult['Protein_acronym']
+                                blSampleName = autoProcResult['BLSample_name']
+                            if '1' in autoProcResult['anomalous']:
+                                anom = True
+                            else:
+                                anom = False
+                            for autoProcAttachment in autoProcResult['autoprocAttachment']:
+                                if 'XDS_ASCII' in autoProcAttachment['fileName']:
+                                    fileName = autoProcAttachment['fileName']
+                                    program = autoProcResult['v_datacollection_processingPrograms']
+                                    attachmentId = autoProcAttachment['autoProcProgramAttachmentId']
+                                    if anom:
+                                        entryKey = program + '_anom'
+                                    else:
+                                        entryKey = program + '_noanom'
+                                    if entryKey not in dictEntry:
+                                        dictEntry[entryKey] = []
+                                    dictEntry[entryKey].append({'id': attachmentId, 'fileName': fileName})
+        if urlError is None:
+            listEnumNames = []
+            dictInput = {}
+            for entryKey, listAttachment in dictEntry.items():
+                if len(listAttachment) == len(outDataAutoprocessing['dataCollection']):
+                    listEnumNames.append(entryKey)
+                    dictInput[entryKey] = listAttachment
+                    index += 1
+            if len(listEnumNames) > 0:
+                dictSchema = {
+                    'title': 'Select processing pipeline for data Collection {0}-{1}'.format(
+                        proteinAcronym,
+                        blSampleName
+                    ),
+                    'type': 'string',
+                    'enum': listEnumNames,
+                    'enumNames': listEnumNames
+                }
+                key = "pipeline"
+                properties[key] = dictSchema
+                listOrder.append(key)
+                # Minimum sigma
+                dictSchema = {
+                    'integer': 'string',
+                    'type': 'string',
+                    'title': 'minimum_I/SIGMA for data Collection {0}-{1}'.format(
+                        proteinAcronym,
+                        blSampleName
+                    )
+                }
+                key = 'minimum_I/SIGMA'
+                properties[key] = dictSchema
+                listOrder.append(key)
+        if urlError is None:
+            schema = {
+                'properties': properties,
+                'type': 'object',
+                'title': 'User input needed'
+            }
+            uiSchema = {
+                'ui:order': listOrder
+            }
+            outData = {
+                'schema': {
+                    "schema": schema,
+                    "uiSchema": uiSchema
+                },
+                'input': dictInput
+            }
+        else:
+            outData = {
+                'error': urlError
+            }
+        return outData
+
+
+class MergeUtls(AbstractTask):
+    """
+    This task will run the Merge_utls.py program written by Shibom Basu
+    """
+
     def run(self, inData):
         listHklLp = inData['listHklLp']
         workingDir = self.getWorkingDirectory()
@@ -161,13 +305,9 @@ class HCACrystalMerge(AbstractTask):
             dataDir.mkdir(exist_ok=True)
             shutil.copy(hklLp['hkl'], str(dataDir / 'XDS_ASCII.HKL'))
             index += 1
-        commandLine = 'ccCalc -f {0}/dataDir/*'.format(str(workingDir))
+        commandLine = 'Merge_utls.py --root {0} --expt serial-xtal'.format(str(workingDir))
         self.runCommandLine(commandLine, logPath=None)
-        hcaCommandLine = 'ccCluster -i ccCLusterLog.txt -p'
-        self.runCommandLine(hcaCommandLine, logPath=None)
         # Find Mergeing_results.json
-        #this needs to be adapted to the ccCluster working framework
-        #Also, need for an  improvement in ccCluster results reporting
         resultPath = self.getWorkingDirectory() / 'adm_serial-xtal' / 'adm_3' / 'Mergeing_results.json'
         if resultPath.exists():
             with open(str(resultPath)) as f:
