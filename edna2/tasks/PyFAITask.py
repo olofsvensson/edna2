@@ -98,6 +98,10 @@ class ExeCrystFEL(AbstractTask):
     def generateCommand(self, inData):
         #this function prepares the command line to run peakfinder.
         #gets image, poni name  + other parameters to be determined
+        shellCommand = 'peakfinder '
+        shellCommand += '-p experiment.poni '
+        shellCommand += 'inData["listH5FilePath"[0]]'
+        return shellCommand
 
     def generatePoni(self, inData):
         #for the sake of uniformity, will need to calculate poni1 poni2 from orgx orgy from MXCUBE.
