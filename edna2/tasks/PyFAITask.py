@@ -25,6 +25,7 @@ from __future__ import division, print_function
 import os
 import sys
 import json
+import pprint
 import logging
 import pathlib
 import jsonschema
@@ -34,6 +35,8 @@ from datetime import datetime
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.utils import UtilsLogging
 from edna2.utils import UtilsImage
+from edna2.utils import UtilsDetector
+
 
 __author__ = ['G. Santoni']
 __license__ = 'MIT'
@@ -52,20 +55,16 @@ class ExeCrystFEL(AbstractTask):
                     "type": "array",
                     "items": {"type": "string"}
                 },
-                "doCBFtoH5": {"type": "boolean"},
                 "doSubmit": {"type": "boolean"},
-                "cbfFileInfo": {
-                    "directory": {"type": "string"},
-                    "template": {"type": "string"},
-                    "startNo": {"type": "integer"},
-                    "endNo": {"type": "integer"},
-                    "batchSize": {"type": "integer"},
-                    "listofImages": {"type": "array",
-                                     "items": {
-                                         "type": "string"
-                                          }
-                                     },
-                },
+                'poni_file':{"type": "string"},
+                "mask_file":{"type":"string"},
+                "detectorType": {"type": "string"},                
+                "detector_distance": {"type": "number"},
+                "wavelength": {"type": "number"},
+                "pixel_size":{"type":"number"},
+                "orgx": {"type": "number"}, %to get the poni1 poni2
+                "orgy": {"type": "number"},%to get the poni1 poni2
+                "isZigZag": {"type": "boolean"},
                 "imageQualityIndicators": {
                     "type": "array",
                     "items": {
@@ -90,3 +89,27 @@ class ExeCrystFEL(AbstractTask):
                 "average_num_spots": {"type": "number"}
             }
         }
+    def run(self, inData):
+        outdata = {}
+        geometry = self.generatePoni(inData)
+        with open(str(self.getWorkingDirectory() / 'experiment.poni'), 'w') as f:
+            f.write(geometry)
+    
+    def generateCommand(self, inData):
+        #this function prepares the command line to run peakfinder.
+        #gets image, poni name  + other parameters to be determined
+
+    def generatePoni(self, inData):
+        #for the sake of uniformity, will need to calculate poni1 poni2 from orgx orgy from MXCUBE.
+        detectorType = inData['detectorType']
+        pixelSize = UtilsDetector.getPixelsize(detectorType)
+        poni = '!\n'
+        poni += 'PixelSize1: %d\n' %pixelSize
+        poni += 'PixelSize2: %d\n' %pixelSize
+        poni += 'Distance: {0}\n'.format(inData["detector_distance"])
+        poni += 'Poni1: {0}\n'.format(inData['orgy'])
+        poni += 'Poni2: {0}\n'.format(inData['orgx'])
+        poni += 'Rot1: 0\n'
+        poni += 'Rot2: 0\n'
+        poni += 'Rot3: 0\n'
+        return poni
