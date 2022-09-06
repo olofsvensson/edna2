@@ -191,21 +191,40 @@ class ImageQualityIndicators(AbstractTask):
         distl_tasks = []
         dozor_tasks = []
         template4d = re.sub("#+", "{0:04d}", self.template)
-        for images_in_batch in listOfBatches:
+        for index, images_in_batch in enumerate(listOfBatches):
             listOfH5FilesInBatch = []
-            image_no = images_in_batch[-1]
-            # Wait for last image
-            image_path = self.directory / template4d.format(image_no)
-            logger.debug("Waiting for path: {0}".format(image_path))
-            self.waitForImagePath(
-                imagePath=image_path,
-                batchSize=self.batchSize,
-                isFastMesh=self.isFastMesh,
-                minImageSize=self.minImageSize,
-                waitFileTimeOut=self.waitFileTimeOut,
-                listofH5FilesInBatch=listOfH5FilesInBatch,
-            )
-            logger.debug("Done waiting for path: {0}".format(image_path))
+            if self.beamline in ["id23eh1", "id30b"]:
+                # Wait for last image for the next batch
+                if index == len(listOfBatches) - 1:
+                    # We are at the last batch so we have to sleep here
+                    time.sleep(5)
+                else:
+                    image_no = listOfBatches[index+1][-1]
+                    image_path = self.directory / template4d.format(image_no)
+                    logger.debug("Waiting for path: {0}".format(image_path))
+                    self.waitForImagePath(
+                        imagePath=image_path,
+                        batchSize=self.batchSize,
+                        isFastMesh=self.isFastMesh,
+                        minImageSize=self.minImageSize,
+                        waitFileTimeOut=self.waitFileTimeOut,
+                        listofH5FilesInBatch=listOfH5FilesInBatch,
+                    )
+                    logger.debug("Done waiting for path: {0}".format(image_path))
+            else:
+                image_no = images_in_batch[-1]
+                # Wait for last image
+                image_path = self.directory / template4d.format(image_no)
+                logger.debug("Waiting for path: {0}".format(image_path))
+                self.waitForImagePath(
+                    imagePath=image_path,
+                    batchSize=self.batchSize,
+                    isFastMesh=self.isFastMesh,
+                    minImageSize=self.minImageSize,
+                    waitFileTimeOut=self.waitFileTimeOut,
+                    listofH5FilesInBatch=listOfH5FilesInBatch,
+                )
+                logger.debug("Done waiting for path: {0}".format(image_path))
             if not self.isFailure():
                 # Determine start and end image no
                 batchStartNo = images_in_batch[0]
