@@ -1,14 +1,7 @@
-{
-
-        "doSubmit": {"type": "boolean"},
-        'poni_file':{"type": "string"},
-        "mask_file":{"type":"string"},
-        "detectorType": {"type": "string"},                
+{       "doSubmit": true,             
         "detector_distance": 0.002,
-        "wavelength": {"type": "number"},
-        "pixel_size":{"type":"number"},
-        "orgx": 0.001, %to get the poni1 poni2
-        "orgy": 0.001,%to get the poni1 poni2
-        "isZigZag": {"type": "boolean"},
- }
-    
+        "wavelength": 0.1,
+        "pixel_size":0.00001,
+        "orgx": 0.001, 
+        "orgy": 0.001
+}

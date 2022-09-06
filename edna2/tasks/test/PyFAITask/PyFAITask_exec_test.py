@@ -28,7 +28,7 @@ import unittest
 from edna2.utils import UtilsTest
 from edna2.utils import UtilsLogging
 
-from edna2.tasks.HelloWorldTask import HelloWorldTask
+from edna2.tasks.PyFAITask import PyFAITask
 
 logger = UtilsLogging.getLogger()
 
@@ -39,10 +39,10 @@ class HelloWorldTaskExecTest(unittest.TestCase):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
     def test_execute(self):
-        referenceDataPath = self.dataPath / 'inDataHelloWorldTask.json'
+        referenceDataPath = self.dataPath / 'inDataPyFAITask.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        helloWorldTask = HelloWorldTask(inData=inData)
-        helloWorldTask.execute()
+        pyFAITask = PyFAITask(inData=inData)
+        pyFAITask.execute()
         self.assertTrue(helloWorldTask.isSuccess())
         outData = helloWorldTask.outData
         self.assertTrue('results' in outData)

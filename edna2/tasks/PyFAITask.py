@@ -45,7 +45,7 @@ __date__ = '07/01/2022'
 logger = UtilsLogging.getLogger()
 
 
-class ExeCrystFEL(AbstractTask):
+class PyFAITask(AbstractTask):
 
     def getInDataSchema(self):
         return {
@@ -62,8 +62,8 @@ class ExeCrystFEL(AbstractTask):
                 "detector_distance": {"type": "number"},
                 "wavelength": {"type": "number"},
                 "pixel_size":{"type":"number"},
-                "orgx": {"type": "number"}, %to get the poni1 poni2
-                "orgy": {"type": "number"},%to get the poni1 poni2
+                "orgx": {"type": "number"}, 
+                "orgy": {"type": "number"},
                 "isZigZag": {"type": "boolean"},
                 "imageQualityIndicators": {
                     "type": "array",
@@ -72,7 +72,7 @@ class ExeCrystFEL(AbstractTask):
                     }
                 }
             },
-        }
+       } 
 
     def getOutDataSchema(self):
         return {
@@ -90,6 +90,8 @@ class ExeCrystFEL(AbstractTask):
         geometry = self.generatePoni(inData)
         with open(str(self.getWorkingDirectory() / 'experiment.poni'), 'w') as f:
             f.write(geometry)
+        commandLine = self.generateCommand(inData)
+        self.runCommandLine(commandLine)
     
     def generateCommand(self, inData):
         #this function prepares the command line to run peakfinder.
