@@ -1,4 +1,10 @@
 matplotlib
-suds-jurko
+suds
 xmltodict
 jsonschema
+graypy
+h5py
+fabio
+numpy
+scipy
+requests

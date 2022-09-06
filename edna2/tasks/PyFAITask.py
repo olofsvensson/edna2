@@ -72,10 +72,6 @@ class ExeCrystFEL(AbstractTask):
                     }
                 }
             },
-            "oneOf": [
-                {"required": ["listH5FilePath"]},
-                {"required": ['cbfFileInfo']}
-            ]
         }
 
     def getOutDataSchema(self):

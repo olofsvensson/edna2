@@ -10,4 +10,4 @@ edna2/lib/autocryst/ext/build
 *.so
 .cache
 .pytest_cache
-
+edna2.egg-info/*
