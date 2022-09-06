@@ -193,7 +193,7 @@ class ImageQualityIndicators(AbstractTask):
         template4d = re.sub("#+", "{0:04d}", self.template)
         for index, images_in_batch in enumerate(listOfBatches):
             listOfH5FilesInBatch = []
-            if self.beamline in ["id23eh1", "id30b"]:
+            if self.beamline in ["id23eh1", "id30b"] and len(listOfBatches) > 1:
                 # Wait for last image for the next batch
                 if index == len(listOfBatches) - 1:
                     # We are at the last batch so we have to sleep here
