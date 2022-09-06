@@ -76,6 +76,13 @@ DETECTOR_PARAMS = {
             [0, 2070, 1614, 1654],
         ],
     },
+    "eiger9m": {
+        "nx": 3108,
+        "ny": 3262,
+        "pixel": 0.075,
+        "sensorThickness": 0.75,
+        "xdsUntrustedRectangle": [],
+    },
     "eiger16m": {
         "nx": 4148,
         "ny": 4362,
