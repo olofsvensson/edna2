@@ -1,4 +1,5 @@
-{       "doSubmit": true,             
+{       "doSubmit": true,
+        "listH5FilePath":  ["/home/gsantoni/lyso_foil_1/lyso_foil_1_block_0_1_0000.h5"],
         "detector_distance": 0.002,
         "wavelength": 0.1,
         "pixel_size":0.00001,
