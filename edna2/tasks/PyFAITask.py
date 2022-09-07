@@ -98,13 +98,13 @@ class PyFAITask(AbstractTask):
         #gets image, poni name  + other parameters to be determined
         shellCommand = 'peakfinder '
         shellCommand += '-p experiment.poni '
-        shellCommand += 'inData["listH5FilePath"[0]]'
+        shellCommand += inData["listH5FilePath"][0]        
         return shellCommand
 
     def generatePoni(self, inData):
         #for the sake of uniformity, will need to calculate poni1 poni2 from orgx orgy from MXCUBE.
-        detectorType = inData['detectorType']
-        pixelSize = UtilsDetector.getPixelsize(detectorType)
+        #detectorType = inData['detectorType']
+        #pixelSize = UtilsDetector.getPixelsize(detectorType)
         poni = '!\n'
         poni += 'PixelSize1: %d\n' %pixelSize
         poni += 'PixelSize2: %d\n' %pixelSize
