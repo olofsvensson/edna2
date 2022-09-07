@@ -43,7 +43,7 @@ class HelloWorldTaskExecTest(unittest.TestCase):
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         pyFAITask = PyFAITask(inData=inData)
         pyFAITask.execute()
-        # self.assertTrue(helloWorldTask.isSuccess())
+        self.assertTrue(pyFAITask.isSuccess())
         # outData = helloWorldTask.outData
         # self.assertTrue('results' in outData)
         # self.assertTrue('Hello world' in outData['results'])

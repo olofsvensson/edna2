@@ -88,9 +88,11 @@ class PyFAITask(AbstractTask):
     def run(self, inData):
         outdata = {}
         geometry = self.generatePoni(inData)
+        print(self.getWorkingDirectory())
         with open(str(self.getWorkingDirectory() / 'experiment.poni'), 'w') as f:
             f.write(geometry)
         commandLine = self.generateCommand(inData)
+        print(commandLine)
         self.runCommandLine(commandLine)
     
     def generateCommand(self, inData):
@@ -105,6 +107,7 @@ class PyFAITask(AbstractTask):
         #for the sake of uniformity, will need to calculate poni1 poni2 from orgx orgy from MXCUBE.
         #detectorType = inData['detectorType']
         #pixelSize = UtilsDetector.getPixelsize(detectorType)
+        pixelSize = inData["pixel_size"]
         poni = '!\n'
         poni += 'PixelSize1: %d\n' %pixelSize
         poni += 'PixelSize2: %d\n' %pixelSize
