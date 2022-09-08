@@ -23,6 +23,10 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "2021/07/20"
 
+import os
+import shutil
+import pathlib
+import tempfile
 import unittest
 
 from edna2.tasks.DozorRD import DozorRD

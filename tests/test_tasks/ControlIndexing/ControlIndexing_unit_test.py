@@ -23,6 +23,8 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "14/04/2020"
 
+from edna2.tasks.ControlIndexing import ControlIndexing
+
 from edna2.utils import UtilsLogging
 
 logger = UtilsLogging.getLogger()

@@ -33,6 +33,7 @@ import unittest
 from edna2.tasks.DozorM import DozorM
 
 from edna2.utils import UtilsTest
+from edna2.utils import UtilsConfig
 
 
 class DozorMUnitTest(unittest.TestCase):

@@ -23,6 +23,8 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "26/07/2019"
 
+import pathlib
+
 from edna2.tasks.AbstractTask import AbstractTask
 
 
