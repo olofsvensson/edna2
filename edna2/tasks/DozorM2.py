@@ -94,7 +94,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
 
     def run(self, inData):
         if len(inData["list_dozor_all"]) > 1:
-            commandLine = "dozorm2 -cr dozorm2.dat"
+            commandLine = "dozorm2 -avs -cr dozorm2.dat"
         else:
             commandLine = "dozorm2 dozorm2.dat"
         commands = self.generateCommands(inData, self.getWorkingDirectory())
