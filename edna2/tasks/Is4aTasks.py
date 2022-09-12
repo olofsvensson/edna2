@@ -25,7 +25,6 @@ __date__ = "10/05/2019"
 
 import json
 import shutil
-import pprint
 
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.ISPyBTasks import GetListAutoprocessingResults

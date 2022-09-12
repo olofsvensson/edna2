@@ -202,7 +202,7 @@ class DiffractionThumbnail(AbstractTask):
         expectedSize = 1000000
         for beamline in ["id23eh1", "id23eh2", "id30a1", "id30a2", "id30a3", "id30b"]:
             if beamline in imagePath:
-                taskConfig = UtilsConfig.getTaskConfig("ExpectedFileSize", "esrf_"+beamline)
+                taskConfig = UtilsConfig.getTaskConfig("ExpectedFileSize", "esrf_" + beamline)
                 expectedSize = int(taskConfig["image"])
                 break
         return expectedSize
