@@ -43,22 +43,28 @@ class FindHklAsciiForMergeExecTest(unittest.TestCase):
                      'Cannot run ImageQualityIndicatorsExecTest ' +
                      'test with default config')
     def test_execute(self):
+        old_site = UtilsConfig.getSite()
+        UtilsConfig.setSite('esrf_ispyb_valid')
         referenceDataPath = self.dataPath / 'findDataForMerge.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         findHklAsciiForMerge = FindHklAsciiForMerge(inData=inData)
         findHklAsciiForMerge.execute()
         self.assertTrue(findHklAsciiForMerge.isSuccess())
         outData = findHklAsciiForMerge.outData
+        UtilsConfig.setSite(old_site)
         self.assertTrue('schema' in outData)
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ImageQualityIndicatorsExecTest ' +
                      'test with default config')
     def test_execute_invalidToken(self):
+        old_site = UtilsConfig.getSite()
+        UtilsConfig.setSite('esrf_ispyb_valid')
         referenceDataPath = self.dataPath / 'findDataForMerge_invalidToken.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         findHklAsciiForMerge = FindHklAsciiForMerge(inData=inData)
         findHklAsciiForMerge.execute()
         self.assertTrue(findHklAsciiForMerge.isSuccess())
         outData = findHklAsciiForMerge.outData
+        UtilsConfig.setSite(old_site)
         self.assertTrue('error' in outData)

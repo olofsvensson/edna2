@@ -38,6 +38,7 @@ class ISPyBRetrieveDataCollectionExecTest(unittest.TestCase):
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ispyb test with default config')
     def test_execute_ISPyBRetrieveDataCollection_image(self):
+        old_site = UtilsConfig.getSite()
         UtilsConfig.setSite('esrf_ispyb_valid')
         referenceDataPath = self.dataPath / \
             "ISPyBRetrieveDataCollection_image.json"
@@ -45,11 +46,13 @@ class ISPyBRetrieveDataCollectionExecTest(unittest.TestCase):
         iSPyBRetrieveDataCollection = ISPyBRetrieveDataCollection(inData=inData)
         iSPyBRetrieveDataCollection.execute()
         outData = iSPyBRetrieveDataCollection.outData
+        UtilsConfig.setSite(old_site)
         self.assertEqual(outData['imagePrefix'], 'ref-ednatest')
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ispyb test with default config')
     def test_execute_ISPyBRetrieveDataCollection_dataCollectionId(self):
+        old_site = UtilsConfig.getSite()
         UtilsConfig.setSite('esrf_ispyb_valid')
         referenceDataPath = self.dataPath / \
             "ISPyBRetrieveDataCollection_dataCollectionId.json"
@@ -57,5 +60,6 @@ class ISPyBRetrieveDataCollectionExecTest(unittest.TestCase):
         iSPyBRetrieveDataCollection = ISPyBRetrieveDataCollection(inData=inData)
         iSPyBRetrieveDataCollection.execute()
         outData = iSPyBRetrieveDataCollection.outData
+        UtilsConfig.setSite(old_site)
         self.assertEqual(outData['imagePrefix'], 'ref-ednatest')
 

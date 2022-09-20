@@ -90,4 +90,4 @@ class ExecDozorUnitTest(unittest.TestCase):
         library = self.dozor.getLibrary("cbf")
         self.assertTrue("xds-zcbf.so" in library)
         library = self.dozor.getLibrary("hdf5")
-        self.assertTrue("durin-plugin.so" in library)
+        self.assertTrue("dectris-neggia.so" in library)

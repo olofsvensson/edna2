@@ -43,22 +43,28 @@ class FindPipelineForMergeExecTest(unittest.TestCase):
                      'Cannot run ImageQualityIndicatorsExecTest ' +
                      'test with default config')
     def test_execute(self):
+        old_site = UtilsConfig.getSite()
+        UtilsConfig.setSite('esrf_ispyb_valid')
         referenceDataPath = self.dataPath / 'findDataForMerge.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         findPipelineForMerge = FindPipelineForMerge(inData=inData)
         findPipelineForMerge.execute()
         self.assertTrue(findPipelineForMerge.isSuccess())
         outData = findPipelineForMerge.outData
+        UtilsConfig.setSite(old_site)
         self.assertTrue('schema' in outData)
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ImageQualityIndicatorsExecTest ' +
                      'test with default config')
     def test_execute_invalidToken(self):
+        old_site = UtilsConfig.getSite()
+        UtilsConfig.setSite('esrf_ispyb_valid')
         referenceDataPath = self.dataPath / 'findDataForMerge_invalidToken.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         findPipelineForMerge = FindPipelineForMerge(inData=inData)
         findPipelineForMerge.execute()
         self.assertTrue(findPipelineForMerge.isSuccess())
         outData = findPipelineForMerge.outData
+        UtilsConfig.setSite(old_site)
         self.assertTrue('error' in outData)

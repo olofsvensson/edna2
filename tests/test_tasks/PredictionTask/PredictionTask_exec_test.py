@@ -25,7 +25,11 @@ __date__ = "14/04/2020"
 
 import unittest
 
+from edna2.utils import UtilsTest
+from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
+
+from edna2.tasks.ControlIndexing import ControlIndexing
 
 logger = UtilsLogging.getLogger()
 

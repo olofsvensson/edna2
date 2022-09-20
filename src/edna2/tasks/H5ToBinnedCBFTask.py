@@ -83,7 +83,7 @@ class H5ToBinnedCBFTask(AbstractTask):
             directory = hdf5File.parent
             prefix = UtilsImage.getPrefix(hdf5File)
             hdf5ImageNumber = 1
-            if 'master' in str(hdf5File):
+            if 'master.h5' in str(hdf5File):
                 masterFile = hdf5File
             else:
                 if UtilsConfig.isEMBL():

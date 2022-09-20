@@ -324,7 +324,7 @@ class ReadImageHeader(AbstractTask):
         # Image number
         image_number = UtilsImage.getImageNumber(imagePath)
         # Find out size of data set
-        prefix = str(h5MasterFilePath).split("master")[0]
+        prefix = str(h5MasterFilePath).split("master.h5")[0]
         listDataImage = []
         noImages = 0
         if not skipNumberOfImages:
