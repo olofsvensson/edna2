@@ -335,7 +335,7 @@ class AutoCrystFEL(object):
             else:
                 listofimagefiles = list(datadir.glob(self.jshandle['prefix'] + '*' + self.jshandle['suffix']))
                 for fname in listofimagefiles:
-                    if 'master' not in str(fname):
+                    if 'master.h5' not in str(fname):
                         self.filelist.append(fname.as_posix())
                     else:
                         pass

@@ -194,7 +194,7 @@ class ImageHandler(object):
             if '.cbf' in self.imagefile:
                 self.imobject = CBFreader(self.imagefile)
                 self.imobject.read_cbfheaders()
-            elif 'master' in self.imagefile:
+            elif 'master.h5' in self.imagefile:
                 self.imobject = EigerReader(self.imagefile)
                 self.imobject.read_h5headers()
             elif '.cxi' in self.imagefile:

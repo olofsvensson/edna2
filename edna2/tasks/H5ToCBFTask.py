@@ -90,7 +90,7 @@ class H5ToCBFTask(AbstractTask):
             hdf5ImageNumber = inData['hdf5ImageNumber']
         else:
             hdf5ImageNumber = imageNumber
-        if 'master' in str(hdf5File):
+        if 'master.h5' in str(hdf5File):
             masterFile = hdf5File
         else:
             if UtilsConfig.isEMBL():
@@ -126,7 +126,7 @@ class H5ToCBFTask(AbstractTask):
             hdf5ImageNumber = inData['hdf5ImageNumber']
         else:
             hdf5ImageNumber = startImageNumber
-        if 'master' in str(hdf5File):
+        if 'master.h5' in str(hdf5File):
             masterFile = hdf5File
         else:
             fileName = prefix + "_{0}_master.h5".format(hdf5ImageNumber)
