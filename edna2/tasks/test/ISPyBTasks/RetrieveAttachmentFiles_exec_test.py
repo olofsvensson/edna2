@@ -40,6 +40,7 @@ class RetrieveAttachmentFilesExecTest(unittest.TestCase):
     @unittest.skipIf('ISPyB_token' not in os.environ,
                      'No ISPyB_token found in environment')
     def test_execute_retrieveAttachmentFiles(self):
+        old_site = UtilsConfig.getSite()
         UtilsConfig.setSite('esrf_ispyb_valid')
         referenceDataPath = self.dataPath / \
             'RetrieveAttachmentFiles.json'
@@ -48,11 +49,13 @@ class RetrieveAttachmentFilesExecTest(unittest.TestCase):
         retrieveAttachmentFiles.execute()
         self.assertTrue(retrieveAttachmentFiles.isSuccess())
         outData = retrieveAttachmentFiles.outData
+        UtilsConfig.setSite(old_site)
         self.assertEqual(1, len(outData['filePath']))
 
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ispyb test with default config')
     def test_execute_getListAutoprocIntegration_invalidToken(self):
+        old_site = UtilsConfig.getSite()
         UtilsConfig.setSite('esrf_ispyb_valid')
         referenceDataPath = self.dataPath / \
             'RetrieveAttachmentFiles.json'
@@ -62,5 +65,6 @@ class RetrieveAttachmentFilesExecTest(unittest.TestCase):
         retrieveAttachmentFiles.execute()
         self.assertTrue(retrieveAttachmentFiles.isSuccess())
         outData = retrieveAttachmentFiles.outData
+        UtilsConfig.setSite(old_site)
         self.assertTrue('error' in outData)
 
