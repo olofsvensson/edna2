@@ -23,6 +23,7 @@ __authors__ = ['O. Svensson']
 __license__ = 'MIT'
 __date__ = '30/11/2019'
 
+import os
 import unittest
 
 from edna2.tasks.DozorM import DozorM

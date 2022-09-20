@@ -25,6 +25,7 @@ __updated__ = "2021-07-20"
 
 import os
 import numpy
+import textwrap
 import matplotlib
 import matplotlib.cm
 import matplotlib.pyplot as plt
@@ -87,13 +88,13 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
             "type": "object",
             "properties": {
                 "logPath": {"type": "string"},
+                "workingDirectory": {"type": "string"},
             },
         }
 
     def run(self, inData):
-        outData = {}
         if len(inData["list_dozor_all"]) > 1:
-            commandLine = "dozorm2 -cr dozorm2.dat"
+            commandLine = "dozorm2 -avs -cr dozorm2.dat"
         else:
             commandLine = "dozorm2 dozorm2.dat"
         commands = self.generateCommands(inData, self.getWorkingDirectory())
@@ -102,7 +103,8 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         logPath = self.getWorkingDirectory() / 'dozorm2.log'
         self.runCommandLine(commandLine, logPath=logPath)
         outData = self.parseOutput(self.getWorkingDirectory(), logPath)
-        outData ["logPath"] = str(logPath)
+        outData["logPath"] = str(logPath)
+        outData["workingDirectory"] = str(self.getWorkingDirectory())
         return outData
 
     @staticmethod

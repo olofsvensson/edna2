@@ -26,6 +26,7 @@ __date__ = "29/03/2022"
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.ReadImageHeader import ReadImageHeader
 
+from edna2.utils import UtilsImage
 from edna2.utils import UtilsLogging
 from edna2.utils import UtilsSubWedge
 

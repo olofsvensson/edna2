@@ -25,6 +25,7 @@ __date__ = "20/04/2020"
 
 import pprint
 import unittest
+import tempfile
 
 from edna2.utils import UtilsTest
 from edna2.utils import UtilsLogging

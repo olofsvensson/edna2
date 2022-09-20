@@ -23,6 +23,7 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "20/04/2020"
 
+import os
 import unittest
 
 from edna2.utils import UtilsTest

@@ -23,6 +23,9 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "14/04/2020"
 
+
+import numpy as np
+
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.SubWedgeAssembly import SubWedgeAssembly
 from edna2.tasks.XDSTasks import XDSIndexAndIntegration

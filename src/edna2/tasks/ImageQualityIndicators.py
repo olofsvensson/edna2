@@ -188,28 +188,28 @@ class ImageQualityIndicators(AbstractTask):
         # - Wait for all files in batch
         # - Run Dozor and DistlSignalStrength (if required) in parallel
         #
-        listDistlTask = []
-        listDozorTask = []
+        distl_tasks = []
+        dozor_tasks = []
         template4d = re.sub("#+", "{0:04d}", self.template)
-        for listOfImagesInBatch in listOfBatches:
+        for index, images_in_batch in enumerate(listOfBatches):
             listOfH5FilesInBatch = []
-            imageNo = listOfImagesInBatch[-1]
+            image_no = images_in_batch[-1]
             # Wait for last image
-            imagePath = self.directory / template4d.format(imageNo)
-            logger.debug("Waiting for path: {0}".format(imagePath))
+            image_path = self.directory / template4d.format(image_no)
+            logger.debug("Waiting for path: {0}".format(image_path))
             self.waitForImagePath(
-                imagePath=imagePath,
+                imagePath=image_path,
                 batchSize=self.batchSize,
                 isFastMesh=self.isFastMesh,
                 minImageSize=self.minImageSize,
                 waitFileTimeOut=self.waitFileTimeOut,
                 listofH5FilesInBatch=listOfH5FilesInBatch,
             )
-            logger.debug("Done waiting for path: {0}".format(imagePath))
+            logger.debug("Done waiting for path: {0}".format(image_path))
             if not self.isFailure():
                 # Determine start and end image no
-                batchStartNo = listOfImagesInBatch[0]
-                batchEndNo = listOfImagesInBatch[-1]
+                batchStartNo = images_in_batch[0]
+                batchEndNo = images_in_batch[-1]
                 dozorTemplate = self.template
                 # Run Control Dozor
                 inDataControlDozor = {
@@ -232,21 +232,21 @@ class ImageQualityIndicators(AbstractTask):
                     ),
                 )
                 controlDozor.start()
-                listDozorTask.append(
-                    (controlDozor, inDataControlDozor, list(listOfImagesInBatch))
+                dozor_tasks.append(
+                    (controlDozor, inDataControlDozor, list(images_in_batch))
                 )
                 # Check if we should run distl.signalStrength
                 if self.doDistlSignalStrength:
-                    for imageNo in listOfImagesInBatch:
-                        imagePath = self.directory / template4d.format(imageNo)
-                        inDataDistl = {"referenceImage": str(imagePath)}
+                    for image_no in images_in_batch:
+                        image_path = self.directory / template4d.format(image_no)
+                        inDataDistl = {"referenceImage": str(image_path)}
                         distlTask = DistlSignalStrengthTask(
                             inData=inDataDistl,
-                            workingDirectorySuffix=imageNo,
+                            workingDirectorySuffix=image_no,
                         )
                         distlTask.start()
-                        listDistlTask.append((imagePath, distlTask))
-        return listDozorTask, listDistlTask
+                        distl_tasks.append((image_path, distlTask))
+        return dozor_tasks, distl_tasks
 
     def synchronizeDislt(self, listDistlTask):
         listDistlResult = []
@@ -281,8 +281,12 @@ class ImageQualityIndicators(AbstractTask):
                     "No dozor results! Re-executing Dozor for"
                     + " images {0} to {1}".format(firstImage, lastImage)
                 )
-                time.sleep(5)
-                controlDozor = ControlDozor(inDataControlDozor)
+                controlDozor = ControlDozor(
+                    inDataControlDozor,
+                    workingDirectorySuffix = "{0:04d}_{1:04d}_redo".format(
+                        firstImage, lastImage
+                    ),
+                )
                 controlDozor.execute()
             listOutDataControlDozor = list(
                 controlDozor.outData["imageQualityIndicators"]

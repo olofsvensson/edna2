@@ -72,6 +72,13 @@ class DozorM2UnitTest(unittest.TestCase):
         self.assertEqual(dictMap["nx"], 18)
         self.assertEqual(dictMap["ny"], 4)
 
+    def test_unit_DozorM2_parseMap_id30a3(self):
+        mapPath = self.dataPath / 'id30a3_dozorm_001.map'
+        dictMap = DozorM2.parseMap(mapPath)
+        import pprint; pprint.pprint(dictMap)
+        self.assertEqual(dictMap["nx"], 75)
+        self.assertEqual(dictMap["ny"], 56)
+
     def test_unit_DozorM_makePlots(self):
         tmpDir = tempfile.mkdtemp(prefix="test_unit_DozorM_makePlots_")
         mapPath = self.dataPath / 'dozorm_001.map'
