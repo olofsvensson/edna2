@@ -77,6 +77,10 @@ class MosflmTasksExecTest(unittest.TestCase):
         UtilsConfig.getSite() == "Default", "Cannot run mosflm test with default config"
     )
     def test_execute_MosflmIndexingTask_fae_3(self):
+        UtilsTest.loadTestImage("ref-fae_3_0001.h5")
+        UtilsTest.loadTestImage("ref-fae_3_0002.h5")
+        UtilsTest.loadTestImage("ref-fae_3_0003.h5")
+        UtilsTest.loadTestImage("ref-fae_3_0004.h5")
         referenceDataPath = self.dataPath / "mosflm_indexing_fae_3.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         mosflmIndexingTask = MosflmIndexingTask(inData=inData)
