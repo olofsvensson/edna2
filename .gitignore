@@ -3,7 +3,7 @@
 .settings
 venv/
 *.pyc
-tests/testdata/
+testdata/
 .idea/
 docs/build
 src/edna2/lib/autocryst/ext/build
