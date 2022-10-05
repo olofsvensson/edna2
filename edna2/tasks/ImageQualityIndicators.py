@@ -45,7 +45,7 @@ from edna2.utils import UtilsLogging
 logger = UtilsLogging.getLogger()
 
 DEFAULT_MIN_IMAGE_SIZE = 1000000
-DEFAULT_WAIT_FILE_TIMEOUT = 120
+DEFAULT_WAIT_FILE_TIMEOUT = 300
 
 
 class ImageQualityIndicators(AbstractTask):
