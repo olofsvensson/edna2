@@ -49,11 +49,12 @@ class AimlessTask(AbstractTask):
         input_file = inData['input_file']
         output_file = inData['output_file']
         symoplib = UtilsConfig.get('CCP4', 'symoplib')
-        ccp4setup = UtilsConfig.get('CCP4', 'ccp4setup')
-        if ccp4setup is None:
-            commandLine = ""
-        else:
-            commandLine = ". " + ccp4setup + '\n'
+        # ccp4setup = UtilsConfig.get('CCP4', 'ccp4setup')
+        # if ccp4setup is None:
+        #     commandLine = ""
+        # else:
+        #     commandLine = ". " + ccp4setup + '\n'
+        commandLine = ""
         if symoplib is None:
             commandLine += 'aimless HKLIN {0} HKLOUT {1}'.format(
                 input_file, output_file)
