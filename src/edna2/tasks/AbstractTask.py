@@ -26,10 +26,10 @@ __date__ = "21/04/2019"
 import os
 import json
 import pathlib
+import billiard
 import traceback
 import jsonschema
 import subprocess
-import multiprocessing
 
 from edna2.utils import UtilsPath
 from edna2.utils import UtilsLogging
@@ -37,19 +37,19 @@ from edna2.utils import UtilsLogging
 logger = UtilsLogging.getLogger()
 
 
-class EDNA2Process(multiprocessing.Process):
+class EDNA2Process(billiard.Process):
     """
     See https://stackoverflow.com/a/33599967.
     """
 
     def __init__(self, *args, **kwargs):
-        multiprocessing.Process.__init__(self, *args, **kwargs)
-        self._pconn, self._cconn = multiprocessing.Pipe()
+        billiard.Process.__init__(self, *args, **kwargs)
+        self._pconn, self._cconn = billiard.Pipe()
         self._exception = None
 
     def run(self):
         try:
-            multiprocessing.Process.run(self)
+            billiard.Process.run(self)
             self._cconn.send(None)
         except BaseException as e:
             tb = traceback.format_exc()
@@ -68,7 +68,7 @@ class AbstractTask():  # noqa R0904
     """
 
     def __init__(self, inData, workingDirectorySuffix=None):
-        self._dictInOut = multiprocessing.Manager().dict()
+        self._dictInOut = billiard.Manager().dict()
         self._dictInOut["inData"] = json.dumps(inData, default=str)
         self._dictInOut["outData"] = json.dumps({})
         self._dictInOut["isFailure"] = False
