@@ -200,8 +200,11 @@ class AbstractTask():  # noqa R0904
         mem = 16000  # 16 Gb memory by default
         script = "#!/bin/bash\n"
         script += '#SBATCH --job-name="{0}"\n'.format(jobName)
-        if partition is not None:
-            script += "#SBATCH --partition={0}\n".format(partition)
+        if partition is None:
+            partition = "mx"
+        else:
+            partition = "mx,{0}".format(partition)
+        script += "#SBATCH --partition={0}\n".format(partition)
         script += "#SBATCH --exclusive\n"
         script += "#SBATCH --mem={0}\n".format(mem)
         script += "#SBATCH --nodes={0}\n".format(nodes)
