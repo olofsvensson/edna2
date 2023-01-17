@@ -38,7 +38,10 @@ class ControlIndexing_id30a1_3_ExecTest(unittest.TestCase):
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(True, "Data no longer available")
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run indexing test with default config",
+    )
     def test_execute_ControlIndexing_id30a1_3(self):
         referenceDataPath = self.dataPath / "id30a1_3.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
