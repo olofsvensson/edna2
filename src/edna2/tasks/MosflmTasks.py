@@ -52,7 +52,7 @@ class AbstractMosflmTask(AbstractTask):
         self.matrixFileName = None
 
     def run(self, inData):
-        commandLine = 'mosflm DNA dnaTables.xml'
+        commandLine = 'ipmosflm DNA dnaTables.xml'
         # Translate from generic data model to specific MOSFLM data model
         mosflmInData = self.generateMOSFLMInData(inData)
         # Save MOSFLM inData

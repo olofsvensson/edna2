@@ -58,7 +58,7 @@ class Raddose(AbstractTask):
 
     @staticmethod
     def createCommandLine(inData):
-        commandLine = "raddose__v20090103"
+        commandLine = "raddose"
         experimentalCondition = inData["experimentalCondition"]
         sample = inData["sample"]
         beam = experimentalCondition["beam"]
