@@ -37,8 +37,7 @@ class DozorMTest(unittest.TestCase):
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run dozor test with default config')
+    @unittest.skipIf(True, "Disabled, DozorM is replaced by DozorM2")
     def test_execute_DozorM(self):
         referenceDataPath = self.dataPath / 'inDataDozorM.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
