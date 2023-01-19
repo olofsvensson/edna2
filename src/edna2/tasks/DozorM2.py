@@ -194,14 +194,13 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         #                    SCAN 1
         #                    ======
         #
-        #    Total N.of crystals in Loop =  8
-        # Cryst Aperture Central  Coordinate  Int/Sig  N.of Images CRsize Score  Helic   Start     Finish     Int/Sig
-        # number size     image      X    Y          All  dX  dY   X   Y   sum           x     y     x     y   helical
-        # ------------------------------------------------------------------------------------------------------------> X
-        #     1   100.0      23   13.5    1.9  261.4   6   6   1   6   1   550.0   NO
-        #     2    30.0      50   14.0    2.9   92.8   3   3   1   3   1   151.7  YES    14     3    16     3   317.9
-        #     3    30.0      53   17.0    2.9   54.7   2   2   1   2   1    70.4   NO
-        #     4    30.0      26   11.0    1.9   31.0   1   1   1   1   1    66.2   NO
+        #    Total N.of crystals in Loop =  3
+        # Cryst Aperture Central  Coordinate  Int/Sig  N.of Images CRsize Score   Dmin Helic   Start     Finish     Int/Sig
+        # number size     image      X    Y          All  dX  dY   X   Y   sum                 x     y     x     y   helical
+        # ------------------------------------------------------------------------------------------------------------------> X
+        #     1   100.0     125   28.0    4.2  172.1  47  13   5  12   4  3846.2  3.06   NO
+        #     2    20.0     133   20.0    4.0   47.5   5   3   2   3   2   147.8  3.46  YES    18     4    20     4   198.0
+        #     3    20.0     198   31.0    6.0   37.5   2   2   1   2   1   112.2  3.68   NO
         with open(str(logPath)) as fd:
             listLogLines = fd.readlines()
         doParseLine = False
@@ -241,36 +240,40 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
                         "numberOfImagesTotal": int(listValues[6]),
                         "numberOfImagesTotalX": int(listValues[7]),
                         "numberOfImagesTotalY": int(listValues[8]),
-                        "score": float(listValues[9]),
-                        "helical": listValues[10] == 'YES'
+                        "crSizeX": int(listValues[9]),
+                        "crSizeY": int(listValues[10]),
+                        "score": float(listValues[11]),
+                        "dmin": float(listValues[12]),
+                        "helical": listValues[13] == 'YES'
                     }
                     if position["helical"]:
-                        position["helicalStartX"] = listValues[11]
-                        position["helicalStartY"] = listValues[12]
-                        position["helicalStopX"] = listValues[13]
-                        position["helicalStopY"] = listValues[14]
-                        position["helicalIoverSigma"] = listValues[15]
+                        position["helicalStartX"] = listValues[14]
+                        position["helicalStartY"] = listValues[15]
+                        position["helicalStopX"] = listValues[16]
+                        position["helicalStopY"] = listValues[17]
+                        position["helicalIoverSigma"] = listValues[18]
                     listPositions.append(position)
                 else:
                     coord = {
                         "number": int(listValues[0]),
                         "averageScore": float(listValues[1]),
-                        "sc1": int(listValues[2]),
-                        "sc2": int(listValues[3]),
-                        "size": float(listValues[4]),
-                        "scanX":  float(listValues[5]),
-                        "scanY1": float(listValues[6]),
-                        "scanY2": float(listValues[7]),
-                        "dx": float(listValues[8]),
-                        "dy1": float(listValues[9]),
-                        "dy2": float(listValues[10]),
-                        "x": float(listValues[11]),
-                        "y": float(listValues[12]),
-                        "z": float(listValues[13]),
-                        "alfa": float(listValues[14]),
-                        "sampx": float(listValues[15]),
-                        "sampy": float(listValues[16]),
-                        "phiy": float(listValues[17])
+                        "dmin": float(listValues[2]),
+                        "sc1": int(listValues[3]),
+                        "sc2": int(listValues[4]),
+                        "size": float(listValues[5]),
+                        "scanX":  float(listValues[6]),
+                        "scanY1": float(listValues[7]),
+                        "scanY2": float(listValues[8]),
+                        "dx": float(listValues[9]),
+                        "dy1": float(listValues[10]),
+                        "dy2": float(listValues[11]),
+                        "sampx": float(listValues[12]),
+                        "sampy": float(listValues[13]),
+                        "phiy": float(listValues[14]),
+                        # "alfa": float(listValues[15]),
+                        # "sampx": float(listValues[16]),
+                        # "sampy": float(listValues[17]),
+                        # "phiy": float(listValues[18])
                     }
                     listCoord.append(coord)
         if scan1 is None:
