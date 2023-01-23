@@ -24,6 +24,7 @@ __license__ = 'MIT'
 __date__ = '2021/07/20'
 
 import os
+import pprint
 import shutil
 import pathlib
 import tempfile
@@ -58,12 +59,22 @@ class DozorM2UnitTest(unittest.TestCase):
     def test_unit_parseDozorm2LogFile_1(self):
         logPath = self.dataPath / 'dozorm2.log'
         dictCoord = DozorM2.parseDozorm2LogFile(logPath)
-        # pprint.pprint(scan1)
-        # pprint.pprint(scan2)
-        # pprint.pprint(coord)
-        self.assertEqual(len(dictCoord["scan1"]), 8)
-        self.assertEqual(len(dictCoord["scan2"]), 8)
-        self.assertEqual(len(dictCoord["coord"]), 7)
+        pprint.pprint(dictCoord["scan1"])
+        # pprint.pprint(dictCoord["scan2"])
+        # pprint.pprint(dictCoord["coord"])
+        self.assertEqual(len(dictCoord["scan1"]), 3)
+        # self.assertEqual(len(dictCoord["scan2"]), 3)
+        # self.assertEqual(len(dictCoord["coord"]), 3)
+
+    def test_unit_parseDozorm2LogFile_2(self):
+        logPath = self.dataPath / 'dozorm2_two_mesh.log'
+        dictCoord = DozorM2.parseDozorm2LogFile(logPath)
+        pprint.pprint(dictCoord["scan1"])
+        pprint.pprint(dictCoord["scan2"])
+        pprint.pprint(dictCoord["coord"])
+        self.assertEqual(len(dictCoord["scan1"]), 9)
+        self.assertEqual(len(dictCoord["scan2"]), 9)
+        self.assertEqual(len(dictCoord["coord"]), 15)
 
     def test_unit_DozorM2_parseMap(self):
         mapPath = self.dataPath / 'dozorm_001.map'
