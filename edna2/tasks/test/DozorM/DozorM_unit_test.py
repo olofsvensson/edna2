@@ -41,6 +41,7 @@ class DozorMUnitTest(unittest.TestCase):
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
+    @unittest.skipIf(True, "Disabled, DozorM is replaced by DozorM2")
     def test_unit_DozorM_parseDozormLogFile_1(self):
         logPath = self.dataPath / 'dozorm_1D.log'
         listPositions = DozorM.parseDozormLogFile(logPath)
@@ -50,6 +51,7 @@ class DozorMUnitTest(unittest.TestCase):
         for position in newListPositions:
             self.assertEqual(position["xPosition"], 1.0)
 
+    @unittest.skipIf(True, "Disabled, DozorM is replaced by DozorM2")
     def test_unit_DozorM_parseDozorm_1D_1(self):
         logPath = self.dataPath / 'opid23eh1_mesh1_dozorm.log'
         listPositions = DozorM.parseDozormLogFile(logPath)
@@ -59,12 +61,14 @@ class DozorMUnitTest(unittest.TestCase):
         self.assertEqual(len(listPositions), 9)
         pprint.pprint(listPositions)
 
+    @unittest.skipIf(True, "Disabled, DozorM is replaced by DozorM2")
     def test_unit_DozorM_parseDozormLogFile_2(self):
         logPath = self.dataPath / 'id30a1_line1_dozorm.log'
         listPositions = DozorM.parseDozormLogFile(logPath)
         self.assertEqual(len(listPositions), 3)
         pprint.pprint(listPositions)
 
+    @unittest.skipIf(True, "Disabled, DozorM is replaced by DozorM2")
     def test_unit_DozorM_makePlots(self):
         tmpDir = tempfile.mkdtemp(prefix="test_unit_DozorM_makePlots_")
         mapPath = self.dataPath / 'opid23eh1_mesh1_dozorm.map'
@@ -75,6 +79,7 @@ class DozorMUnitTest(unittest.TestCase):
         self.assertTrue(os.path.exists(imagePath))
         shutil.rmtree(tmpDir)
 
+    @unittest.skipIf(True, "Disabled, DozorM is replaced by DozorM2")
     def test_unit_DozorM_makePlots_id30a2(self):
         tmpDir = tempfile.mkdtemp(prefix="test_unit_DozorM_makePlots_")
         mapPath = self.dataPath / 'opid30a2_line_dozorm.map'
@@ -83,6 +88,7 @@ class DozorMUnitTest(unittest.TestCase):
         shutil.rmtree(tmpDir)
 
 
+    @unittest.skipIf(True, "Disabled, DozorM is replaced by DozorM2")
     def test_unit_DozorM_parseMap(self):
         mapPath = self.dataPath / 'opid23eh1_mesh1_dozorm.map'
         dictMap = DozorM.parseMap(mapPath)
@@ -90,6 +96,7 @@ class DozorMUnitTest(unittest.TestCase):
         self.assertEqual(dictMap["nx"], 18)
         self.assertEqual(dictMap["ny"], 16)
 
+    @unittest.skipIf(True, "Disabled, DozorM is replaced by DozorM2")
     def test_unit_DozorM_parseMap_1(self):
         mapPath = self.dataPath / 'id30a1_mesh1_dozorm.map'
         dictMap = DozorM.parseMap(mapPath)
@@ -97,6 +104,7 @@ class DozorMUnitTest(unittest.TestCase):
         self.assertEqual(dictMap["nx"], 35)
         self.assertEqual(dictMap["ny"], 20)
 
+    @unittest.skipIf(True, "Disabled, DozorM is replaced by DozorM2")
     def test_updateMeshPositions(self):
         meshPositionPath = self.dataPath / 'opid23eh1_mesh1_meshPositions.json'
         with open(str(meshPositionPath)) as fd:
