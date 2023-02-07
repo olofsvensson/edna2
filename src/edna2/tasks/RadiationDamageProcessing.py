@@ -87,5 +87,5 @@ class RadiationDamageProcessing(AbstractTask):
         sub_wedge_assembly = SubWedgeAssembly(inData=inData)
         sub_wedge_assembly.execute()
         if sub_wedge_assembly.isSuccess():
-            list_sub_wedges = sub_wedge_assembly.outData
+            list_sub_wedges = sub_wedge_assembly.outData["subWedge"]
         return list_sub_wedges
