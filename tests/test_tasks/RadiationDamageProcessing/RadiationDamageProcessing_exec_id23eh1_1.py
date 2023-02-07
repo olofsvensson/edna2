@@ -43,6 +43,8 @@ class RadiationDamageProcessingExecTest(unittest.TestCase):
         "Cannot run indexing test with default config",
     )
     def test_execute_RadiationDamageProcessing_id23eh1_1(self):
+        old_site = UtilsConfig.getSite()
+        UtilsConfig.setSite('esrf_ispyb_valid')
         referenceDataPath = self.dataPath / "id23eh1_1.json"
         in_data = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         radiation_damage_processing = RadiationDamageProcessing(
@@ -50,3 +52,4 @@ class RadiationDamageProcessingExecTest(unittest.TestCase):
         )
         radiation_damage_processing.execute()
         self.assertTrue(radiation_damage_processing.isSuccess())
+        UtilsConfig.setSite(old_site)
