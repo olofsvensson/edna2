@@ -65,105 +65,116 @@ class XDSTask(AbstractTask):
         return outData
 
     @staticmethod
-    def generateImageLinks(inData, workingDirectory=None):
-        listImageLink = []
-        firstSubWedge = inData["subWedge"][0]
-        firstImagePath = firstSubWedge["image"][0]["path"]
-        prefix = UtilsImage.getPrefix(firstImagePath)
-        suffix = UtilsImage.getSuffix(firstImagePath)
+    def generateImageLinks(in_data, working_directory=None):
+        first_sub_wedge = in_data["subWedge"][0]
+        first_image_path = first_sub_wedge["image"][0]["path"]
+        prefix = UtilsImage.getPrefix(first_image_path)
+        suffix = UtilsImage.getSuffix(first_image_path)
         if suffix == "h5":
-            lowestXDSImageNumber = 1
-            highestXDSImageNumber = 1
+            lowest_xds_image_number = 1
+            highest_xds_image_number = 1
             h5MasterFilePath, h5DataFilePath, h5FileNumber = UtilsImage.getH5FilePath(
-                firstImagePath, hasOverlap=True, isFastMesh=False
+                first_image_path, hasOverlap=True, isFastMesh=False
             )
             h5MasterFile = os.path.basename((str(h5MasterFilePath)))
             h5DataFile = os.path.basename((str(h5DataFilePath)))
-            listImageLink = [
+            list_image_link = [
                 [str(h5MasterFilePath), h5MasterFile],
                 [str(h5DataFilePath), h5DataFile],
             ]
-            if workingDirectory is not None:
+            if working_directory is not None:
                 os.symlink(str(h5MasterFilePath), h5MasterFile)
                 os.symlink(str(h5DataFilePath), h5DataFile)
             template = h5MasterFile.replace("master", "??????")
-            lowestXDSImageNumber = None
-            highestXDSImageNumber = None
-            for subwedge in inData["subWedge"]:
+            lowest_xds_image_number = None
+            highest_xds_image_number = None
+            for subwedge in in_data["subWedge"]:
                 image_list = subwedge["image"]
                 for image_dict in image_list:
                     image_path = image_dict["path"]
                     image_number = UtilsImage.getImageNumber(image_path)
-                    if lowestXDSImageNumber is None or lowestXDSImageNumber > image_number:
-                        lowestXDSImageNumber = image_number
-                    if highestXDSImageNumber is None or highestXDSImageNumber < image_number:
-                        highestXDSImageNumber = image_number
+                    if lowest_xds_image_number is None or lowest_xds_image_number > image_number:
+                        lowest_xds_image_number = image_number
+                    if highest_xds_image_number is None or highest_xds_image_number < image_number:
+                        highest_xds_image_number = image_number
         else:
             template = "%s_xdslink_?????.%s" % (prefix, suffix)
-            xdsLowestImageNumberGlobal = 1
+            xds_lowest_image_number_global = 1
             # First we have to find the smallest goniostat rotation axis start:
-            oscillationStartMin = 0
-            # for subWedge in inData["subWedge"]:
-            #     goniostat = subWedge["experimentalCondition"]["goniostat"]
-            #     oscillationStart = goniostat["rotationAxisStart"]
-            #     if oscillationStartMin is None or \
-            #         oscillationStartMin > oscillationStart:
-            #         oscillationStartMin = oscillationStart
+            oscillation_start_min = 0
 
             # Loop through the list of sub wedges
-
-            for subWedge in inData["subWedge"]:
-                imageList = subWedge["image"]
-                xsDataGoniostat = subWedge["experimentalCondition"]["goniostat"]
-                oscillationStart = xsDataGoniostat["rotationAxisStart"]
-                oscillationRange = xsDataGoniostat["oscillationWidth"]
+            list_of_list = []
+            lowest_xds_image_number = None
+            highest_xds_image_number = None
+            list_spot_range = []
+            for sub_wedge in in_data["subWedge"]:
+                list_image_link = []
+                image_list = sub_wedge["image"]
+                goniostat = sub_wedge["experimentalCondition"]["goniostat"]
+                oscillation_start = goniostat["rotationAxisStart"]
+                oscillation_range = goniostat["oscillationWidth"]
 
                 # First find the lowest and highest image numbers
-                lowestImageNumber = None
-                for dictImage in imageList:
-                    imageNumber = dictImage["number"]
-                    if lowestImageNumber is None or imageNumber < lowestImageNumber:
-                        lowestImageNumber = imageNumber
+                lowest_image_number = None
+                for image in image_list:
+                    image_number = image["number"]
+                    if lowest_image_number is None or image_number < lowest_image_number:
+                        lowest_image_number = image_number
 
                 # Loop through the list of images
-                lowestXDSImageNumber = None
-                highestXDSImageNumber = None
-                for dictImage in imageList:
-                    imageNumber = dictImage["number"]
-                    imageOscillationStart = (
-                        oscillationStart
-                        + (imageNumber - lowestImageNumber) * oscillationRange
+                spot_range_min = None
+                spot_range_max = None
+                for image in image_list:
+                    image_number = image["number"]
+                    image_oscillation_start = (
+                        oscillation_start
+                        + (image_number - lowest_image_number) * oscillation_range
                     )
                     # if xdsLowestImageNumberGlobal is None:
                     #     xdsLowestImageNumberGlobal = 1 + int((imageOscillationStart - oscillationStartMin) / oscillationRange)
-                    xdsImageNumber = xdsLowestImageNumberGlobal + int(
-                        (imageOscillationStart - oscillationStartMin) / oscillationRange + 0.5
+                    xds_image_number = xds_lowest_image_number_global + int(
+                        (image_oscillation_start - oscillation_start_min) / oscillation_range + 0.5
                     )
                     print(
-                        xdsImageNumber,
-                        imageOscillationStart,
-                        oscillationStartMin,
-                        oscillationRange,
+                        xds_image_number,
+                        image_oscillation_start,
+                        oscillation_start_min,
+                        oscillation_range,
                     )
-                    sourcePath = dictImage["path"]
-                    target = "%s_xdslink_%05d.%s" % (prefix, xdsImageNumber, suffix)
-                    print([sourcePath, target])
-                    listImageLink.append([sourcePath, target])
-                    if workingDirectory is not None and not os.path.exists(target):
-                        os.symlink(sourcePath, target)
+                    source_path = image["path"]
+                    target = "%s_xdslink_%05d.%s" % (prefix, xds_image_number, suffix)
+                    print([source_path, target])
+                    list_image_link.append([source_path, target])
+                    if working_directory is not None and not os.path.exists(target):
+                        os.symlink(source_path, target)
                     if (
-                        lowestXDSImageNumber is None
-                        or lowestXDSImageNumber > xdsImageNumber
+                        lowest_xds_image_number is None
+                        or lowest_xds_image_number > xds_image_number
                     ):
-                        lowestXDSImageNumber = xdsImageNumber
+                        lowest_xds_image_number = xds_image_number
                     if (
-                        highestXDSImageNumber is None
-                        or highestXDSImageNumber < xdsImageNumber
+                        highest_xds_image_number is None
+                        or highest_xds_image_number < xds_image_number
                     ):
-                        highestXDSImageNumber = xdsImageNumber
+                        highest_xds_image_number = xds_image_number
+                    if spot_range_min is None or spot_range_min > xds_image_number:
+                        spot_range_min = xds_image_number
+                    if spot_range_max is None or spot_range_max < xds_image_number:
+                        spot_range_max = xds_image_number
+                list_spot_range.append([spot_range_min, spot_range_max])
+                list_of_list.append(list_image_link)
+        previous_exclude_data_range_max = 1
+        list_exclude_data_range = []
+        for spot_range_min, spot_range_max in list_spot_range:
+            if spot_range_min > previous_exclude_data_range_max + 1:
+                list_exclude_data_range.append([previous_exclude_data_range_max, spot_range_min - 1])
+            previous_exclude_data_range_max = spot_range_max + 1
         dictImageLinks = {
-            "imageLink": listImageLink,
-            "dataRange": [lowestXDSImageNumber, highestXDSImageNumber],
+            "imageLink": list_of_list,
+            "spotRange": list_spot_range,
+            "dataRange": [lowest_xds_image_number, highest_xds_image_number],
+            "excludeDataRange": list_exclude_data_range,
             "template": template,
         }
         return dictImageLinks
@@ -439,31 +450,51 @@ class XDSTask(AbstractTask):
 
 class XDSIndexing(XDSTask):
     def generateXDS_INP(self, inData):
-        firstSubWedge = inData["subWedge"][0]
-        listDozorSpotFile = inData["dozorSpotFile"]
-        experimentalCondition = firstSubWedge["experimentalCondition"]
-        goniostat = experimentalCondition["goniostat"]
+        first_sub_wedge = inData["subWedge"][0]
+        # listDozorSpotFile = inData["dozorSpotFile"]
+        experimental_condition = first_sub_wedge["experimentalCondition"]
+        goniostat = experimental_condition["goniostat"]
         oscRange = goniostat["oscillationWidth"]
-        XDSTask.writeSPOT_XDS(
-            listDozorSpotFile,
-            oscRange=oscRange,
-            workingDirectory=self.getWorkingDirectory(),
+        # XDSTask.writeSPOT_XDS(
+        #     listDozorSpotFile,
+        #     oscRange=oscRange,
+        #     workingDirectory=self.getWorkingDirectory(),
+        # )
+        list_xds_inp = XDSTask.generateXDS_INP(inData)
+        list_xds_inp.insert(0, "JOB= XYCORR INIT COLSPOT IDXREF")
+        dict_image_links = self.generateImageLinks(inData, self.getWorkingDirectory())
+        list_xds_inp.append(
+            "NAME_TEMPLATE_OF_DATA_FRAMES= {0}".format(dict_image_links["template"])
         )
-        listXDS_INP = XDSTask.generateXDS_INP(inData)
-        listXDS_INP.insert(0, "JOB= IDXREF")
-        listXDS_INP.append("DATA_RANGE= 1 360")
-        return listXDS_INP
+        list_spot_range = dict_image_links["spotRange"]
+        for spot_range_min, spot_range_max in list_spot_range:
+            list_xds_inp.append(
+                "SPOT_RANGE= {0} {1}".format(spot_range_min, spot_range_max)
+            )
+        list_xds_inp.append(
+            "DATA_RANGE= {0} {1}".format(
+                dict_image_links["dataRange"][0], dict_image_links["dataRange"][1]
+            )
+        )
+        list_spot_range = dict_image_links["excludeDataRange"]
+        for exclude_range_min, exclude_range_max in list_spot_range:
+            list_xds_inp.append(
+                "EXCLUDE_DATA_RANGE= {0} {1}".format(exclude_range_min, exclude_range_max)
+            )
+        return list_xds_inp
 
     @staticmethod
     def parseXDSOutput(workingDirectory):
-        idxrefPath = workingDirectory / "IDXREF.LP"
-        xparmPath = workingDirectory / "XPARM.XDS"
-        outData = {
-            "idxref": XDSIndexing.readIdxrefLp(idxrefPath),
-            "xparm": XDSIndexing.parseXparm(xparmPath),
-            "xparmXdsPath": xparmPath,
+        idxref_path = workingDirectory / "IDXREF.LP"
+        xparm_path = workingDirectory / "XPARM.XDS"
+        spot_path = workingDirectory / "SPOT.XDS"
+        out_data = {
+            "idxref": XDSIndexing.readIdxrefLp(idxref_path),
+            "xparm": XDSIndexing.parseXparm(xparm_path),
+            "xparmXdsPath": xparm_path,
+            "spotXdsPath": spot_path
         }
-        return outData
+        return out_data
 
     @staticmethod
     def parseParameters(indexLine, listLines, resultXDSIndexing):
