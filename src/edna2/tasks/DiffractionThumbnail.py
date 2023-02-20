@@ -318,8 +318,9 @@ class CreateThumbnail(AbstractTask):
                     time.sleep(5)
             if fabioImage is None:
                 raise RuntimeError("Cannot open file {0} with fabio".format(h5MasterFilePath))
-            logger.debug("No frames: {0}".format(fabioImage.nframes))
-            if imageNumber <= fabioImage.nframes:
+            logger.debug(f"h5MasterFilePath: {h5MasterFilePath}")
+            logger.debug(f"imageNumber: {imageNumber}, no frames: {fabioImage.nframes}")
+            if imageNumber != 1 and imageNumber <= fabioImage.nframes:
                 numpyImage = fabioImage.getframe(imageNumber-1).data
             else:
                 numpyImage = fabioImage.data
