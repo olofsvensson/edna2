@@ -28,9 +28,9 @@ import pathlib
 import jsonschema
 from datetime import datetime
 
-import edna2.lib.autocryst.src.saveDozor as sd
-from edna2.lib.autocryst.src.Image import ImageHandler as Im
-from edna2.lib.autocryst import run_crystfel
+import autocryst.saveDozor as sd
+from autocryst.Image import ImageHandler as Im
+from autocryst import run_crystfel
 
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.utils import UtilsLogging
