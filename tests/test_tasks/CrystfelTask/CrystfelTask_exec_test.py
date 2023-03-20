@@ -30,11 +30,7 @@ from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 
-try:
-    from edna2.tasks.CrystfelTasks import ExeCrystFEL
-    crystFelImportFailed = False
-except ImportError:
-    crystFelImportFailed = True
+from edna2.tasks.CrystfelTasks import ExeCrystFEL
 
 
 logger = UtilsLogging.getLogger()
@@ -45,11 +41,10 @@ class CrystfelTaskExecTest(unittest.TestCase):
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(crystFelImportFailed, 'Import of ExeCrystFEL failed.')
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ImageQualityIndicatorsExecTest ' +
                      'test with default config')
-    def tes_execute_listOfImages(self):
+    def test_execute_listOfImages(self):
         referenceDataPath = self.dataPath / 'id23eh2_4500images.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         task = ExeCrystFEL(inData=inData)
