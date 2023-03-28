@@ -55,6 +55,8 @@ class ExeCrystFEL(AbstractTask):
                 },
                 "doCBFtoH5": {"type": "boolean"},
                 "doSubmit": {"type": "boolean"},
+                "detectorType": {"type": "string"},
+                "batchSize": {"type": "integer"},
                 "cbfFileInfo": {
                     "directory": {"type": "string"},
                     "template": {"type": "string"},
@@ -128,11 +130,10 @@ class ExeCrystFEL(AbstractTask):
                 logger.error('CrystFEL Task failed due to failure of dozor packing into cxi')
         else:
             os.chdir(self.getWorkingDirectory())
-            streampath, crysttask = self.exeIndexing(inData)
-            if os.path.exists(streampath):
-                # outData = crysttask.report_stats(streampath)
-                outData['streamfile'] = streampath
-                # outData['autoCryst'] = crysttask
+            streampath, results = self.exeIndexing(inData)
+            if streampath.exists():
+                outData = results
+                outData['streamfile'] = str(streampath)
 
             else:
                 self.isFailure()
@@ -145,14 +146,29 @@ class ExeCrystFEL(AbstractTask):
 
         if 'listH5FilePath' in inData.keys():
             tmp = UtilsImage.getPrefix(inData['listH5FilePath'][0])
-            FirstImage = tmp.replace('data', 'master.h5')
-            Image = Im(FirstImage)
-            in_for_crystfel['detectorType'] = Image.imobject.headers['detector_name'][0] + \
-                                              Image.imobject.headers['detector_name'][1]
-            in_for_crystfel['prefix'] = tmp.strip('data')
+            in_for_crystfel['prefix'] = tmp
+            in_for_crystfel['detectorType'] = inData.get("detectorType", "jungfrau")
+            if inData.get('detectorType', 'jungfrau') == 'eiger':
+                in_for_crystfel['prefix'] = tmp.strip('data')
+                in_for_crystfel['maxchunksize'] = 10
+                FirstImage = tmp.replace('data', 'master.h5')
+                Image = Im(FirstImage)
+                in_for_crystfel['detectorType'] = Image.imobject.headers['detector_name'][0] + \
+                                                  Image.imobject.headers['detector_name'][1]
+            else:
+                in_for_crystfel["geometry_file"] = inData["geometry_file"]
+                in_for_crystfel["threshold"] = inData.get("threshold", "1000")
+                in_for_crystfel["peak_radius"] = inData.get("peak_radius", "4,5,10")
+                in_for_crystfel["int_radius"] = inData.get("int_radius", "4,5,10")
+                in_for_crystfel["min_snr"] = inData.get("min_snr", "5.0")
+                in_for_crystfel["min_peaks"] = inData.get("min_peaks", "20")
+                in_for_crystfel["max_res"] = inData.get("max_res", "1200")
+                in_for_crystfel["partition"] = inData.get("partition", "mx-low")
+                in_for_crystfel["unit_cell_file"] = inData.get("unit_cell_file", " ")
+
             in_for_crystfel['suffix'] = UtilsImage.getSuffix(inData['listH5FilePath'][0])
             in_for_crystfel['image_directory'] = str(pathlib.Path(inData['listH5FilePath'][0]).parent)
-            in_for_crystfel['maxchunksize'] = 10
+            in_for_crystfel['maxchunksize'] = inData.get('batchSize', 300)
 
         elif 'cbfFileInfo' in inData.keys():
             in_for_crystfel['maxchunksize'] = inData['cbfFileInfo'].get('batchSize', 10)
@@ -185,8 +201,20 @@ class ExeCrystFEL(AbstractTask):
 
         crysttask = run_crystfel.AutoCrystFEL(in_for_crystfel)
         outstream = None
+        results = dict()
         try:
             jsonschema.validate(instance=crysttask.jshandle, schema=crysttask.getInDataSchema())
+            crysttask.run_indexing()
+            if crysttask.is_executable('sbatch'):
+                crysttask.combine_streams()
+            else:
+                pass
+
+            outstream = crysttask.getOutputDirectory() / 'alltogether.stream'
+            results['QualityMetrics'] = crysttask.report_stats(str(outstream))
+            print(results)
+            crysttask.writeOutputData(results)
+            '''
             crysttask.datafinder()
             crysttask.makeOutputDirectory()
             kk = {}
@@ -195,7 +223,7 @@ class ExeCrystFEL(AbstractTask):
                 geomfile = crysttask.make_geometry_file(**kk)
             else:
                 geomfile = crysttask.make_geometry_file(**kk)
-
+            print(geomfile)
             crysttask.make_list_events(str(geomfile))
             infile = str(crysttask.getOutputDirectory() / 'input.lst')
             outname = datetime.now().strftime('%H-%M-%S.stream')
@@ -208,12 +236,12 @@ class ExeCrystFEL(AbstractTask):
             ofh.close()
             crystfel_cmd = crysttask.indexamajig_cmd(infile, outstream, geomfile)
             self.runCommandLine(crystfel_cmd, doSubmit=inData.get('doSubmit', True))
-
+            '''
         except Exception as err:
             self.setFailure()
             logger.error(err)
 
-        return outstream, crysttask
+        return outstream, results
 
 
 if __name__ == '__main__':
