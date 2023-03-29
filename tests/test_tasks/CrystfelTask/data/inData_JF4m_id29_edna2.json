@@ -1,0 +1,15 @@
+{
+    "listH5FilePath": [
+        "/data/scisoft/pxsoft/data/CrystFEL/id29_JF4M/lysozyme_PC/lysozyme_PC-lysozyme_PC_dense_0_00000.h5"
+    ],
+    "detectorType": "jungfrau",
+    "geometry_file": "/home/esrf/opid29/progs/xml_server_npc/jf4m_mx2427_20230218.geom",
+    "threshold": "1000",
+    "peak_radius": "4,5,10",
+    "int_radius": "4,5,10",
+    "min_snr": "5.0",
+    "min_peaks": "20",
+    "max_res": "1600",
+    "maxchunksize": 300,
+    "partition": "mx-low"
+} 
