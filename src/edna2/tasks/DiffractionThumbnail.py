@@ -23,7 +23,7 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "12/04/2021"
 
-
+import math
 import os
 import fabio
 import numpy
@@ -363,11 +363,11 @@ class CreateThumbnail(AbstractTask):
             yy, xx = numpy.mgrid[:sizeY, :sizeX]
             circle = (xx - centreX) ** 2 + (yy - centreY) ** 2
             for resolution in [1.0, 1.1, 1.2, 1.5, 2.0, 3.0, 4.0]:
-                import math
-                theta = math.asin(wavelength/(2*resolution))
-                radius = math.tan(2*theta)* distance / pixelSizeX
-                listResolution.append((resolution, radius / averageSize ))
-                numpyImageInt = numpy.where(numpy.logical_and(circle < (radius+delta)**2, circle > (radius-delta)**2), 254, numpyImageInt)
+                if (wavelength/(2*resolution)) < 1.0:
+                    theta = math.asin(wavelength/(2*resolution))
+                    radius = math.tan(2*theta)* distance / pixelSizeX
+                    listResolution.append((resolution, radius / averageSize ))
+                    numpyImageInt = numpy.where(numpy.logical_and(circle < (radius+delta)**2, circle > (radius-delta)**2), 254, numpyImageInt)
         pilOutputImage = ImageOps.invert(Image.fromarray(numpyImageInt, 'L'))
         if height is not None and width is not None:
             pilOutputImage = pilOutputImage.resize((width, height), Image.ANTIALIAS)
