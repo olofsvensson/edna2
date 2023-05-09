@@ -36,23 +36,19 @@ from edna2.tasks.AbstractTask import AbstractTask
 from edna2.utils import UtilsLogging
 from edna2.utils import UtilsImage
 
-__author__ = ['S. Basu']
-__license__ = 'MIT'
-__date__ = '05/07/2019'
+__authors__ = ["S. Basu", "Olof Svensson"]
+__license__ = "MIT"
+__date__ = "05/07/2019"
 
 logger = UtilsLogging.getLogger()
 
 
 class ExeCrystFEL(AbstractTask):
-
     def getInDataSchema(self):
         return {
             "type": "object",
             "properties": {
-                "listH5FilePath": {
-                    "type": "array",
-                    "items": {"type": "string"}
-                },
+                "listH5FilePath": {"type": "array", "items": {"type": "string"}},
                 "doCBFtoH5": {"type": "boolean"},
                 "doSubmit": {"type": "boolean"},
                 "detectorType": {"type": "string"},
@@ -63,29 +59,21 @@ class ExeCrystFEL(AbstractTask):
                     "startNo": {"type": "integer"},
                     "endNo": {"type": "integer"},
                     "batchSize": {"type": "integer"},
-                    "listofImages": {"type": "array",
-                                     "items": {
-                                         "type": "string"
-                                          }
-                                     },
+                    "listofImages": {"type": "array", "items": {"type": "string"}},
                 },
                 "imageQualityIndicators": {
                     "type": "array",
-                    "items": {
-                        "$ref": self.getSchemaUrl("imageQualityIndicators.json")
-                    }
-                }
+                    "items": {"$ref": self.getSchemaUrl("imageQualityIndicators.json")},
+                },
             },
-            "oneOf": [
-                {"required": ["listH5FilePath"]},
-                {"required": ['cbfFileInfo']}
-            ]
+            "oneOf": [{"required": ["listH5FilePath"]}, {"required": ["cbfFileInfo"]}],
         }
 
     def getOutDataSchema(self):
         return {
             "type": "object",
             "properties": {
+                "data_directory": {"type": "string"},
                 "streamfile": {"type": "string"},
                 "centering": {"type": "string"},
                 "num_indexed_frames": {"type": "integer"},
@@ -98,23 +86,30 @@ class ExeCrystFEL(AbstractTask):
                 "point_group": {"type": "string"},
                 "space_group": {"type": "string"},
                 "resolution_limit": {"type": "number"},
-                "average_num_spots": {"type": "number"}
-            }
+                "average_num_spots": {"type": "number"},
+            },
         }
 
     def run(self, inData):
-        doCBFtoH5 = inData.get('doCBFtoH5', False)
+        # Determine data diretcory
+        if "listH5FilePath" in inData:
+            data_directory = os.path.dirname(inData["listH5FilePath"][0])
+        elif "cbfFileInfo" in inData:
+            data_directory = inData["cbfFileInfo"]["directory"]
+        else:
+            raise RuntimeError("No data source found inData")
+        doCBFtoH5 = inData.get("doCBFtoH5", False)
 
         outData = {}
         if doCBFtoH5:
             dd = sd.Dozor(inData)
             dd.extract_olof_json(inData)
 
-            headerfile = self.getWorkingDirectory() / 'headers.json'
+            headerfile = self.getWorkingDirectory() / "headers.json"
             if dd.is_success():
                 os.chdir(str(self.getWorkingDirectory()))
                 if not headerfile.exists():
-                    with open(str(headerfile), 'w') as jhead:
+                    with open(str(headerfile), "w") as jhead:
                         json.dump(dd.cbfheader, jhead, sort_keys=True, indent=2)
                 else:
                     pass
@@ -127,13 +122,16 @@ class ExeCrystFEL(AbstractTask):
                 outData = self.exeIndexing(inData)
             else:
                 self.setFailure()
-                logger.error('CrystFEL Task failed due to failure of dozor packing into cxi')
+                logger.error(
+                    "CrystFEL Task failed due to failure of dozor packing into cxi"
+                )
         else:
             os.chdir(self.getWorkingDirectory())
             streampath, results = self.exeIndexing(inData)
             if streampath.exists():
                 outData = results
-                outData['streamfile'] = str(streampath)
+                outData["streamfile"] = str(streampath)
+                outData["data_directory"] = data_directory
 
             else:
                 self.isFailure()
@@ -141,20 +139,22 @@ class ExeCrystFEL(AbstractTask):
         return outData
 
     def exeIndexing(self, inData):
-        doCBFtoH5 = inData.get('doCBFtoH5', False)
+        doCBFtoH5 = inData.get("doCBFtoH5", False)
         in_for_crystfel = dict()
 
-        if 'listH5FilePath' in inData.keys():
-            tmp = UtilsImage.getPrefix(inData['listH5FilePath'][0])
-            in_for_crystfel['prefix'] = tmp
-            in_for_crystfel['detectorType'] = inData.get("detectorType", "jungfrau")
-            if inData.get('detectorType', 'jungfrau') == 'eiger':
-                in_for_crystfel['prefix'] = tmp.strip('data')
-                in_for_crystfel['maxchunksize'] = 10
-                FirstImage = tmp.replace('data', 'master.h5')
+        if "listH5FilePath" in inData.keys():
+            tmp = UtilsImage.getPrefix(inData["listH5FilePath"][0])
+            in_for_crystfel["prefix"] = tmp
+            in_for_crystfel["detectorType"] = inData.get("detectorType", "jungfrau")
+            if inData.get("detectorType", "jungfrau") == "eiger":
+                in_for_crystfel["prefix"] = tmp.strip("data")
+                in_for_crystfel["maxchunksize"] = 10
+                FirstImage = tmp.replace("data", "master.h5")
                 Image = Im(FirstImage)
-                in_for_crystfel['detectorType'] = Image.imobject.headers['detector_name'][0] + \
-                                                  Image.imobject.headers['detector_name'][1]
+                in_for_crystfel["detectorType"] = (
+                    Image.imobject.headers["detector_name"][0]
+                    + Image.imobject.headers["detector_name"][1]
+                )
             else:
                 in_for_crystfel["geometry_file"] = inData["geometry_file"]
                 in_for_crystfel["threshold"] = inData.get("threshold", "1000")
@@ -166,52 +166,71 @@ class ExeCrystFEL(AbstractTask):
                 in_for_crystfel["partition"] = inData.get("partition", "mx-low")
                 in_for_crystfel["unit_cell_file"] = inData.get("unit_cell_file", " ")
 
-            in_for_crystfel['suffix'] = UtilsImage.getSuffix(inData['listH5FilePath'][0])
-            in_for_crystfel['image_directory'] = str(pathlib.Path(inData['listH5FilePath'][0]).parent)
-            in_for_crystfel['maxchunksize'] = inData.get('batchSize', 300)
+            in_for_crystfel["suffix"] = UtilsImage.getSuffix(
+                inData["listH5FilePath"][0]
+            )
+            in_for_crystfel["image_directory"] = str(
+                pathlib.Path(inData["listH5FilePath"][0]).parent
+            )
+            in_for_crystfel["maxchunksize"] = inData.get("batchSize", 300)
 
-        elif 'cbfFileInfo' in inData.keys():
-            in_for_crystfel['maxchunksize'] = inData['cbfFileInfo'].get('batchSize', 10)
-            in_for_crystfel['listofImages'] = inData['cbfFileInfo'].get('listofImages', [])
-            in_for_crystfel['image_directory'] = inData['cbfFileInfo']['directory']
-            in_for_crystfel['prefix'] = inData['cbfFileInfo']['template'].strip('####.cbf')
-            in_for_crystfel['suffix'] = UtilsImage.getSuffix(inData['cbfFileInfo']['template'])
-            if len(in_for_crystfel['listofImages']) == 0:
-                in_for_crystfel['ImageRange'] = (inData['cbfFileInfo']['startNo'], inData['cbfFileInfo']['endNo'])
-                FirstImage = os.path.join(inData['cbfFileInfo']['directory'], inData['cbfFileInfo']['template'].
-                                          replace('####', '0001'))
+        elif "cbfFileInfo" in inData.keys():
+            in_for_crystfel["maxchunksize"] = inData["cbfFileInfo"].get("batchSize", 10)
+            in_for_crystfel["listofImages"] = inData["cbfFileInfo"].get(
+                "listofImages", []
+            )
+            in_for_crystfel["image_directory"] = inData["cbfFileInfo"]["directory"]
+            in_for_crystfel["prefix"] = inData["cbfFileInfo"]["template"].strip(
+                "####.cbf"
+            )
+            in_for_crystfel["suffix"] = UtilsImage.getSuffix(
+                inData["cbfFileInfo"]["template"]
+            )
+            if len(in_for_crystfel["listofImages"]) == 0:
+                in_for_crystfel["ImageRange"] = (
+                    inData["cbfFileInfo"]["startNo"],
+                    inData["cbfFileInfo"]["endNo"],
+                )
+                FirstImage = os.path.join(
+                    inData["cbfFileInfo"]["directory"],
+                    inData["cbfFileInfo"]["template"].replace("####", "0001"),
+                )
             else:
-                FirstImage = in_for_crystfel['listofImages'][0]
+                FirstImage = in_for_crystfel["listofImages"][0]
 
             Image = Im(FirstImage)
-            in_for_crystfel['detectorType'] = Image.imobject.headers['detector_name'][0] + \
-                                              Image.imobject.headers['detector_name'][1]
+            in_for_crystfel["detectorType"] = (
+                Image.imobject.headers["detector_name"][0]
+                + Image.imobject.headers["detector_name"][1]
+            )
         else:
             logger.error("input json must have either listH5FilePath or cbfFileInfo")
 
         if doCBFtoH5:
-            cxi_all = list(self.getWorkingDirectory().glob('dozor*cxi'))
+            cxi_all = list(self.getWorkingDirectory().glob("dozor*cxi"))
             current = len(cxi_all) - 1
-            in_for_crystfel['image_directory'] = self.getWorkingDirectory()
-            in_for_crystfel['prefix'] = 'dozor_%d.' % current
-            in_for_crystfel['suffix'] = 'cxi'
-            in_for_crystfel['peak_search'] = 'cxi'
-            in_for_crystfel['peak_info'] = '/data/peakinfo'
-            in_for_crystfel['maxchunksize'] = 10
+            in_for_crystfel["image_directory"] = self.getWorkingDirectory()
+            in_for_crystfel["prefix"] = "dozor_%d." % current
+            in_for_crystfel["suffix"] = "cxi"
+            in_for_crystfel["peak_search"] = "cxi"
+            in_for_crystfel["peak_info"] = "/data/peakinfo"
+            in_for_crystfel["maxchunksize"] = 10
 
         crysttask = run_crystfel.AutoCrystFEL(in_for_crystfel)
         outstream = None
         results = dict()
         try:
-            jsonschema.validate(instance=crysttask.jshandle, schema=crysttask.getInDataSchema())
+            jsonschema.validate(
+                instance=crysttask.jshandle, schema=crysttask.getInDataSchema()
+            )
             crysttask.run_indexing()
-            if crysttask.is_executable('sbatch'):
+            if crysttask.is_executable("sbatch"):
                 crysttask.combine_streams()
             else:
                 pass
 
-            outstream = crysttask.getOutputDirectory() / 'alltogether.stream'
-            results['QualityMetrics'] = crysttask.report_stats(str(outstream))
+            outstream = crysttask.getOutputDirectory() / "alltogether.stream"
+            results["QualityMetrics"] = crysttask.report_stats(str(outstream))
             print(results)
             crysttask.writeOutputData(results)
             '''
@@ -244,13 +263,60 @@ class ExeCrystFEL(AbstractTask):
         return outstream, results
 
 
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s %(name)-12s %(levelname)-8s%(message)s',
-                        datefmt='%y-%m-%d %H:%M',
-                        filename='autocryst.log',
-                        filemode='a+')
-    fh = open(sys.argv[1], 'r')
+class CrystFEL2ISPyB(AbstractTask):
+    def getInDataSchema(self):
+        return {
+            "type": "object",
+            "properties": {
+                "streamfile": {"type": "string"},
+                "centering": {"type": "string"},
+                "num_indexed_frames": {"type": "integer"},
+                "lattice": {"type": "string"},
+                "unique_axis": {"type": "string"},
+                "unit_cell": {
+                    "type": "array",
+                    "items": {"type": "number"},
+                },
+                "point_group": {"type": "string"},
+                "space_group": {"type": "string"},
+                "resolution_limit": {"type": "number"},
+                "average_num_spots": {"type": "number"},
+            },
+        }
+
+    def getOutDataSchema(self):
+        return {"type": "object", "properties": {"status": {"type": "string"}}}
+
+    def run(self, inData):
+        qm = inData["QualityMetrics"]
+        # Create ssx_cells.json
+        ssx_cells = {"unit_cells": qm["unit_cell_array"]}
+        working_dir = self.getWorkingDirectory()
+        ssx_cells_path = working_dir / "ssx_cells.json"
+        with open(ssx_cells_path, "w") as f:
+            f.write(json.dumps(ssx_cells, indent=4))
+        # Create ssx_stats.json
+        ssx_stats = {
+            "nbHits": qm["number_hits"],
+            "nbIndexed": qm["num_indexed_frames"],
+            "laticeType": qm["lattice"],
+            "estimatedResolution": qm["resolution_limit"],
+        }
+        ssx_stats_path = working_dir / "ssx_stats.json"
+        with open(ssx_stats_path, "w") as f:
+            f.write(json.dumps(ssx_stats, indent=4))
+        # Create pyarch directory
+
+
+if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s %(name)-12s %(levelname)-8s%(message)s",
+        datefmt="%y-%m-%d %H:%M",
+        filename="autocryst.log",
+        filemode="a+",
+    )
+    fh = open(sys.argv[1], "r")
     inData = json.load(fh)
     fh.close()
     crystfel = ExeCrystFEL(inData)

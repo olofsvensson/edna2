@@ -22,7 +22,6 @@
 __authors__ = ["O. Svensson", "S.Basu"]
 __license__ = "MIT"
 __date__ = "12/07/2019"
-__commandtoRun__ = "python -m unittest edna2.tasks.test.CrystfelTask.CrystfelTask_exec_test"
 
 import unittest
 
@@ -30,13 +29,13 @@ from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 
-from edna2.tasks.CrystfelTasks import ExeCrystFEL
+from edna2.tasks.CrystfelTasks import CrystFEL2ISPyB
 
 
 logger = UtilsLogging.getLogger()
 
 
-class CrystfelTaskExecTest(unittest.TestCase):
+class CrystFEL2ISPyBTest(unittest.TestCase):
 
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
@@ -44,10 +43,10 @@ class CrystfelTaskExecTest(unittest.TestCase):
     @unittest.skipIf(UtilsConfig.getSite() == 'Default',
                      'Cannot run ImageQualityIndicatorsExecTest ' +
                      'test with default config')
-    def test_execute_listOfImages(self):
-        referenceDataPath = self.dataPath / 'inData_JF4m_id29_edna2.json'
+    def test_execute(self):
+        referenceDataPath = self.dataPath / 'outDataExeCrystFEL.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        task = ExeCrystFEL(inData=inData)
+        task = CrystFEL2ISPyB(inData=inData)
         task.execute()
         self.assertFalse(task.isFailure())
         outData = task.outData
