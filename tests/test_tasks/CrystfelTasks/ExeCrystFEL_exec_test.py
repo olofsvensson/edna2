@@ -24,6 +24,7 @@ __license__ = "MIT"
 __date__ = "12/07/2019"
 __commandtoRun__ = "python -m unittest edna2.tasks.test.CrystfelTask.CrystfelTask_exec_test"
 
+import socket
 import unittest
 
 from edna2.utils import UtilsTest
@@ -47,6 +48,9 @@ class ExeCrystFELExecTest(unittest.TestCase):
     def test_execute_listOfImages(self):
         referenceDataPath = self.dataPath / 'inData_JF4m_id29_edna2.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+        # Workaround for tests on linsvensson - SLURM submission doesn't work
+        if socket.gethostname() == "linsvensson":
+            inData["doSubmit"] = False
         task = ExeCrystFEL(inData=inData)
         task.execute()
         self.assertFalse(task.isFailure())

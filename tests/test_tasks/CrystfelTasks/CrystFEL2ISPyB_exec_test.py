@@ -36,19 +36,19 @@ logger = UtilsLogging.getLogger()
 
 
 class CrystFEL2ISPyBTest(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run ImageQualityIndicatorsExecTest ' +
-                     'test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run ImageQualityIndicatorsExecTest " + "test with default config",
+    )
     def test_execute(self):
-        referenceDataPath = self.dataPath / 'outDataExeCrystFEL.json'
+        referenceDataPath = self.dataPath / "outDataExeCrystFEL.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         task = CrystFEL2ISPyB(inData=inData)
         task.execute()
         self.assertFalse(task.isFailure())
         outData = task.outData
-        self.assertTrue('streamfile' in outData)
+        self.assertTrue("status" in outData)
         return

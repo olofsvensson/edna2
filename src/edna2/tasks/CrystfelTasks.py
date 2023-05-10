@@ -216,6 +216,8 @@ class ExeCrystFEL(AbstractTask):
             in_for_crystfel["peak_info"] = "/data/peakinfo"
             in_for_crystfel["maxchunksize"] = 10
 
+        in_for_crystfel["doSubmit"] = inData.get("doSubmit", True)
+
         crysttask = run_crystfel.AutoCrystFEL(in_for_crystfel)
         outstream = None
         results = dict()
@@ -306,6 +308,11 @@ class CrystFEL2ISPyB(AbstractTask):
         with open(ssx_stats_path, "w") as f:
             f.write(json.dumps(ssx_stats, indent=4))
         # Create pyarch directory
+
+        out_data = {
+            "status": "ok"
+        }
+        return out_data
 
 
 if __name__ == "__main__":

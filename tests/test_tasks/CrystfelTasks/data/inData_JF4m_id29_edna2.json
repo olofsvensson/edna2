@@ -11,6 +11,5 @@
     "min_peaks": "20",
     "max_res": "1600",
     "maxchunksize": 300,
-    "partition": "mx-low",
-    "doSubmit": false
+    "partition": "mx-low"
 } 
