@@ -23,12 +23,14 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "05/09/2019"
 
+import datetime
 import os
 import json
 import time
 import requests
 
 from suds.client import Client
+from suds.sax.date import DateTime
 from suds.transport.https import HttpAuthenticated
 
 from edna2.utils import UtilsImage
@@ -99,6 +101,23 @@ def getCollectionWebService():
 def getToolsForCollectionWebService():
     return os.path.join(getWdslRoot(), "ispybWS", "ToolsForCollectionWebService?wsdl")
 
+
+def getToolsForAutoprocessingWebService():
+    return os.path.join(getWdslRoot(), "ispybWS", "ToolsForAutoprocessingWebService?wsdl")
+
+
+def getAutoprocessingWebService():
+    logger = UtilsLogging.getLogger()
+    collectionWdsl = getToolsForAutoprocessingWebService()
+    transport = getTransport()
+    if transport is None:
+        logger.error(
+            "No transport defined, ISPyB web service client cannot be instantiated."
+        )
+        autoprocessingWSClient = None
+    else:
+        autoprocessingWSClient = Client(collectionWdsl, transport=transport, cache=None)
+    return autoprocessingWSClient
 
 def findDataCollection(dataCollectionId, client=None):
     e = None
@@ -189,3 +208,108 @@ def setImageQualityIndicatorsPlot(dataCollectionId, plotFile, csvFile):
         dataCollectionId, plotFile, csvFile
     )
     return returnDataCollectionId
+
+
+def storeOrUpdateAutoProcProgram(
+    programs,
+    commandline,
+    status,
+    message=None,
+    start_time=None,
+    end_time=None,
+    environment=None,
+    record_time_stamp=None,
+    autoProcProgramId=None,
+):
+    if start_time is None:
+        start_time = DateTime(datetime.datetime.now())
+    if end_time is None:
+        end_time = DateTime(datetime.datetime.now())
+    if record_time_stamp is None:
+        record_time_stamp = DateTime(datetime.datetime.now())
+    client = getAutoprocessingWebService()
+    autoProcProgramId = client.service.storeOrUpdateAutoProcProgram(
+        arg0=autoProcProgramId,
+        processingCommandLine=commandline,
+        processingPrograms=programs,
+        processingStatus=status,
+        processingMessage=message,
+        processingStartTime=start_time,
+        processingEndTime=end_time,
+        processingEnvironment=environment,
+        recordTimeStamp=record_time_stamp
+    )
+    return autoProcProgramId
+
+def storeOrUpdateAutoProcProgramAttachment(
+    auto_proc_program_id,
+    file_type,
+    file_path,
+    record_time_stamp=None,
+    auto_proc_program_attachment_id=None,
+):
+    if record_time_stamp is None:
+        record_time_stamp = DateTime(datetime.datetime.now())
+    client = getAutoprocessingWebService()
+    auto_proc_program_attachment_id = client.service.storeOrUpdateAutoProcProgramAttachment(
+        arg0=auto_proc_program_attachment_id,
+        fileType=file_type,
+        fileName=os.path.basename(file_path),
+        filePath=os.path.dirname(file_path),
+        recordTimeStamp=record_time_stamp,
+        autoProcProgramId=auto_proc_program_id
+    )
+    return auto_proc_program_attachment_id
+
+def storeOrUpdateAutoProcIntegration(
+    auto_proc_program_id,
+    dataCollection_id,
+    start_image_number=None,
+    end_image_number=None,
+    auto_proc_integration_id=None,
+    refined_detector_distance=None,
+    refined_x_beam=None,
+    refined_y_beam=None,
+    rotation_axis_x=None,
+    rotation_axis_y=None,
+    rotation_axis_z=None,
+    beam_vector_x=None,
+    beam_vector_y=None,
+    beam_vector_z=None,
+    cell_a=None,
+    cell_b=None,
+    cell_c=None,
+    cell_alpha=None,
+    cell_beta=None,
+    cell_gamma=None,
+    record_time_stamp=None,
+    anomalous=None,
+):
+    if record_time_stamp is None:
+        record_time_stamp = DateTime(datetime.datetime.now())
+    client = getAutoprocessingWebService()
+    auto_proc_integration_id = client.service.storeOrUpdateAutoProcIntegration(
+        arg0=auto_proc_integration_id,
+        autoProcProgramId=auto_proc_program_id,
+        startImageNumber=start_image_number,
+        endImageNumber=end_image_number,
+        refinedDetectorDistance=refined_detector_distance,
+        refinedXbeam=refined_x_beam,
+        refinedYbeam=refined_y_beam,
+        rotationAxisX=rotation_axis_x,
+        rotationAxisY=rotation_axis_y,
+        rotationAxisZ=rotation_axis_z,
+        beamVectorX=beam_vector_x,
+        beamVectorY=beam_vector_y,
+        beamVectorZ=beam_vector_z,
+        cellA=cell_a,
+        cellB=cell_b,
+        cellC=cell_c,
+        cellAlpha=cell_alpha,
+        cellBeta=cell_beta,
+        cellGamma=cell_gamma,
+        recordTimeStamp=record_time_stamp,
+        anomalous=anomalous,
+        dataCollectionId=dataCollection_id
+    )
+    return auto_proc_integration_id
