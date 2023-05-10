@@ -1227,5 +1227,6 @@
         "average_num_spots": 32,
         "number_hits": 152
     },
+    "first_data_path": "/data/visitor/mx2112/id29/20230510/RAW_DATA/protein1/sample1/run_0/protein1-sample1_0_00000.h5",
     "streamfile": "/home/esrf/opid29/test_edna2/edna2/tests/testdata/rundir/20230509_153913/ExeCrystFEL_0cia84f8/id29_JF4M/lysozyme_PC/autoCryst_2023-05-09_15-39-13/alltogether.stream"
 }

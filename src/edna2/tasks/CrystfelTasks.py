@@ -19,22 +19,22 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-from __future__ import division, print_function
 import os
 import sys
 import json
 import logging
 import pathlib
 import jsonschema
-from datetime import datetime
 
 import autocryst.saveDozor as sd
 from autocryst.Image import ImageHandler as Im
 from autocryst import run_crystfel
 
 from edna2.tasks.AbstractTask import AbstractTask
-from edna2.utils import UtilsLogging
+
+from edna2.utils import UtilsPath
 from edna2.utils import UtilsImage
+from edna2.utils import UtilsLogging
 
 __authors__ = ["S. Basu", "Olof Svensson"]
 __license__ = "MIT"
@@ -73,7 +73,7 @@ class ExeCrystFEL(AbstractTask):
         return {
             "type": "object",
             "properties": {
-                "data_directory": {"type": "string"},
+                "first_data_path": {"type": "string"},
                 "streamfile": {"type": "string"},
                 "centering": {"type": "string"},
                 "num_indexed_frames": {"type": "integer"},
@@ -93,9 +93,9 @@ class ExeCrystFEL(AbstractTask):
     def run(self, inData):
         # Determine data diretcory
         if "listH5FilePath" in inData:
-            data_directory = os.path.dirname(inData["listH5FilePath"][0])
+            first_data_path = inData["listH5FilePath"][0]
         elif "cbfFileInfo" in inData:
-            data_directory = inData["cbfFileInfo"]["directory"]
+            raise RuntimeError("Not yet implemented!")
         else:
             raise RuntimeError("No data source found inData")
         doCBFtoH5 = inData.get("doCBFtoH5", False)
@@ -131,8 +131,7 @@ class ExeCrystFEL(AbstractTask):
             if streampath.exists():
                 outData = results
                 outData["streamfile"] = str(streampath)
-                outData["data_directory"] = data_directory
-
+                outData["first_data_path"] = first_data_path
             else:
                 self.isFailure()
                 logger.error("AutoCryst returned empty stream file")
@@ -270,6 +269,7 @@ class CrystFEL2ISPyB(AbstractTask):
         return {
             "type": "object",
             "properties": {
+                "first_data_path": {"type": "string"},
                 "streamfile": {"type": "string"},
                 "centering": {"type": "string"},
                 "num_indexed_frames": {"type": "integer"},
@@ -308,9 +308,17 @@ class CrystFEL2ISPyB(AbstractTask):
         with open(ssx_stats_path, "w") as f:
             f.write(json.dumps(ssx_stats, indent=4))
         # Create pyarch directory
+        first_data_path = pathlib.Path(inData["first_data_path"])
+        pyarch_dir = UtilsPath.createPyarchFilePath(first_data_path.parent / first_data_path.stem)
+        os.makedirs(pyarch_dir, mode=0o755, exist_ok=True)
+        # Copy files to pyarch
+        UtilsPath.systemCopyFile(ssx_cells_path, pyarch_dir)
+        UtilsPath.systemCopyFile(ssx_stats_path, pyarch_dir)
+        # Upload info to ISPyB
 
         out_data = {
-            "status": "ok"
+            "status": "ok",
+            "pyarch_dir": pyarch_dir
         }
         return out_data
 

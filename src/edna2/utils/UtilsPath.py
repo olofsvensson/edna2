@@ -28,6 +28,7 @@ __date__ = "21/04/2019"
 # mxv1/src/EDHandlerESRFPyarchv1_0.py
 
 import os
+import subprocess
 import time
 import pathlib
 import tempfile
@@ -220,3 +221,26 @@ def stripDataDirectoryPrefix(data_directory):
     else:
         new_data_directory = data_directory
     return pathlib.Path(new_data_directory)
+
+def systemCopyFile(from_path, to_path):
+    p = subprocess.Popen(["cp", from_path, to_path])
+    p.wait()
+
+def systemRmTree(treePath, ignore_errors=False):
+    try:
+        if ignore_errors:
+            subprocess.check_call(f"rm -rf {treePath}", shell=True)
+        else:
+            subprocess.check_call(f"rm -r {treePath} 2>&1 > /dev/null", shell=True)
+    except subprocess.CalledProcessError:
+        if not ignore_errors:
+            raise
+
+def systemCopyTree(from_path, to_path, dirs_exists_ok=False):
+    if os.path.exists(to_path):
+        if dirs_exists_ok:
+            systemRmTree(to_path)
+        else:
+            raise FileExistsError(to_path)
+    p = subprocess.Popen(["cp", "-r", from_path, to_path])
+    p.wait()
