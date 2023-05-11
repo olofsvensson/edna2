@@ -44,6 +44,8 @@ class CrystFEL2ISPyBTest(unittest.TestCase):
         "Cannot run ImageQualityIndicatorsExecTest " + "test with default config",
     )
     def test_execute(self):
+        old_site = UtilsConfig.getSite()
+        UtilsConfig.setSite("esrf_ispyb_valid")
         referenceDataPath = self.dataPath / "outDataExeCrystFEL.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         task = CrystFEL2ISPyB(inData=inData)
@@ -51,4 +53,4 @@ class CrystFEL2ISPyBTest(unittest.TestCase):
         self.assertFalse(task.isFailure())
         outData = task.outData
         self.assertTrue("status" in outData)
-        return
+        UtilsConfig.setSite("old_site")
