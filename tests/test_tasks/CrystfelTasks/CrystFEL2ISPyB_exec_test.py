@@ -45,7 +45,7 @@ class CrystFEL2ISPyBTest(unittest.TestCase):
     )
     def test_execute(self):
         old_site = UtilsConfig.getSite()
-        UtilsConfig.setSite("esrf_ispyb_valid")
+        UtilsConfig.setSite("esrf_id29")
         referenceDataPath = self.dataPath / "outDataExeCrystFEL.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         task = CrystFEL2ISPyB(inData=inData)
