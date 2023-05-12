@@ -1,8 +1,12 @@
 {
-	"fastCharacterisation": {
-		"listSubWedgeAngles": [0, 90, 180, 270],
-		"noImagesInSubWedge": 10,
-		"firstImagePath": "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20220414/RAW_DATA/DERA-M/DERA-M-EPF-PCl-Cin-x2/MXPressA_01/ref-fineslice-DERA-M-EPF-PCl-Cin-x2_1_0001.cbf"
-
-	}
+    "fastCharacterisation": {
+        "listSubWedgeAngles": [
+            0,
+            90,
+            180,
+            270
+        ],
+        "noImagesInSubWedge": 10,
+        "firstImagePath": "/data/visitor/mx2458/id30a1/20230331/RAW_DATA/YTH/YTH-C4_RNA-B11_s1h_a/MXPressA_01/ref-fineslice-YTH-C4_RNA-B11_s1h_a_1_0001.cbf"
+    }
 }

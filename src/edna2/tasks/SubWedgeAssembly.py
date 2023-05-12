@@ -77,9 +77,13 @@ class SubWedgeAssembly(AbstractTask):
                         global_axis_start = axis_start
             for index_subwedge, subwedge in enumerate(list_subwedge):
                 if is_fast_characterisation:
+                    # Correct for MASSIF 1 angle bug
+                    subwedge["experimentalCondition"]["goniostat"]["rotationAxisStart"] = index_subwedge * 0.1
+                    subwedge["experimentalCondition"]["goniostat"]["rotationAxisEnd"] = index_subwedge * 0.1 + 0.1
+                    subwedge["experimentalCondition"]["goniostat"]["oscillationWidth"] = 0.1
                     # Modify the start angle
                     index_angle = int(index_subwedge / no_images_in_subwedge)
-                    angle_subwedge = list_subwedge_angles[index_angle]
+                    angle_subwedge = list_subwedge_angles[index_angle] - index_angle
                     goniostat = subwedge["experimentalCondition"]["goniostat"]
                     if force_zero_rotation_axis_start:
                         goniostat["rotationAxisStart"] -= global_axis_start
