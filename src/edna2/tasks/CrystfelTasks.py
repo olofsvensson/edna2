@@ -140,6 +140,7 @@ class ExeCrystFEL(AbstractTask):
 
     def exeIndexing(self, inData):
         doCBFtoH5 = inData.get("doCBFtoH5", False)
+        doSubmit = inData.get("doSubmit", True)
         in_for_crystfel = dict()
 
         if "listH5FilePath" in inData.keys():
@@ -226,10 +227,7 @@ class ExeCrystFEL(AbstractTask):
                 instance=crysttask.jshandle, schema=crysttask.getInDataSchema()
             )
             crysttask.run_indexing()
-            if crysttask.is_executable("sbatch"):
-                crysttask.combine_streams()
-            else:
-                pass
+            crysttask.combine_streams(doSubmit=doSubmit)
 
             outstream = crysttask.getOutputDirectory() / "alltogether.stream"
             results["QualityMetrics"] = crysttask.report_stats(str(outstream))
