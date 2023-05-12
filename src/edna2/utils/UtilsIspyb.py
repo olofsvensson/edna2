@@ -222,11 +222,11 @@ def storeOrUpdateAutoProcProgram(
     autoProcProgramId=None,
 ):
     if start_time is None:
-        start_time = DateTime(datetime.datetime.now())
+        start_time = datetime.datetime.now()
     if end_time is None:
-        end_time = DateTime(datetime.datetime.now())
+        end_time = datetime.datetime.now()
     if record_time_stamp is None:
-        record_time_stamp = DateTime(datetime.datetime.now())
+        record_time_stamp = datetime.datetime.now()
     client = getAutoprocessingWebService()
     autoProcProgramId = client.service.storeOrUpdateAutoProcProgram(
         arg0=autoProcProgramId,
@@ -234,8 +234,8 @@ def storeOrUpdateAutoProcProgram(
         processingPrograms=programs,
         processingStatus=status,
         processingMessage=message,
-        processingStartTime=start_time,
-        processingEndTime=end_time,
+        processingStartTime=DateTime(start_time),
+        processingEndTime=DateTime(end_time),
         processingEnvironment=environment,
         recordTimeStamp=record_time_stamp
     )

@@ -1,0 +1,146 @@
+<?xml version="1.0"?>
+<AutoProcContainer>
+  <AutoProcProgramContainer>
+    <AutoProcProgram>
+      <processingCommandLine>/mnt/multipath-shares/sware/exp/pxsoft/GPhL_WorkFlow_beta-academic/v20221123/linux/autoPROC/bin/linux64/process -Id 001,/data/visitor/mx2112/id30a2/20230512/RAW_DATA/prot1/prot1-sample1/prot1-sample1_001/main,prot1-sample1_G1B1_4_####.cbf,1,3600 dist_001=242.65 wave_001=0.9654586390998307 osc_001=0.1 goniostat_Omega_angle_001=270 goniostat_Kappa_angle_001=0.0 goniostat_Phi_angle_001=0.0 beam="1198.1047372750866 1305.3328513227978" autoPROC_XdsKeyword_ORGX=1198.1047372750866 autoPROC_XdsKeyword_ORGY=1305.3328513227978 autoPROC_XdsKeyword_DIRECTION_OF_DETECTOR_XAXIS="1.0 0.0 0.0" autoPROC_XdsKeyword_DIRECTION_OF_DETECTOR_YAXIS="0.0 1.0 0.0" autoPROC_XdsKeyword_INCIDENT_BEAM_DIRECTION="0.0 0.0 1.0" autoPROC_XdsKeyword_ROTATION_AXIS="1.0 0.0 0.0" autoPROC_XdsKeyword_POLARIZATION_PLANE_NORMAL="0.0 1.0 0.0" autoPROC_XdsKeyword_FRACTION_OF_POLARIZATION=0.9900000095367432 autoPROC_TwoThetaAxis="1.0 0.0 0.0" BeamCentreFrom=header:x,y DistributeBackgroundImages=no XdsStartImageBackgroundRange=1 XdsNumImagesBackgroundRange=All autoPROC_RedoInitAfterAnaFilter=yes autoPROC_FilterFeature=yes autoPROC_XdsKeepFilesThroughout="XCORRECTIONS YCORRECTIONS BKGINIT BLANK GAIN BKGPIX ABS" autoPROC_ReRunIdxrefAtEnd=yes KapparotSitesFile=/tmp/opid30-1683873112-aP_wf_process__2781637.kapparot KapparotSite=Goniostat KapparotUseSimcalReorient=yes XdsGetRotationAxisViaKapparot=no autoPROC_XdsKeyword_REFINEINTEGRATE=" " autoPROC_XdsKeyword_SENSOR_THICKNESS=1.0 Xparm2Simin_TransAxisX="0.0 0.0 -1.0" Xparm2Simin_TransAxisY="0.0 -1.0 0.0" Xparm2Simin_TransAxisZ="-1.0 0.0 0.0" -D /tmp/opid30-1683873112-aP_wf_process__2781637.dat -d /mnt/multipath-shares/data/visitor/mx2112/id30a2/20230512/PROCESSED_DATA/prot1/prot1-sample1/prot1-sample1_001/main/06_process/aP_wf_process</processingCommandLine>
+      <processingPrograms>autoPROC 1.1.7 (20221123 - see: http://www.globalphasing.com/autoproc/)</processingPrograms>
+      <processingStatus>1</processingStatus>
+      <processingMessage></processingMessage>
+      <processingStartTime>Fri May 12 08:31:54 CEST 2023</processingStartTime>
+      <processingEndTime>Fri May 12 08:44:26 CEST 2023</processingEndTime>
+      <processingEnvironment>
+  Host      : mxhpc6-01
+  OS        : Ubuntu 20.04.5 LTS
+  User      : opid30 (group = jsbg)
+  Directory : /mnt/multipath-shares/data/visitor/mx2112/id30a2/20230512/PROCESSED_DATA/prot1/prot1-sample1/prot1-sample1_001/main/06_process
+  Date      : Fri May 12 08:31:54 CEST 2023
+  autoPROC  : /opt/pxsoft/GPhL_WorkFlow_beta-academic/vdefault/linux
+      </processingEnvironment>
+    </AutoProcProgram>
+    <AutoProcProgramAttachment>
+      <fileType>Log</fileType>
+      <fileName>summary.html</fileName>
+      <filePath>/mnt/multipath-shares/data/visitor/mx2112/id30a2/20230512/PROCESSED_DATA/prot1/prot1-sample1/prot1-sample1_001/main/06_process/aP_wf_process</filePath>
+    </AutoProcProgramAttachment>
+    <AutoProcProgramAttachment>
+      <fileType>Log</fileType>
+      <fileName>summary.tar.gz</fileName>
+      <filePath>/mnt/multipath-shares/data/visitor/mx2112/id30a2/20230512/PROCESSED_DATA/prot1/prot1-sample1/prot1-sample1_001/main/06_process/aP_wf_process</filePath>
+    </AutoProcProgramAttachment>
+    <AutoProcProgramAttachment>
+      <fileType>Result</fileType>
+      <fileName>truncate-unique.mtz</fileName>
+      <filePath>/mnt/multipath-shares/data/visitor/mx2112/id30a2/20230512/PROCESSED_DATA/prot1/prot1-sample1/prot1-sample1_001/main/06_process/aP_wf_process</filePath>
+    </AutoProcProgramAttachment>
+    <AutoProcProgramAttachment>
+      <fileType>Result</fileType>
+      <fileName>truncate-unique.table1</fileName>
+      <filePath>/mnt/multipath-shares/data/visitor/mx2112/id30a2/20230512/PROCESSED_DATA/prot1/prot1-sample1/prot1-sample1_001/main/06_process/aP_wf_process</filePath>
+    </AutoProcProgramAttachment>
+    <AutoProcProgramAttachment>
+      <fileType>Result</fileType>
+      <fileName>truncate-unique.stats</fileName>
+      <filePath>/mnt/multipath-shares/data/visitor/mx2112/id30a2/20230512/PROCESSED_DATA/prot1/prot1-sample1/prot1-sample1_001/main/06_process/aP_wf_process</filePath>
+    </AutoProcProgramAttachment>
+  </AutoProcProgramContainer>
+  <AutoProc>
+    <spaceGroup>C 2 2 21</spaceGroup>
+    <wavelength>.96546</wavelength>
+    <refinedCell_a>81.207</refinedCell_a>
+    <refinedCell_b>111.433</refinedCell_b>
+    <refinedCell_c>62.445</refinedCell_c>
+    <refinedCell_alpha>90.000</refinedCell_alpha>
+    <refinedCell_beta>90.000</refinedCell_beta>
+    <refinedCell_gamma>90.000</refinedCell_gamma>
+  </AutoProc>
+  <AutoProcScalingContainer>
+    <AutoProcScaling>
+      <recordTimeStamp>2023-05-12 08:41:45</recordTimeStamp>
+    </AutoProcScaling>
+    <AutoProcScalingStatistics>
+      <scalingStatisticsType>overall</scalingStatisticsType>
+      <resolutionLimitLow>65.629</resolutionLimitLow>
+      <resolutionLimitHigh>1.439</resolutionLimitHigh>
+      <rMerge>.107</rMerge>
+      <rMeasWithinIPlusIMinus>.116</rMeasWithinIPlusIMinus>
+      <rMeasAllIPlusIMinus>.112</rMeasAllIPlusIMinus>
+      <rPimWithinIPlusIMinus>.048</rPimWithinIPlusIMinus>
+      <rPimAllIPlusIMinus>.034</rPimAllIPlusIMinus>
+      <nTotalObservations>571518</nTotalObservations>
+      <nTotalUniqueObservations>51610</nTotalUniqueObservations>
+      <meanIOverSigI>10.8</meanIOverSigI>
+      <completeness>99.8</completeness>
+      <multiplicity>11.1</multiplicity>
+      <ccHalf>0.999</ccHalf>
+      <anomalousCompleteness>99.8</anomalousCompleteness>
+      <anomalousMultiplicity>5.8</anomalousMultiplicity>
+      <ccAnomalous>-0.094</ccAnomalous>
+      <DanoOverSigDano>.709</DanoOverSigDano>
+    </AutoProcScalingStatistics>
+    <AutoProcScalingStatistics>
+      <scalingStatisticsType>innerShell</scalingStatisticsType>
+      <resolutionLimitLow>65.629</resolutionLimitLow>
+      <resolutionLimitHigh>3.904</resolutionLimitHigh>
+      <rMerge>.042</rMerge>
+      <rMeasWithinIPlusIMinus>.044</rMeasWithinIPlusIMinus>
+      <rMeasAllIPlusIMinus>.044</rMeasAllIPlusIMinus>
+      <rPimWithinIPlusIMinus>.018</rPimWithinIPlusIMinus>
+      <rPimAllIPlusIMinus>.013</rPimAllIPlusIMinus>
+      <nTotalObservations>29551</nTotalObservations>
+      <nTotalUniqueObservations>2759</nTotalUniqueObservations>
+      <meanIOverSigI>37.7</meanIOverSigI>
+      <completeness>100.0</completeness>
+      <multiplicity>10.7</multiplicity>
+      <ccHalf>0.999</ccHalf>
+      <anomalousCompleteness>100.0</anomalousCompleteness>
+      <anomalousMultiplicity>5.9</anomalousMultiplicity>
+      <ccAnomalous>-0.136</ccAnomalous>
+      <DanoOverSigDano>.639</DanoOverSigDano>
+    </AutoProcScalingStatistics>
+    <AutoProcScalingStatistics>
+      <scalingStatisticsType>outerShell</scalingStatisticsType>
+      <resolutionLimitLow>1.463</resolutionLimitLow>
+      <resolutionLimitHigh>1.439</resolutionLimitHigh>
+      <rMerge>3.806</rMerge>
+      <rMeasWithinIPlusIMinus>3.853</rMeasWithinIPlusIMinus>
+      <rMeasAllIPlusIMinus>3.996</rMeasAllIPlusIMinus>
+      <rPimWithinIPlusIMinus>1.623</rPimWithinIPlusIMinus>
+      <rPimAllIPlusIMinus>1.211</rPimAllIPlusIMinus>
+      <nTotalObservations>27516</nTotalObservations>
+      <nTotalUniqueObservations>2558</nTotalUniqueObservations>
+      <meanIOverSigI>.6</meanIOverSigI>
+      <completeness>100.0</completeness>
+      <multiplicity>10.8</multiplicity>
+      <ccHalf>0.367</ccHalf>
+      <anomalousCompleteness>100.0</anomalousCompleteness>
+      <anomalousMultiplicity>5.5</anomalousMultiplicity>
+      <ccAnomalous>-0.017</ccAnomalous>
+      <DanoOverSigDano>.672</DanoOverSigDano>
+    </AutoProcScalingStatistics>
+    <AutoProcIntegrationContainer>
+      <Image>
+        <fileName>prot1-sample1_G1B1_4_0001.cbf</fileName>
+        <fileLocation>/data/visitor/mx2112/id30a2/20230512/RAW_DATA/prot1/prot1-sample1/prot1-sample1_001/main</fileLocation>
+      </Image>
+      <AutoProcIntegration>
+        <cell_a>81.1687</cell_a>
+        <cell_b>111.3808</cell_b>
+        <cell_c>62.4074</cell_c>
+        <cell_alpha>90.000</cell_alpha>
+        <cell_beta>90.000</cell_beta>
+        <cell_gamma>90.000</cell_gamma>
+        <startImageNumber>227</startImageNumber>
+        <endImageNumber>3253</endImageNumber>
+        <refinedDetectorDistance>241.282776</refinedDetectorDistance>
+        <refinedXBeam>206.219</refinedXBeam>
+        <refinedYBeam>224.424</refinedYBeam>
+        <rotationAxisX>0.999965</rotationAxisX>
+        <rotationAxisY>0.001047</rotationAxisY>
+        <rotationAxisZ>0.008341</rotationAxisZ>
+        <beamVectorX>-0.005732</beamVectorX>
+        <beamVectorY>0.001319</beamVectorY>
+        <beamVectorZ>1.035760</beamVectorZ>
+      </AutoProcIntegration>
+    </AutoProcIntegrationContainer>
+  </AutoProcScalingContainer>
+</AutoProcContainer>

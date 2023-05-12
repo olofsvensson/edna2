@@ -23,6 +23,11 @@ __authors__ = ['O. Svensson']
 __license__ = 'MIT'
 __date__ = '21/04/2019'
 
+import datetime
+import pprint
+import time
+
+import xmltodict
 # Corresponding EDNA code:
 # https://github.com/olofsvensson/edna-mx
 # mxPluginExec/plugins/EDPluginGroupISPyB-v1.4/plugins/
@@ -361,3 +366,43 @@ class ISPyBFindDetectorByParam(AbstractTask):
         else:
             outData = {}
         return outData
+
+
+class UploadGPhLResultsToISPyB(AbstractTask):
+
+    def run(self, in_data):
+        # Load XML file
+        xml_path = in_data["autoPROCXML"]
+        with open(xml_path) as f:
+            xml_string = f.read()
+        auto_proc_dict = xmltodict.parse(xml_string)
+        # pprint.pprint(auto_proc_dict)
+        auto_proc_container = auto_proc_dict["AutoProcContainer"]
+        auto_proc_program_container = auto_proc_container["AutoProcProgramContainer"]
+        # 1. Create AutoProcProgram entry
+        auto_proc_program = auto_proc_program_container["AutoProcProgram"]
+        auto_proc_program_id = UtilsIspyb.storeOrUpdateAutoProcProgram(
+            programs=self.check_length(auto_proc_program["processingPrograms"]),
+            commandline=self.check_length(auto_proc_program["processingCommandLine"]),
+            start_time=self.get_time(auto_proc_program["processingStartTime"]),
+            end_time=self.get_time(auto_proc_program["processingEndTime"]),
+            environment=self.check_length(auto_proc_program["processingEnvironment"]),
+            message=self.check_length(auto_proc_program["processingMessage"]),
+            status=auto_proc_program["processingStatus"]
+        )
+        pprint.pprint(auto_proc_program_id)
+        out_data = {}
+        return out_data
+
+    def check_length(self, parameter, max_string_length=255):
+        if type(parameter) == str and len(parameter) > max_string_length:
+            old_parameter = parameter
+            parameter = parameter[0:max_string_length - 3] + "..."
+            logger.warning(
+                "String truncated to %d characters for ISPyB! Original string: %s" % (max_string_length, old_parameter))
+            logger.warning("Truncated string: %s" % parameter)
+        return parameter
+
+    def get_time(self, time_value):
+        # Fri May 12 08:31:54 CEST 2023
+        return datetime.datetime.strptime(time_value, "%a %b %d %H:%M:%S %Z %Y")
