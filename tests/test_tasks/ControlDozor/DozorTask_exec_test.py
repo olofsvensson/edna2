@@ -71,7 +71,7 @@ class ExecDozorTest(unittest.TestCase):
             UtilsTest.loadTestImage(file_name)
         dozor = ExecDozor(inData=in_data)
         dozor.execute()
-        # shutil.rmtree(working_dir)
+        shutil.rmtree(working_dir)
         self.assertTrue(dozor.isSuccess())
         out_data = dozor.outData
         self.assertEqual(len(out_data["imageDozor"]), 10)
