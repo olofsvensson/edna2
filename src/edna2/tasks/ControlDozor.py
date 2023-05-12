@@ -115,7 +115,8 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 "wedgeNumber": {"type": "integer"},
                 "radiationDamage": {"type": "boolean"},
                 "overlap": {"type": "number"},
-                "doDozorM": {"type": "boolean"}
+                "doDozorM": {"type": "boolean"},
+                "doSubmit": {"type": "boolean"}
             },
         }
 
