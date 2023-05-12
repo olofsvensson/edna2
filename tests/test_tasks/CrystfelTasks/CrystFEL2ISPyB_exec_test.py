@@ -53,4 +53,4 @@ class CrystFEL2ISPyBTest(unittest.TestCase):
         self.assertFalse(task.isFailure())
         outData = task.outData
         self.assertTrue("status" in outData)
-        UtilsConfig.setSite("old_site")
+        UtilsConfig.setSite(old_site)
