@@ -34,6 +34,7 @@ from edna2.tasks.AbstractTask import AbstractTask
 
 from edna2.utils import UtilsPath
 from edna2.utils import UtilsImage
+from edna2.utils import UtilsIspyb
 from edna2.utils import UtilsLogging
 
 __authors__ = ["S. Basu", "Olof Svensson"]
@@ -270,6 +271,7 @@ class CrystFEL2ISPyB(AbstractTask):
             "type": "object",
             "properties": {
                 "first_data_path": {"type": "string"},
+                "dataCollectionId": {"type": "integer"},
                 "streamfile": {"type": "string"},
                 "centering": {"type": "string"},
                 "num_indexed_frames": {"type": "integer"},
@@ -291,6 +293,7 @@ class CrystFEL2ISPyB(AbstractTask):
 
     def run(self, inData):
         qm = inData["QualityMetrics"]
+        dataCollection_id = inData["dataCollectionId"]
         # Create ssx_cells.json
         ssx_cells = {"unit_cells": qm["unit_cell_array"]}
         working_dir = self.getWorkingDirectory()
@@ -313,12 +316,41 @@ class CrystFEL2ISPyB(AbstractTask):
         os.makedirs(pyarch_dir, mode=0o755, exist_ok=True)
         # Copy files to pyarch
         UtilsPath.systemCopyFile(ssx_cells_path, pyarch_dir)
+        ssx_cells_pyarch_path = pyarch_dir / "ssx_cells.json"
         UtilsPath.systemCopyFile(ssx_stats_path, pyarch_dir)
+        ssx_stats_pyarch_path = pyarch_dir / "ssx_stats.json"
         # Upload info to ISPyB
-
+        #
+        # 1. Create AutoProcProgram entry
+        auto_proc_program_id = UtilsIspyb.storeOrUpdateAutoProcProgram(
+            programs="CrystFEL",
+            commandline="indexamajig",
+            status="SUCCESS"
+        )
+        # 2. Create "dummy" AutoProcIntegration entry for linking with data collection
+        auto_proc_integration_id = UtilsIspyb.storeOrUpdateAutoProcIntegration(
+            auto_proc_program_id=auto_proc_program_id,
+            dataCollection_id=dataCollection_id
+        )
+        # 3. Upload ssx_cells and ssx_stats as program attachments
+        auto_proc_program_attachment_id_cells = UtilsIspyb.storeOrUpdateAutoProcProgramAttachment(
+            auto_proc_program_id=auto_proc_program_id,
+            file_type="Result",
+            file_path=ssx_cells_pyarch_path
+        )
+        auto_proc_program_attachment_id_stats = UtilsIspyb.storeOrUpdateAutoProcProgramAttachment(
+            auto_proc_program_id=auto_proc_program_id,
+            file_type="Result",
+            file_path=ssx_stats_pyarch_path
+        )
         out_data = {
             "status": "ok",
-            "pyarch_dir": pyarch_dir
+            "pyarch_dir": pyarch_dir,
+            "dataCollectionId": dataCollection_id,
+            "auto_proc_program_id": auto_proc_program_id,
+            "auto_proc_integration_id": auto_proc_integration_id,
+            "auto_proc_program_attachment_id_cells": auto_proc_program_attachment_id_cells,
+            "auto_proc_program_attachment_id_stats": auto_proc_program_attachment_id_stats
         }
         return out_data
 

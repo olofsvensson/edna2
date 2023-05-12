@@ -1,4 +1,3 @@
-#
 # Copyright (c) European Synchrotron Radiation Facility (ESRF)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -17,40 +16,38 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#
 
-__authors__ = ["O. Svensson", "S.Basu"]
+__authors__ = ["O. Svensson"]
 __license__ = "MIT"
-__date__ = "12/07/2019"
+__date__ = "12/05/2023"
 
+import os
 import unittest
 
 from edna2.utils import UtilsTest
 from edna2.utils import UtilsConfig
-from edna2.utils import UtilsLogging
 
-from edna2.tasks.CrystfelTasks import CrystFEL2ISPyB
-
-
-logger = UtilsLogging.getLogger()
+from edna2.tasks.ISPyBTasks import UploadGPhLResultsToISPyB
 
 
-class CrystFEL2ISPyBTest(unittest.TestCase):
+class UploadGPhLResultsToISPyBExecTest(unittest.TestCase):
+
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(
-        UtilsConfig.getSite() == "Default",
-        "Cannot run ImageQualityIndicatorsExecTest " + "test with default config",
-    )
-    def test_execute(self):
+    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
+                     'Cannot run ispyb test with default config')
+    @unittest.skipIf('ISPyB_token' not in os.environ,
+                     'No ISPyB_token found in environment')
+    def test_execute_retrieveAttachmentFiles(self):
         old_site = UtilsConfig.getSite()
-        UtilsConfig.setSite("esrf_id29")
-        referenceDataPath = self.dataPath / "outDataExeCrystFEL.json"
-        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        task = CrystFEL2ISPyB(inData=inData)
-        task.execute()
-        self.assertFalse(task.isFailure())
-        outData = task.outData
-        self.assertTrue("status" in outData)
-        UtilsConfig.setSite("old_site")
+        UtilsConfig.setSite('esrf_ispyb_valid')
+        reference_data_path = self.dataPath / \
+            'UploadGPhLResultsToISPyB.json'
+        in_data = UtilsTest.loadAndSubstitueTestData(reference_data_path)
+        uploadGPhLResultsToISPyB = UploadGPhLResultsToISPyB(inData=in_data)
+        uploadGPhLResultsToISPyB.execute()
+        self.assertTrue(uploadGPhLResultsToISPyB.isSuccess())
+        out_data = uploadGPhLResultsToISPyB.outData
+        UtilsConfig.setSite(old_site)
+
