@@ -39,11 +39,11 @@ class UploadGPhLResultsToISPyBExecTest(unittest.TestCase):
                      'Cannot run ispyb test with default config')
     @unittest.skipIf('ISPyB_token' not in os.environ,
                      'No ISPyB_token found in environment')
-    def test_execute_retrieveAttachmentFiles(self):
+    def test_execute_uploadGPhLResultsToISPyB(self):
         old_site = UtilsConfig.getSite()
         UtilsConfig.setSite('esrf_ispyb_valid')
         reference_data_path = self.dataPath / \
-            'UploadGPhLResultsToISPyB.json'
+            'UploadGPhLResultsToISPyB_valid.json'
         in_data = UtilsTest.loadAndSubstitueTestData(reference_data_path)
         uploadGPhLResultsToISPyB = UploadGPhLResultsToISPyB(inData=in_data)
         uploadGPhLResultsToISPyB.execute()

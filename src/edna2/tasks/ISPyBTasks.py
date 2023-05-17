@@ -383,8 +383,9 @@ class ISPyBFindDetectorByParam(AbstractTask):
 
 class UploadGPhLResultsToISPyB(AbstractTask):
     def run(self, in_data):
-        # Data collection id
-        data_collection_id = in_data["dataCollectionId"]
+        list_id = []
+        # List of data collection ids
+        list_data_collection_id = in_data["dataCollectionId"]
         # Load XML file
         xml_path = in_data["autoPROCXML"]
         with open(xml_path) as f:
@@ -392,13 +393,21 @@ class UploadGPhLResultsToISPyB(AbstractTask):
         auto_proc_dict = xmltodict.parse(xml_string)
         pprint.pprint(auto_proc_dict)
         auto_proc_container = auto_proc_dict["AutoProcContainer"]
+        auto_proc = auto_proc_container["AutoProc"]
+        if type(auto_proc) == list:
+            list_auto_proc = auto_proc
+        else:
+            list_auto_proc = [auto_proc]
         auto_proc_program_container = auto_proc_container["AutoProcProgramContainer"]
         auto_proc_scaling_container = auto_proc_container["AutoProcScalingContainer"]
         if type(auto_proc_scaling_container) == list:
             list_auto_proc_scaling_container = auto_proc_scaling_container
         else:
             list_auto_proc_scaling_container = [auto_proc_scaling_container]
-        for auto_proc_scaling_container in list_auto_proc_scaling_container:
+        for index, auto_proc_scaling_container in enumerate(list_auto_proc_scaling_container):
+            auto_proc = list_auto_proc[index]
+            data_collection_id = list_data_collection_id[index]
+            auto_proc_scaling = auto_proc_scaling_container["AutoProcScaling"]
             auto_proc_scaling_statistics = auto_proc_scaling_container[
                 "AutoProcScalingStatistics"
             ]
@@ -429,19 +438,30 @@ class UploadGPhLResultsToISPyB(AbstractTask):
             auto_proc_scaling_id = self.createAutoProcScaling(
                 auto_proc_id=auto_proc_id, auto_proc_scaling=auto_proc_scaling
             )
+            # 6. Create scaling has int entry
+            auto_proc_scaling_has_int_id = self.createAutoProcScaling_has_int(
+                auto_proc_integration_id=auto_proc_integration_id,
+                auto_proc_scaling_id=auto_proc_scaling_id
+            )
             # 6. Create scaling statistics entries
             list_statistics_id = self.uploadStatistics(
                 auto_proc_scaling_id=auto_proc_scaling_id,
                 auto_proc_scaling_statistics=auto_proc_scaling_statistics,
             )
-            out_data = {
+            scaling_container_id = {
+                "data_collection_id": data_collection_id,
                 "auto_proc_id": auto_proc_id,
                 "auto_proc_program_id": auto_proc_program_id,
                 "auto_proc_integration_id": auto_proc_integration_id,
                 "list_attachment_id": list_attachment_id,
                 "auto_proc_scaling_id": auto_proc_scaling_id,
+                "auto_proc_scaling_has_int_id": auto_proc_scaling_has_int_id,
                 "list_statistics_id": list_statistics_id,
             }
+            list_id.append(scaling_container_id)
+        out_data = {
+            "ids": list_id
+        }
         pprint.pprint(out_data)
         return out_data
 
@@ -505,7 +525,7 @@ class UploadGPhLResultsToISPyB(AbstractTask):
             cell_beta=auto_proc_integration.get("cell_beta", None),
             cell_gamma=auto_proc_integration.get("cell_gamma", None),
             record_time_stamp=None,
-            anomalous=None,
+            anomalous=1,
         )
         return auto_proc_integration_id
 
@@ -527,6 +547,14 @@ class UploadGPhLResultsToISPyB(AbstractTask):
             auto_proc_id=auto_proc_id
         )
         return auto_proc_scaling_id
+
+    def createAutoProcScaling_has_int(self, auto_proc_integration_id, auto_proc_scaling_id):
+        auto_proc_scaling_has_int_id = UtilsIspyb.storeOrUpdateAutoProcScalingHasInt(
+            auto_proc_integration_id=auto_proc_integration_id,
+            auto_proc_scaling_id=auto_proc_scaling_id
+        )
+        return auto_proc_scaling_has_int_id
+
 
     def uploadStatistics(self, auto_proc_scaling_id, auto_proc_scaling_statistics):
         list_statistics_id = []

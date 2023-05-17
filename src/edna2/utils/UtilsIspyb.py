@@ -392,6 +392,23 @@ def storeOrUpdateAutoProcScaling(
     return auto_proc_scaling_id
 
 
+def storeOrUpdateAutoProcScalingHasInt(
+    auto_proc_integration_id,
+    auto_proc_scaling_id,
+    record_time_stamp=None
+):
+    if record_time_stamp is None:
+        record_time_stamp = DateTime(datetime.datetime.now())
+    client = getAutoprocessingWebService()
+    auto_proc_scaling_has_int_id = client.service.storeOrUpdateAutoProcScalingHasInt(
+        arg0=None,
+        autoProcIntegrationId=auto_proc_integration_id,
+        autoProcScalingId=auto_proc_scaling_id,
+        recordTimeStamp=record_time_stamp
+    )
+    return auto_proc_scaling_has_int_id
+
+
 def storeOrUpdateAutoProcScalingStatistics(
     scaling_statistics_type,
     resolution_limit_low,

@@ -2,5 +2,5 @@
 	"token": "$ISPyB_token",
 	"proposal": "MX2112",
 	"autoPROCXML": "$EDNA2_TASK_DATA/autoPROC_staraniso.xml",
-	"dataCollectionId": 2473458
+	"dataCollectionId": [2473456, 2473457, 2473458]
 }
