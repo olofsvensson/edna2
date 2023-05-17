@@ -103,7 +103,9 @@ def getToolsForCollectionWebService():
 
 
 def getToolsForAutoprocessingWebService():
-    return os.path.join(getWdslRoot(), "ispybWS", "ToolsForAutoprocessingWebService?wsdl")
+    return os.path.join(
+        getWdslRoot(), "ispybWS", "ToolsForAutoprocessingWebService?wsdl"
+    )
 
 
 def getAutoprocessingWebService():
@@ -118,6 +120,7 @@ def getAutoprocessingWebService():
     else:
         autoprocessingWSClient = Client(collectionWdsl, transport=transport, cache=None)
     return autoprocessingWSClient
+
 
 def findDataCollection(dataCollectionId, client=None):
     e = None
@@ -237,9 +240,10 @@ def storeOrUpdateAutoProcProgram(
         processingStartTime=DateTime(start_time),
         processingEndTime=DateTime(end_time),
         processingEnvironment=environment,
-        recordTimeStamp=record_time_stamp
+        recordTimeStamp=record_time_stamp,
     )
     return autoProcProgramId
+
 
 def storeOrUpdateAutoProcProgramAttachment(
     auto_proc_program_id,
@@ -251,15 +255,18 @@ def storeOrUpdateAutoProcProgramAttachment(
     if record_time_stamp is None:
         record_time_stamp = DateTime(datetime.datetime.now())
     client = getAutoprocessingWebService()
-    auto_proc_program_attachment_id = client.service.storeOrUpdateAutoProcProgramAttachment(
-        arg0=auto_proc_program_attachment_id,
-        fileType=file_type,
-        fileName=os.path.basename(file_path),
-        filePath=os.path.dirname(file_path),
-        recordTimeStamp=record_time_stamp,
-        autoProcProgramId=auto_proc_program_id
+    auto_proc_program_attachment_id = (
+        client.service.storeOrUpdateAutoProcProgramAttachment(
+            arg0=auto_proc_program_attachment_id,
+            fileType=file_type,
+            fileName=os.path.basename(file_path),
+            filePath=os.path.dirname(file_path),
+            recordTimeStamp=record_time_stamp,
+            autoProcProgramId=auto_proc_program_id,
+        )
     )
     return auto_proc_program_attachment_id
+
 
 def storeOrUpdateAutoProcIntegration(
     auto_proc_program_id,
@@ -310,6 +317,146 @@ def storeOrUpdateAutoProcIntegration(
         cellGamma=cell_gamma,
         recordTimeStamp=record_time_stamp,
         anomalous=anomalous,
-        dataCollectionId=dataCollection_id
+        dataCollectionId=dataCollection_id,
     )
     return auto_proc_integration_id
+
+
+def storeOrUpdateAutoProc(
+    auto_proc_program_id,
+    space_group,
+    refined_cell_a,
+    refined_cell_b,
+    refined_cell_c,
+    refined_cell_alpha,
+    refined_cell_beta,
+    refined_cell_gamma,
+    auto_proc_id=None,
+    record_time_stamp=None,
+):
+    if record_time_stamp is None:
+        record_time_stamp = DateTime(datetime.datetime.now())
+    client = getAutoprocessingWebService()
+    auto_proc_id = client.service.storeOrUpdateAutoProc(
+        arg0=auto_proc_id,
+        autoProcProgramId=auto_proc_program_id,
+        spaceGroup=space_group,
+        refinedCellA=refined_cell_a,
+        refinedCellB=refined_cell_b,
+        refinedCellC=refined_cell_c,
+        refinedCellAlpha=refined_cell_alpha,
+        refinedCellBeta=refined_cell_beta,
+        refinedCellGamma=refined_cell_gamma,
+        recordTimeStamp=record_time_stamp,
+    )
+    return auto_proc_id
+
+
+def storeOrUpdateAutoProcScaling(
+    auto_proc_id,
+    resolution_ellipsoid_axis_11=None,
+    resolution_ellipsoid_axis_12=None,
+    resolution_ellipsoid_axis_13=None,
+    resolution_ellipsoid_axis_21=None,
+    resolution_ellipsoid_axis_22=None,
+    resolution_ellipsoid_axis_23=None,
+    resolution_ellipsoid_axis_31=None,
+    resolution_ellipsoid_axis_32=None,
+    resolution_ellipsoid_axis_33=None,
+    resolution_ellipsoid_value_1=None,
+    resolution_ellipsoid_value_2=None,
+    resolution_ellipsoid_value_3=None,
+    auto_proc_scaling_id=None,
+    record_time_stamp=None,
+):
+    if record_time_stamp is None:
+        record_time_stamp = DateTime(datetime.datetime.now())
+    client = getAutoprocessingWebService()
+    auto_proc_scaling_id = client.service.storeOrUpdateAutoProcScaling(
+        arg0=auto_proc_scaling_id,
+        autoProcId=auto_proc_id,
+        recordTimeStamp=record_time_stamp,
+        resolutionEllipsoidAxis11=resolution_ellipsoid_axis_11,
+        resolutionEllipsoidAxis12=resolution_ellipsoid_axis_12,
+        resolutionEllipsoidAxis13=resolution_ellipsoid_axis_13,
+        resolutionEllipsoidAxis21=resolution_ellipsoid_axis_21,
+        resolutionEllipsoidAxis22=resolution_ellipsoid_axis_22,
+        resolutionEllipsoidAxis23=resolution_ellipsoid_axis_23,
+        resolutionEllipsoidAxis31=resolution_ellipsoid_axis_31,
+        resolutionEllipsoidAxis32=resolution_ellipsoid_axis_32,
+        resolutionEllipsoidAxis33=resolution_ellipsoid_axis_33,
+        resolutionEllipsoidValue1=resolution_ellipsoid_value_1,
+        resolutionEllipsoidValue2=resolution_ellipsoid_value_2,
+        resolutionEllipsoidValue3=resolution_ellipsoid_value_3,
+    )
+    return auto_proc_scaling_id
+
+
+def storeOrUpdateAutoProcScalingStatistics(
+    scaling_statistics_type,
+    resolution_limit_low,
+    resolution_limit_high,
+    r_merge,
+    r_meas_within_i_plus_i_minus,
+    r_meas_all_i_plus_i_minus,
+    r_pim_within_i_plus_i_minus,
+    r_pim_all_i_plus_i_minus,
+    ntotal_observations,
+    ntotal_unique_observations,
+    mean_iover_sig_i,
+    completeness,
+    multiplicity,
+    anomalous_completeness,
+    anomalous_multiplicity,
+    auto_proc_scaling_id,
+    cc_half,
+    cc_ano,
+    comments=None,
+    anomalous=None,
+    sig_ano=None,
+    isa=None,
+    completeness_spherical=None,
+    anomalous_completeness_spherical=None,
+    completeness_ellipsoidal=None,
+    anomalous_completeness_ellipsoidal=None,
+    fractional_partial_bias=None,
+    auto_proc_scaling_statistics_id=None,
+    record_time_stamp=None,
+):
+    if record_time_stamp is None:
+        record_time_stamp = DateTime(datetime.datetime.now())
+    client = getAutoprocessingWebService()
+    auto_proc_scaling_statistics_id = (
+        client.service.storeOrUpdateAutoProcScalingStatistics(
+            arg0=auto_proc_scaling_statistics_id,
+            scalingStatisticsType=scaling_statistics_type,
+            comments=comments,
+            resolutionLimitLow=resolution_limit_low,
+            resolutionLimitHigh=resolution_limit_high,
+            rmerge=r_merge,
+            rmeasWithinIplusIminus=r_meas_within_i_plus_i_minus,
+            rmeasAllIplusIminus=r_meas_all_i_plus_i_minus,
+            rpimWithinIplusIminus=r_pim_within_i_plus_i_minus,
+            rpimAllIplusIminus=r_pim_all_i_plus_i_minus,
+            fractionalPartialBias=fractional_partial_bias,
+            nTotalObservations=ntotal_observations,
+            nTotalUniqueObservations=ntotal_unique_observations,
+            meanIoverSigI=mean_iover_sig_i,
+            completeness=completeness,
+            multiplicity=multiplicity,
+            anomalousCompleteness=anomalous_completeness,
+            anomalousMultiplicity=anomalous_multiplicity,
+            recordTimeStamp=record_time_stamp,
+            anomalous=anomalous,
+            autoProcScalingId=auto_proc_scaling_id,
+            ccHalf=cc_half,
+            ccAno=cc_ano,
+            sigAno=sig_ano,
+            isa=isa,
+            completenessSpherical=completeness_spherical,
+            anomalousCompletenessSpherical=anomalous_completeness_spherical,
+            completenessEllipsoidal=completeness_ellipsoidal,
+            anomalousCompletenessEllipsoidal=anomalous_completeness_ellipsoidal,
+        )
+    )
+    return auto_proc_scaling_statistics_id
