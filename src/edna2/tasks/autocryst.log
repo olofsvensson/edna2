@@ -1,0 +1,11 @@
+23-03-24 12:36 autoCryst    INFO    Stream_Error:could not convert string to float: 'Event:'
+23-03-24 12:36 autoCryst    ERROR   Job_Error:not enough values to unpack (expected 3, got 2)
+23-03-24 14:42 autoCryst    INFO    Stream_Error:could not convert string to float: 'Event:'
+23-03-24 14:42 autoCryst    ERROR   Job_Error:not enough values to unpack (expected 3, got 2)
+23-03-24 14:44 autoCryst    INFO    Stream_Error:could not convert string to float: 'Event:'
+23-03-24 14:44 autoCryst    ERROR   Job_Error:not enough values to unpack (expected 3, got 2)
+23-03-24 14:52 autoCryst    INFO    Stream_Error:could not convert string to float: 'Event:'
+23-03-24 14:55 autoCryst    INFO    Stream_Error:could not convert string to float: 'Event:'
+23-03-24 14:55 autoCryst    ERROR   Job_Error:not enough values to unpack (expected 3, got 2)
+23-03-27 08:59 autoCryst    INFO    Stream_Error:could not convert string to float: 'Event:'
+23-03-27 08:59 autoCryst    ERROR   Job_Error:not enough values to unpack (expected 3, got 2)

@@ -165,6 +165,8 @@ class ExeCrystFEL(AbstractTask):
                 in_for_crystfel["max_res"] = inData.get("max_res", "1200")
                 in_for_crystfel["partition"] = inData.get("partition", "mx-low")
                 in_for_crystfel["unit_cell_file"] = inData.get("unit_cell_file", " ")
+                in_for_crystfel["indexing_method"] = inData.get("indexing_method", "xgandalf")
+                in_for_crystfel["local_bg_radius"] = inData.get("local_bg_radius", "10")
 
             in_for_crystfel['suffix'] = UtilsImage.getSuffix(inData['listH5FilePath'][0])
             in_for_crystfel['image_directory'] = str(pathlib.Path(inData['listH5FilePath'][0]).parent)
