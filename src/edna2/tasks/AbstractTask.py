@@ -190,12 +190,11 @@ class AbstractTask():  # noqa R0904
             errorLog = f.read()
         return errorLog
 
-    def submitCommandLine(self, commandLine, jobName, partition, ignoreErrors):
+    def submitCommandLine(self, commandLine, jobName, partition, ignoreErrors, noCores=None):
         workingDir = str(self._workingDirectory)
         if workingDir.startswith("/mntdirect/_users"):
             workingDir = workingDir.replace("/mntdirect/_users", "/home/esrf")
         nodes = 1
-        core = 10
         time = "1:00:00"
         mem = 16000  # 16 Gb memory by default
         script = "#!/bin/bash\n"
@@ -208,8 +207,10 @@ class AbstractTask():  # noqa R0904
         script += "#SBATCH --exclusive\n"
         script += "#SBATCH --mem={0}\n".format(mem)
         script += "#SBATCH --nodes={0}\n".format(nodes)
-        script += "#SBATCH --nodes=1\n"  # Necessary for not splitting jobs! See ATF-57
-        script += "#SBATCH --cpus-per-task={0}\n".format(core)
+        if noCores is None:
+            script += "#SBATCH --exclusive\n"
+        else:
+            script += "#SBATCH --cpus-per-task={0}\n".format(noCores)
         script += "#SBATCH --time={0}\n".format(time)
         script += "#SBATCH --chdir={0}\n".format(workingDir)
         script += "#SBATCH --output=stdout.txt\n"
@@ -257,6 +258,7 @@ class AbstractTask():  # noqa R0904
         ignoreErrors=False,
         doSubmit=False,
         partition=None,
+        noCores=None
     ):
         if logPath is None:
             logPath = self.getLogPath()
@@ -275,7 +277,7 @@ class AbstractTask():  # noqa R0904
         with open(str(commandLinePath), "w") as f:
             f.write(commandLine)
         if doSubmit:
-            self.submitCommandLine(commandLine, jobName, partition, ignoreErrors)
+            self.submitCommandLine(commandLine, jobName, partition, ignoreErrors, noCores)
         else:
             pipes = subprocess.Popen(
                 commandLine,
@@ -347,3 +349,4 @@ class AbstractTask():  # noqa R0904
 
     def setPersistInOutData(self, value):
         self._persistInOutData = value
+

@@ -30,6 +30,7 @@ __date__ = "10/05/2019"
 
 import os
 import re
+import shutil
 import time
 import pathlib
 
@@ -38,9 +39,11 @@ from edna2.tasks.WaitFileTask import WaitFileTask
 from edna2.tasks.ControlDozor import ControlDozor
 from edna2.tasks.PhenixTasks import DistlSignalStrengthTask
 
-from edna2.utils import UtilsImage
+from edna2.utils import UtilsImage, UtilsPath, UtilsIspyb
 from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
+
+from edna2.tasks.ISPyBTasks import ISPyBRetrieveDataCollection
 
 logger = UtilsLogging.getLogger()
 
@@ -74,6 +77,17 @@ class ImageQualityIndicators(AbstractTask):
         listControlDozorAllFile = []
         # Initialize parameters
         self.init(inData)
+        dataCollection = None
+        dataCollectionId = inData.get("dataCollectionId", None)
+        if dataCollectionId is not None:
+            ispybInData = {"dataCollectionId": dataCollectionId}
+            ispybTask = ISPyBRetrieveDataCollection(inData=ispybInData)
+            ispybTask.execute()
+            dataCollection = ispybTask.outData
+            inData["directory"] = dataCollection["imageDirectory"]
+            inData["template"] = dataCollection["fileTemplate"].replace("%04d", "####")
+            inData["startNo"] = dataCollection["startImageNumber"]
+            inData["endNo"] = dataCollection["startImageNumber"] + dataCollection["numberOfImages"] - 1
         # Set up batch list
         listOfBatches = self.createBatchList(inData)
         outData = dict()
@@ -91,6 +105,28 @@ class ImageQualityIndicators(AbstractTask):
                 )
                 outData["dozorAllFile"] = imageQualityIndicatorsDozorAllFile
         outData["imageQualityIndicators"] = listImageQualityIndicators
+        # Make plot if we have a data collection id
+        if "dataCollectionId" in inData and inData["dataCollectionId"] is not None:
+            if "processDirectory" in inData:
+                processDirectory = pathlib.Path(inData["processDirectory"])
+            else:
+                processDirectory = self.getWorkingDirectory()
+            dozorPlotPath, dozorCsvPath = self.makePlot(
+                inData["dataCollectionId"], outData, self.getWorkingDirectory()
+            )
+            doIspybUpload = inData.get("doIspybUpload", False)
+            if doIspybUpload:
+                self.storeDataOnPyarch(
+                    inData["dataCollectionId"],
+                    dozorPlotPath=dozorPlotPath,
+                    dozorCsvPath=dozorCsvPath,
+                    workingDirectory=processDirectory,
+                )
+
+        doIcatUpload = inData.get("doIcatUpload", False)
+        if doIcatUpload:
+            self.uploadDataToIcat(dataCollection)
+
         return outData
 
     def init(self, inData):
@@ -98,9 +134,9 @@ class ImageQualityIndicators(AbstractTask):
         self.doSubmit = inData.get("doSubmit", False)
         self.doDozorM = inData.get("doDozorM", False)
         self.doDistlSignalStrength = inData.get("doDistlSignalStrength", False)
-        self.isFastMesh = inData.get("fastMesh", False)
+        self.isFastMesh = inData.get("fastMesh", True)
         self.listImage = inData.get("image", [])
-        self.batchSize = inData.get("batchSize", 1)
+        self.batchSize = inData.get("batchSize", 100)
         self.doIspybUpload = inData.get("doIspybUpload", False)
         self.dataCollectionId = inData.get("dataCollectionId", None)
         # Configurations
@@ -221,7 +257,7 @@ class ImageQualityIndicators(AbstractTask):
                     "doSubmit": self.doSubmit,
                     "doDozorM": self.doDozorM,
                     "doIspybUpload": self.doIspybUpload,
-                    "dataCollectionId": self.dataCollectionId
+                    # "dataCollectionId": self.dataCollectionId
                 }
                 if self.beamline is not None:
                     inDataControlDozor["beamline"] = self.beamline
@@ -397,3 +433,225 @@ class ImageQualityIndicators(AbstractTask):
                 errorMessage = "Time-out while waiting for image " + str(imagePath)
                 logger.error(errorMessage)
                 self.setFailure()
+
+    def createGnuPlotFile(self, workingDirectory, csvFileName, outDataImageDozor):
+        with open(str(workingDirectory / csvFileName), "w") as gnuplotFile:
+            gnuplotFile.write("# Data directory: {0}\n".format(self.directory))
+            gnuplotFile.write(
+                "# File template: {0}\n".format(self.template.replace("%04d", "####"))
+            )
+            gnuplotFile.write(
+                "# {0:>9s}{1:>16s}{2:>16s}{3:>16s}{4:>16s}{5:>16s}\n".format(
+                    "'Image no'",
+                    "'Angle'",
+                    "'No of spots'",
+                    "'Main score (*10)'",
+                    "'Spot score'",
+                    "'Visible res.'",
+                )
+            )
+            for imageQualityIndicators in outDataImageDozor["imageQualityIndicators"]:
+                gnuplotFile.write(
+                    "{0:10d},{1:15.3f},{2:15d},{3:15.3f},{4:15.3f},{5:15.3f}\n".format(
+                        imageQualityIndicators["number"],
+                        imageQualityIndicators["angle"],
+                        imageQualityIndicators["dozorSpotsNumOf"],
+                        10 * imageQualityIndicators["dozorScore"],
+                        imageQualityIndicators["dozorSpotScore"],
+                        imageQualityIndicators["dozorVisibleResolution"],
+                    )
+                )
+
+    def determineMinMaxParameters(self, outDataImageDozor):
+        minImageNumber = None
+        maxImageNumber = None
+        minAngle = None
+        maxAngle = None
+        minDozorValue = None
+        maxDozorValue = None
+        minResolution = None
+        maxResolution = None
+        for imageQualityIndicators in outDataImageDozor["imageQualityIndicators"]:
+            if (
+                minImageNumber is None
+                or minImageNumber > imageQualityIndicators["number"]
+            ):
+                minImageNumber = imageQualityIndicators["number"]
+                minAngle = imageQualityIndicators["angle"]
+            if (
+                maxImageNumber is None
+                or maxImageNumber < imageQualityIndicators["number"]
+            ):
+                maxImageNumber = imageQualityIndicators["number"]
+                maxAngle = imageQualityIndicators["angle"]
+            if (
+                minDozorValue is None
+                or minDozorValue > imageQualityIndicators["dozorScore"]
+            ):
+                minDozorValue = imageQualityIndicators["dozorScore"]
+            if (
+                maxDozorValue is None
+                or maxDozorValue < imageQualityIndicators["dozorScore"]
+            ):
+                maxDozorValue = imageQualityIndicators["dozorScore"]
+
+            # Min resolution: the higher the value the lower the resolution
+            if (
+                minResolution is None
+                or minResolution < imageQualityIndicators["dozorVisibleResolution"]
+            ):
+                # Disregard resolution worse than 10.0
+                if imageQualityIndicators["dozorVisibleResolution"] < 10.0:
+                    minResolution = imageQualityIndicators["dozorVisibleResolution"]
+            # Max resolution: the lower the number the better the resolution
+            if (
+                maxResolution is None
+                or maxResolution > imageQualityIndicators["dozorVisibleResolution"]
+            ):
+                maxResolution = imageQualityIndicators["dozorVisibleResolution"]
+        plotDict = {
+            "minImageNumber": minImageNumber,
+            "maxImageNumber": maxImageNumber,
+            "minAngle": minAngle,
+            "maxAngle": maxAngle,
+            "minDozorValue": minDozorValue,
+            "maxDozorValue": maxDozorValue,
+            "minResolution": minResolution,
+            "maxResolution": maxResolution,
+        }
+        return plotDict
+
+    def determinePlotParameters(self, plotDict):
+        xtics = ""
+        minImageNumber = plotDict["minImageNumber"]
+        maxImageNumber = plotDict["maxImageNumber"]
+        minAngle = plotDict["minAngle"]
+        maxAngle = plotDict["maxAngle"]
+        minResolution = plotDict["minResolution"]
+        maxResolution = plotDict["maxResolution"]
+        minDozorValue = plotDict["minDozorValue"]
+        maxDozorValue = plotDict["maxDozorValue"]
+        if minImageNumber is not None and minImageNumber == maxImageNumber:
+            minAngle -= 1.0
+            maxAngle += 1.0
+        noImages = maxImageNumber - minImageNumber + 1
+        if noImages <= 4:
+            minImageNumber -= 0.1
+            maxImageNumber += 0.1
+            deltaAngle = maxAngle - minAngle
+            minAngle -= deltaAngle * 0.1 / noImages
+            maxAngle += deltaAngle * 0.1 / noImages
+            xtics = "1"
+        if maxResolution is None or maxResolution > 0.8:
+            maxResolution = 0.8
+        else:
+            maxResolution = int(maxResolution * 10.0) / 10.0
+        if minResolution is None or minResolution < 4.5:
+            minResolution = 4.5
+        else:
+            minResolution = int(minResolution * 10.0) / 10.0 + 1
+        if maxDozorValue < 0.001 and minDozorValue < 0.001:
+            yscale = "set yrange [-0.5:0.5]\n    set ytics 1"
+        else:
+            yscale = "set autoscale  y"
+        plotDict = {
+            "xtics": xtics,
+            "yscale": yscale,
+            "minImageNumber": minImageNumber,
+            "maxImageNumber": maxImageNumber,
+            "minAngle": minAngle,
+            "maxAngle": maxAngle,
+            "minDozorValue": minDozorValue,
+            "maxDozorValue": maxDozorValue,
+            "minResolution": minResolution,
+            "maxResolution": maxResolution,
+        }
+        return plotDict
+
+    def makePlot(self, dataCollectionId, outDataImageDozor, workingDirectory):
+        plotFileName = "dozor_{0}.png".format(dataCollectionId)
+        csvFileName = "dozor_{0}.csv".format(dataCollectionId)
+        self.createGnuPlotFile(workingDirectory, csvFileName, outDataImageDozor)
+        plotDict = self.determineMinMaxParameters(outDataImageDozor)
+        plotDict = self.determinePlotParameters(plotDict)
+        gnuplotScript = """#
+set terminal png
+set output '{dozorPlotFileName}'
+set title '{title}'
+set grid x2 y2
+set xlabel 'Image number'
+set x2label 'Angle (degrees)'
+set y2label 'Resolution (A)'
+set ylabel 'Number of spots / ExecDozor score (*10)'
+set xtics {xtics} nomirror
+set x2tics
+set ytics nomirror
+set y2tics
+set xrange [{minImageNumber}:{maxImageNumber}]
+set x2range [{minAngle}:{maxAngle}]
+{yscale}
+set y2range [{minResolution}:{maxResolution}]
+set key below
+plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with points linetype rgb 'goldenrod' pointtype 7 pointsize 1.5, \
+    '{dozorCsvFileName}' using 1:4 title 'ExecDozor score' axes x1y1 with points linetype 3 pointtype 7 pointsize 1.5, \
+    '{dozorCsvFileName}' using 1:6 title 'Visible resolution' axes x1y2 with points linetype 1 pointtype 7 pointsize 1.5
+""".format(
+            title=self.template.replace("%04d", "####"),
+            dozorPlotFileName=plotFileName,
+            dozorCsvFileName=csvFileName,
+            minImageNumber=plotDict["minImageNumber"],
+            maxImageNumber=plotDict["maxImageNumber"],
+            minAngle=plotDict["minAngle"],
+            maxAngle=plotDict["maxAngle"],
+            minResolution=plotDict["minResolution"],
+            maxResolution=plotDict["maxResolution"],
+            xtics=plotDict["xtics"],
+            yscale=plotDict["yscale"],
+        )
+        pathGnuplotScript = str(workingDirectory / "gnuplot.sh")
+        with open(pathGnuplotScript, "w") as f:
+            f.write(gnuplotScript)
+        oldCwd = os.getcwd()
+        os.chdir(str(workingDirectory))
+        gnuplot = UtilsConfig.get(self, "gnuplot", "gnuplot")
+        os.system("{0} {1}".format(gnuplot, pathGnuplotScript))
+        os.chdir(oldCwd)
+        dozorPlotPath = workingDirectory / plotFileName
+        dozorCsvPath = workingDirectory / csvFileName
+        return dozorPlotPath, dozorCsvPath
+
+    @classmethod
+    def storeDataOnPyarch(
+        cls, dataCollectionId, dozorPlotPath, dozorCsvPath, workingDirectory
+    ):
+        resultsDirectory = pathlib.Path(workingDirectory) / "results"
+        try:
+            if not resultsDirectory.exists():
+                resultsDirectory.mkdir(parents=True, mode=0o755)
+            dozorPlotResultPath = resultsDirectory / dozorPlotPath.name
+            dozorCsvResultPath = resultsDirectory / dozorCsvPath.name
+            shutil.copy(dozorPlotPath, dozorPlotResultPath)
+            shutil.copy(dozorCsvPath, dozorCsvResultPath)
+        except Exception as e:
+            logger.warning(
+                "Couldn't copy files to results directory: {0}".format(resultsDirectory)
+            )
+            logger.warning(e)
+        try:
+            # Create paths on pyarch
+            dozorPlotPyarchPath = UtilsPath.createPyarchFilePath(dozorPlotResultPath)
+            dozorCsvPyarchPath = UtilsPath.createPyarchFilePath(dozorCsvResultPath)
+            if not os.path.exists(os.path.dirname(dozorPlotPyarchPath)):
+                os.makedirs(os.path.dirname(dozorPlotPyarchPath), 0o755)
+            shutil.copy(dozorPlotResultPath, dozorPlotPyarchPath)
+            shutil.copy(dozorCsvResultPath, dozorCsvPyarchPath)
+            # Upload to data collection
+            dataCollectionId = UtilsIspyb.setImageQualityIndicatorsPlot(
+                dataCollectionId, dozorPlotPyarchPath, dozorCsvPyarchPath
+            )
+        except Exception as e:
+            logger.warning("Couldn't copy files to pyarch.")
+            logger.warning(e)
+
+    def uploadDataToIcat(self, dataCollection):
+        pass
