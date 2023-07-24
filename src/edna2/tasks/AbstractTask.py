@@ -202,7 +202,7 @@ class AbstractTask():  # noqa R0904
         if partition is None:
             partition = "mx"
         else:
-            partition = "mx,{0}".format(partition)
+            partition = "{0}".format(partition)
         script += "#SBATCH --partition={0}\n".format(partition)
         script += "#SBATCH --exclusive\n"
         script += "#SBATCH --mem={0}\n".format(mem)

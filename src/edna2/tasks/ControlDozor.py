@@ -147,6 +147,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         if doSubmit:
             executable = UtilsConfig.get(self, "slurm_executable", "dozor")
             partition = UtilsConfig.get(self, "slurm_partition", None)
+            noCores = UtilsConfig.get(self, "noCores", 10)
         else:
             executable = UtilsConfig.get(self, "executable", "dozor")
             partition = None
@@ -158,7 +159,12 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         else:
             commandLine += " -p dozor.dat"
         self.setLogFileName("dozor.log")
-        self.runCommandLine(commandLine, doSubmit=doSubmit, partition=partition)
+        self.runCommandLine(
+            commandLine,
+            doSubmit=doSubmit,
+            partition=partition,
+            noCores=noCores
+        )
         log = self.getLog()
         outData = self.parseOutput(
             inData, log, doDozorM=doDozorM, workingDir=self.getWorkingDirectory()
