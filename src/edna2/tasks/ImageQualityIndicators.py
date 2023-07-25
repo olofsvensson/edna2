@@ -23,6 +23,7 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "10/05/2019"
 
+import json
 # Corresponding EDNA code:
 # https://github.com/olofsvensson/edna-mx
 # mxv1/plugins/EDPluginControlImageQualityIndicators-v1.4/plugins/
@@ -105,7 +106,9 @@ class ImageQualityIndicators(AbstractTask):
             dozor_plot_path, dozor_csv_path = self.makePlot(
                 inData["dataCollectionId"], outData, working_directory
             )
+            logger.info("Checking if doIspybUpload")
             if self.doIspybUpload:
+                logger.debug("doIspybUpload")
                 self.storeDataOnPyarch(
                     inData["dataCollectionId"],
                     dozor_plot_path=dozor_plot_path,
@@ -114,6 +117,7 @@ class ImageQualityIndicators(AbstractTask):
                 )
 
             if self.doIcatUpload:
+                logger.debug("doIcatUpload")
                 self.uploadDataToIcat(
                     working_directory=working_directory,
                     raw=[str(self.directory)],
@@ -674,15 +678,18 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
         return (beamline, proposal)
 
     def uploadDataToIcat(self, working_directory, raw, dozor_csv_path, dozor_plot_path):
-        if working_directory.parts[-1] == "nobackup":
+        logger.debug(working_directory)
+        if working_directory.parts[-2] == "nobackup":
             beamline, proposal = self.getBeamlineProposalFromPath(working_directory)
+            logger.debug(beamline)
+            logger.debug(proposal)
             if beamline is not None:
-                metadata_urls = UtilsConfig.get(
-                    beamline, "ICAT", "metadata_urls", defaultValue=None
-                )
-                client = IcatClient(metadata_urls=metadata_urls)
-                if metadata_urls is not None:
-                    icat_directory = working_directory.parent
+                dict_config = UtilsConfig.getTaskConfig("ICAT")
+                metadata_urls = json.loads(dict_config.get("metadata_urls", "[]"))
+                logger.debug(metadata_urls)
+                if len(metadata_urls) > 0:
+                    client = IcatClient(metadata_urls=metadata_urls)
+                    icat_directory = working_directory.parents[1]
                     gallery_directory = icat_directory / "gallery"
                     gallery_directory.mkdir(mode=0o755, exist_ok=False)
                     shutil.copy(dozor_csv_path, gallery_directory)
@@ -691,6 +698,7 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
                         "Sample_name": "dozor_plot",
                     }
                     dataset_name = "dozor_plot"
+                    logger.debug("Before store")
                     client.store_processed_data(
                         beamline=beamline,
                         proposal=proposal,
@@ -699,3 +707,4 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
                         metadata=data,
                         raw=raw,
                     )
+                    logger.debug("After store")
