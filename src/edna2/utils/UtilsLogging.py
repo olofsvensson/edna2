@@ -72,9 +72,9 @@ def addConfigFileHandler(logger):
         logger.addHandler(fileHandler)
 
 def addFileHandler(logger, log_path):
-    if "DATE" in log_path:
+    if "DATETIME" in log_path:
         log_path = log_path.replace(
-            "DATE", time.strftime("%Y-%m-%d", time.localtime(time.time()))
+            "DATETIME", time.strftime("%Y%m%d-%H%M%S", time.localtime(time.time()))
         )
     if not os.path.exists(os.path.dirname(log_path)):
         os.makedirs(os.path.dirname(log_path))
