@@ -46,10 +46,13 @@ def getWorkingDirectory(task, inData, workingDirectorySuffix=None):
     if parentDirectory is None:
         parentDirectory = os.getcwd()
     parentDirectory = pathlib.Path(parentDirectory)
+    if not parentDirectory.exists():
+        parentDirectory.mkdir(mode=0o755)
     if workingDirectorySuffix is None:
         # Create unique directory
         workingDirectory = tempfile.mkdtemp(
-            prefix=task.__class__.__name__ + "_", dir=parentDirectory
+            prefix=task.__class__.__name__ + "_",
+            dir=parentDirectory,
         )
         os.chmod(workingDirectory, 0o755)
         workingDirectory = pathlib.Path(workingDirectory)

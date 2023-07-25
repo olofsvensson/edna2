@@ -151,6 +151,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         else:
             executable = UtilsConfig.get(self, "executable", "dozor")
             partition = None
+            noCores = None
         commandLine = executable + " -pall"
         if doDozorM:
             commandLine += " -mesh"
