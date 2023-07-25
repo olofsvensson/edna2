@@ -41,7 +41,9 @@ from edna2.tasks.WaitFileTask import WaitFileTask
 from edna2.tasks.ControlDozor import ControlDozor
 from edna2.tasks.PhenixTasks import DistlSignalStrengthTask
 
-from edna2.utils import UtilsImage, UtilsPath, UtilsIspyb
+from edna2.utils import UtilsPath
+from edna2.utils import UtilsImage
+from edna2.utils import UtilsIspyb
 from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 
@@ -673,24 +675,27 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
 
     def uploadDataToIcat(self, working_directory, raw, dozor_csv_path, dozor_plot_path):
         if working_directory.parts[-1] == "nobackup":
-            icat_directory = working_directory.parent
-            gallery_directory = icat_directory / "gallery"
-            gallery_directory.mkdir(mode=0o755, exist_ok=False)
-            shutil.copy(dozor_csv_path, gallery_directory)
-            shutil.copy(dozor_plot_path, gallery_directory)
-            data = {
-                "Sample_name": "dozor_plot",
-            }
-            dataset_name = "dozor_plot"
-            metadata_urls = ["dau-dm-04.esrf.fr:61613"]  # Test ICAT server
-            client = IcatClient(metadata_urls=metadata_urls)
-            beamline, proposal = self.getBeamlineProposalFromPath(icat_directory)
+            beamline, proposal = self.getBeamlineProposalFromPath(working_directory)
             if beamline is not None:
-                client.store_processed_data(
-                    beamline=beamline,
-                    proposal=proposal,
-                    dataset=dataset_name,
-                    path=str(icat_directory),
-                    metadata=data,
-                    raw=raw,
+                metadata_urls = UtilsConfig.get(
+                    beamline, "ICAT", "metadata_urls", defaultValue=None
                 )
+                client = IcatClient(metadata_urls=metadata_urls)
+                if metadata_urls is not None:
+                    icat_directory = working_directory.parent
+                    gallery_directory = icat_directory / "gallery"
+                    gallery_directory.mkdir(mode=0o755, exist_ok=False)
+                    shutil.copy(dozor_csv_path, gallery_directory)
+                    shutil.copy(dozor_plot_path, gallery_directory)
+                    data = {
+                        "Sample_name": "dozor_plot",
+                    }
+                    dataset_name = "dozor_plot"
+                    client.store_processed_data(
+                        beamline=beamline,
+                        proposal=proposal,
+                        dataset=dataset_name,
+                        path=str(icat_directory),
+                        metadata=data,
+                        raw=raw,
+                    )
