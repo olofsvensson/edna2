@@ -47,7 +47,6 @@ class H5ToCBFTask(AbstractTask):
             "properties": {
                 "imageNumber": {"type": "integer"},
                 "startImageNumber": {"type": "integer"},
-                "imageNumber": {"type": "integer"},
                 "hdf5ImageNumber": {"type": "integer"},
                 "hdf5File": {"type": "string"},
                 "forcedOutputDirectory": {"type": "string"}
