@@ -46,10 +46,13 @@ def getWorkingDirectory(task, inData, workingDirectorySuffix=None):
     if parentDirectory is None:
         parentDirectory = os.getcwd()
     parentDirectory = pathlib.Path(parentDirectory)
+    if not parentDirectory.exists():
+        parentDirectory.mkdir(mode=0o755)
     if workingDirectorySuffix is None:
         # Create unique directory
         workingDirectory = tempfile.mkdtemp(
-            prefix=task.__class__.__name__ + "_", dir=parentDirectory
+            prefix=task.__class__.__name__ + "_",
+            dir=parentDirectory,
         )
         os.chmod(workingDirectory, 0o755)
         workingDirectory = pathlib.Path(workingDirectory)
@@ -242,3 +245,16 @@ def systemCopyTree(from_path, to_path, dirs_exists_ok=False):
             raise FileExistsError(to_path)
     p = subprocess.Popen(["cp", "-r", from_path, to_path])
     p.wait()
+
+
+def getIcatBeamline(beamline):
+    dict_beamline = {
+        "id23eh1": "id23-1",
+        "id23eh2": "id23-2",
+        "id30a1": "id30a-1",
+        "id30a2": "id30a-2",
+        "id30a3": "id30a-3",
+        "id30b": "id30b",
+        "bm07": "bm07"
+    }
+    return dict_beamline[beamline]

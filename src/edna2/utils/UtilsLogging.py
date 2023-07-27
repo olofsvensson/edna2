@@ -48,7 +48,7 @@ def addStreamHandler(logger):
     logger.addHandler(streamHandler)
 
 
-def addFileHandler(logger):
+def addConfigFileHandler(logger):
     logPath = UtilsConfig.get("Logging", "log_file_path")
     if logPath is not None:
         if "DATE" in logPath:
@@ -71,6 +71,26 @@ def addFileHandler(logger):
         fileHandler.setFormatter(formatter)
         logger.addHandler(fileHandler)
 
+def addFileHandler(logger, log_path):
+    if "DATETIME" in log_path:
+        log_path = log_path.replace(
+            "DATETIME", time.strftime("%Y%m%d-%H%M%S", time.localtime(time.time()))
+        )
+    if not os.path.exists(os.path.dirname(log_path)):
+        os.makedirs(os.path.dirname(log_path))
+    maxBytes = int(UtilsConfig.get("Logging", "log_file_maxbytes", 1e7))
+    backupCount = int(UtilsConfig.get("Logging", "log_file_backupCount", 0))
+    fileHandler = logging.handlers.RotatingFileHandler(
+        log_path, maxBytes=maxBytes, backupCount=backupCount
+    )
+    logFileFormat = UtilsConfig.get("Logging", "log_file_format")
+    if logFileFormat is None:
+        logFileFormat = (
+            "%(asctime)s %(module)-20s %(funcName)-15s %(levelname)-8s %(message)s"
+        )
+    formatter = logging.Formatter(logFileFormat)
+    fileHandler.setFormatter(formatter)
+    logger.addHandler(fileHandler)
 
 def setLoggingLevel(logger, level):
     if level is None:
@@ -112,7 +132,7 @@ def getLogger(level=None):
     if not hasStreamHandler:
         addStreamHandler(logger)
     if not hasFileHandler:
-        addFileHandler(logger)
+        addConfigFileHandler(logger)
     # Set level
     setLoggingLevel(logger, level)
     return logger

@@ -38,6 +38,7 @@ from edna2.utils import UtilsDetector
 
 logger = UtilsLogging.getLogger()
 
+
 class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
     """
     The DozorM2 is responsible for executing the 'dozorm2' program.
@@ -69,18 +70,16 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 "number_apertures": {"type": "integer"},
                 "aperture_size": {"type": "string"},
                 "reject_level": {"type": "integer"},
+                "loop_thickness": {"type": "integer"},
                 "isHorizontalScan": {"type": "boolean"},
                 "number_scans": {"type": "integer"},
                 "grid_x0": {"type": "number"},
                 "grid_x1": {"type": "number"},
-                "phi_values": {
-                    "type": "array",
-                    "items": {"type": "number"}
-                },
+                "phi_values": {"type": "array", "items": {"type": "number"}},
                 "sampx": {"type": "number"},
                 "sampy": {"type": "number"},
                 "phiy": {"type": "number"},
-            }
+            },
         }
 
     def getOutDataSchema(self):
@@ -98,9 +97,9 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         else:
             commandLine = "dozorm2 dozorm2.dat"
         commands = self.generateCommands(inData, self.getWorkingDirectory())
-        with open(str(self.getWorkingDirectory() / 'dozorm2.dat'), 'w') as f:
+        with open(str(self.getWorkingDirectory() / "dozorm2.dat"), "w") as f:
             f.write(commands)
-        logPath = self.getWorkingDirectory() / 'dozorm2.log'
+        logPath = self.getWorkingDirectory() / "dozorm2.log"
         self.runCommandLine(commandLine, logPath=logPath)
         outData = self.parseOutput(self.getWorkingDirectory(), logPath)
         outData["logPath"] = str(logPath)
@@ -112,51 +111,57 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         """
         This method creates the input file for dozorm
         """
-        detectorType = inData['detectorType']
+        detectorType = inData["detectorType"]
         nx = UtilsDetector.getNx(detectorType)
         ny = UtilsDetector.getNy(detectorType)
         pixelSize = UtilsDetector.getPixelsize(detectorType)
         for index, dozor_all_file in enumerate(inData["list_dozor_all"]):
-            os.symlink(dozor_all_file, str(workingDirectory / "d_00{0}".format(index+1)))
+            os.symlink(
+                dozor_all_file, str(workingDirectory / "d_00{0}".format(index + 1))
+            )
         nameTemplateScan = "d_00?"
-        if inData.get('isHorizontalScan', True):
+        if inData.get("isHorizontalScan", True):
             meshDirect = "-h"
         else:
             meshDirect = "-v"
-        command = '!\n'
-        command += 'detector {0}\n'.format(detectorType)
-        command += 'nx %d\n' % nx
-        command += 'ny %d\n' % ny
-        command += 'pixel %f\n' % pixelSize
-        command += 'detector_distance {0}\n'.format(inData['detector_distance'])
-        command += 'X-ray_wavelength {0}\n'.format(inData['wavelength'])
-        command += 'orgx {0}\n'.format(inData['orgx'])
-        command += 'orgy {0}\n'.format(inData['orgy'])
-        command += 'number_row {0}\n'.format(inData['number_row'])
-        command += 'number_images {0}\n'.format(inData['number_images'])
-        command += 'mesh_direct {0}\n'.format(meshDirect)
-        command += 'step_h {0}\n'.format(inData['step_h'])
-        command += 'step_v {0}\n'.format(inData['step_v'])
-        command += 'beam_shape {0}\n'.format(inData['beam_shape'])
-        command += 'beam_h {0}\n'.format(inData['beam_h'])
-        command += 'beam_v {0}\n'.format(inData['beam_v'])
-        command += 'number_apertures {0}\n'.format(inData['number_apertures'])
-        command += 'aperture_size {0}\n'.format(inData['aperture_size'])
-        command += 'reject_level {0}\n'.format(inData['reject_level'])
-        command += 'name_template_scan {0}\n'.format(nameTemplateScan)
-        command += 'number_scans {0}\n'.format(inData['number_scans'])
-        command += 'first_scan_number 1\n'
-        if 'phi_values' in inData:
-            for index, phi_value in enumerate(inData['phi_values']):
-                command += 'phi{0} {1}\n'.format(index+1, phi_value)
-            command += 'axis_zero {0} {1}\n'.format(inData["grid_x0"], inData["grid_y0"])
+        command = "!\n"
+        command += "detector {0}\n".format(detectorType)
+        command += "nx %d\n" % nx
+        command += "ny %d\n" % ny
+        command += "pixel %f\n" % pixelSize
+        command += "detector_distance {0}\n".format(inData["detector_distance"])
+        command += "X-ray_wavelength {0}\n".format(inData["wavelength"])
+        command += "orgx {0}\n".format(inData["orgx"])
+        command += "orgy {0}\n".format(inData["orgy"])
+        command += "number_row {0}\n".format(inData["number_row"])
+        command += "number_images {0}\n".format(inData["number_images"])
+        command += "mesh_direct {0}\n".format(meshDirect)
+        command += "step_h {0}\n".format(inData["step_h"])
+        command += "step_v {0}\n".format(inData["step_v"])
+        command += "beam_shape {0}\n".format(inData["beam_shape"])
+        command += "beam_h {0}\n".format(inData["beam_h"])
+        command += "beam_v {0}\n".format(inData["beam_v"])
+        command += "number_apertures {0}\n".format(inData["number_apertures"])
+        command += "aperture_size {0}\n".format(inData["aperture_size"])
+        command += "reject_level {0}\n".format(inData["reject_level"])
+        if "loop_thickness" in inData and inData["loop_thickness"] is not None:
+            command += "loop_thickness {0}\n".format(inData["loop_thickness"])
+        command += "name_template_scan {0}\n".format(nameTemplateScan)
+        command += "number_scans {0}\n".format(inData["number_scans"])
+        command += "first_scan_number 1\n"
+        if "phi_values" in inData:
+            for index, phi_value in enumerate(inData["phi_values"]):
+                command += "phi{0} {1}\n".format(index + 1, phi_value)
+            command += "axis_zero {0} {1}\n".format(
+                inData["grid_x0"], inData["grid_y0"]
+            )
         if "sampx" in inData:
-            command += 'sampx {0}\n'.format(inData["sampx"])
+            command += "sampx {0}\n".format(inData["sampx"])
         if "sampy" in inData:
-            command += 'sampy {0}\n'.format(inData["sampy"])
+            command += "sampy {0}\n".format(inData["sampy"])
         if "phiy" in inData:
-            command += 'phiy {0}\n'.format(inData["phiy"])
-        command += 'end\n'
+            command += "phiy {0}\n".format(inData["phiy"])
+        command += "end\n"
         # logger.debug('command: {0}'.format(command))
         return command
 
@@ -173,7 +178,9 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
             # listPositions = DozorM2.check1Dpositions(listPositions, nx, ny)
             crystalMapPath = DozorM2.makeCrystalPlot(dictMap["crystal"], workingDir)
             if nx != 1 and ny != 1:
-                imageNumberMapPath = DozorM2.makeImageNumberMap(dictMap["imageNumber"], workingDir)
+                imageNumberMapPath = DozorM2.makeImageNumberMap(
+                    dictMap["imageNumber"], workingDir
+                )
             else:
                 imageNumberMapPath = None
             outData = {
@@ -185,7 +192,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 "crystal": dictMap["crystal"],
                 "imageNumber": dictMap["imageNumber"],
                 "crystalMapPath": crystalMapPath,
-                "imageNumberMapPath": imageNumberMapPath
+                "imageNumberMapPath": imageNumberMapPath,
             }
         return outData
 
@@ -244,7 +251,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
                         "crSizeY": int(listValues[10]),
                         "score": float(listValues[11]),
                         "dmin": float(listValues[12]),
-                        "helical": listValues[13] == 'YES'
+                        "helical": listValues[13] == "YES",
                     }
                     if position["helical"]:
                         position["helicalStartX"] = listValues[14]
@@ -261,7 +268,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
                         "sc1": int(listValues[3]),
                         "sc2": int(listValues[4]),
                         "size": float(listValues[5]),
-                        "scanX":  float(listValues[6]),
+                        "scanX": float(listValues[6]),
                         "scanY1": float(listValues[7]),
                         "scanY2": float(listValues[8]),
                         "dx": float(listValues[9]),
@@ -278,11 +285,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
                     listCoord.append(coord)
         if scan1 is None:
             scan1 = listPositions
-        dictCoord = {
-            "scan1": scan1,
-            "scan2": scan2,
-            "coord": listCoord
-        }
+        dictCoord = {"scan1": scan1, "scan2": scan2, "coord": listCoord}
         return dictCoord
 
     @staticmethod
@@ -295,8 +298,12 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
             ySize, xSize = npArrayCrystal.shape
         npArrayCrystalAbs = numpy.abs(npArrayCrystal)
         # Make '999' be the max crystal number + 1
-        maxNumber = numpy.amax(numpy.where(npArrayCrystalAbs < 999, npArrayCrystalAbs, 0))
-        npArrayCrystalAbs = numpy.where(npArrayCrystalAbs == 999, maxNumber + 1, npArrayCrystalAbs)
+        maxNumber = numpy.amax(
+            numpy.where(npArrayCrystalAbs < 999, npArrayCrystalAbs, 0)
+        )
+        npArrayCrystalAbs = numpy.where(
+            npArrayCrystalAbs == 999, maxNumber + 1, npArrayCrystalAbs
+        )
         # minValue = numpy.amin(npArrayCrystal)
         # newZeroValue = minValue - 1
         # npArrayCrystal = numpy.where(npArrayCrystal == 0.0, newZeroValue, npArrayCrystal)
@@ -309,38 +316,33 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
             fontSize = 8
             dpi = 100
         else:
-            fontSize =5
+            fontSize = 5
             dpi = 150
 
-        font = {'family': 'normal',
-                'weight': 'normal',
-                'size': fontSize}
+        font = {"family": "normal", "weight": "normal", "size": fontSize}
 
-        matplotlib.rc('font', **font)
+        matplotlib.rc("font", **font)
 
         fig, ax = plt.subplots()
 
-        im = ax.imshow(
-            npArrayCrystalAbs,
-            cmap=matplotlib.cm.Spectral
-        )
+        im = ax.imshow(npArrayCrystalAbs, cmap=matplotlib.cm.Spectral)
 
         ax.set_xticks(numpy.arange(len(range(xSize))))
         ax.set_yticks(numpy.arange(len(range(ySize))))
 
-        ax.set_xticklabels(list(range(1, xSize+1)))
-        ax.set_yticklabels(list(range(1, ySize+1)))
+        ax.set_xticklabels(list(range(1, xSize + 1)))
+        ax.set_yticklabels(list(range(1, ySize + 1)))
 
         # Rotate the tick labels and set their alignment.
-        plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
-                 rotation_mode="anchor")
+        plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 
         # Loop over data dimensions and create text annotations.
         for i in range(ySize):
             for j in range(xSize):
                 if abs(npArrayCrystal[i, j]) > 0.001:
-                    text = ax.text(j, i, npArrayCrystal[i, j],
-                                   ha="center", va="center", color="b")
+                    text = ax.text(
+                        j, i, npArrayCrystal[i, j], ha="center", va="center", color="b"
+                    )
 
         ax.set_title("Crystal map")
         fig.tight_layout(pad=2)
@@ -373,36 +375,31 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
             fontSize = 8
             dpi = 100
         else:
-            fontSize =5
+            fontSize = 5
             dpi = 150
 
-        font = {'family': 'normal',
-                'weight': 'normal',
-                'size': fontSize}
+        font = {"family": "normal", "weight": "normal", "size": fontSize}
 
-        matplotlib.rc('font', **font)
+        matplotlib.rc("font", **font)
 
         fig, ax = plt.subplots()
-        im = ax.imshow(
-            npArrayImageNumber,
-            cmap=matplotlib.cm.Greys
-        )
+        im = ax.imshow(npArrayImageNumber, cmap=matplotlib.cm.Greys)
 
         ax.set_xticks(numpy.arange(len(range(xSize))))
         ax.set_yticks(numpy.arange(len(range(ySize))))
 
-        ax.set_xticklabels(list(range(1, xSize+1)))
-        ax.set_yticklabels(list(range(1, ySize+1)))
+        ax.set_xticklabels(list(range(1, xSize + 1)))
+        ax.set_yticklabels(list(range(1, ySize + 1)))
 
         # Rotate the tick labels and set their alignment.
-        plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
-                 rotation_mode="anchor")
+        plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 
         # Loop over data dimensions and create text annotations.
         for i in range(ySize):
             for j in range(xSize):
-                text = ax.text(j, i, arrayImageNumber[i][j],
-                               ha="center", va="center", color="b")
+                text = ax.text(
+                    j, i, arrayImageNumber[i][j], ha="center", va="center", color="b"
+                )
 
         ax.set_title("Image numbers")
         fig.tight_layout(pad=2)
@@ -432,7 +429,9 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
             # listScores = textwrap.wrap(listLines[index][5:], spacing)
             listScores = []
             for line_pos in range(0, len(listLines[index]), spacing):
-                sub_string = listLines[index][line_pos + 5:line_pos + spacing + 5].strip()
+                sub_string = listLines[index][
+                    line_pos + 5 : line_pos + spacing + 5
+                ].strip()
                 if sub_string != "":
                     if isFloat:
                         listScores.append(float(sub_string))
@@ -443,8 +442,6 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         index += 1
         return index, arrayValues
 
-
-
     @staticmethod
     def parseMap(mapPath):
         with open(str(mapPath)) as fd:
@@ -453,20 +450,28 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         index = 1
         nx, ny = map(int, listLines[index].split())
         # Parse scores
-        index, arrayScore = DozorM2.parseMatrix(index, listLines, spacing=6, isFloat=True)
+        index, arrayScore = DozorM2.parseMatrix(
+            index, listLines, spacing=6, isFloat=True
+        )
         # Parse rel. contamination
-        index, relContamination = DozorM2.parseMatrix(index, listLines, spacing=6, isFloat=True)
+        index, relContamination = DozorM2.parseMatrix(
+            index, listLines, spacing=6, isFloat=True
+        )
         # Parse crystals
-        index, arrayCrystal = DozorM2.parseMatrix(index, listLines, spacing=4, isFloat=False)
+        index, arrayCrystal = DozorM2.parseMatrix(
+            index, listLines, spacing=4, isFloat=False
+        )
         # Parse image number
-        index, arrayImageNumber = DozorM2.parseMatrix(index, listLines, spacing=5, isFloat=False)
+        index, arrayImageNumber = DozorM2.parseMatrix(
+            index, listLines, spacing=5, isFloat=False
+        )
         dictMap = {
             "nx": nx,
             "ny": ny,
             "score": arrayScore,
             "relContamination": relContamination,
             "crystal": arrayCrystal,
-            "imageNumber": arrayImageNumber
+            "imageNumber": arrayImageNumber,
         }
         return dictMap
 
