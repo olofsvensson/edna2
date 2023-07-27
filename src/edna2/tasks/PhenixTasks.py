@@ -26,7 +26,8 @@ __date__ = "26/07/2019"
 import pathlib
 
 from edna2.tasks.AbstractTask import AbstractTask
-
+from edna2.tasks.H5ToCBFTask import H5ToCBFTask
+from edna2.utils import UtilsImage
 
 class DistlSignalStrengthTask(AbstractTask):
     """
@@ -35,7 +36,17 @@ class DistlSignalStrengthTask(AbstractTask):
 
     def run(self, inData):
         commandLine = 'distl.signal_strength '
-        commandLine += inData['referenceImage']
+        image_path = pathlib.path(inData['referenceImage'])
+        if image_path.suffix == ".h5":
+            image_number = UtilsImage.getImageNumber(image_path)
+            inDataH5ToCBF = {
+                "imageNumber": image_number,
+                "hdf5File": str(image_path)
+            }
+            h5ToCBFTask = H5ToCBFTask(inData=inDataH5ToCBF)
+            h5ToCBFTask.execute()
+            image_path = h5ToCBFTask.outData["outputCBFFile"]
+        commandLine += str(image_path)
         logPath = self.getWorkingDirectory() / 'distl.log'
         self.runCommandLine(commandLine, logPath=logPath)
         with open(str(logPath)) as f:
