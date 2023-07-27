@@ -27,7 +27,6 @@ import pathlib
 
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.H5ToCBFTask import H5ToCBFTask
-from edna2.utils import UtilsImage
 
 class DistlSignalStrengthTask(AbstractTask):
     """
