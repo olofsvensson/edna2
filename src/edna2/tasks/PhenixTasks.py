@@ -36,7 +36,7 @@ class DistlSignalStrengthTask(AbstractTask):
 
     def run(self, inData):
         commandLine = 'distl.signal_strength '
-        image_path = pathlib.path(inData['referenceImage'])
+        image_path = pathlib.Path(inData['referenceImage'])
         if image_path.suffix == ".h5":
             image_number = UtilsImage.getImageNumber(image_path)
             inDataH5ToCBF = {

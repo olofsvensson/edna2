@@ -43,7 +43,7 @@ class PhenixTaskExecTest(unittest.TestCase):
                      'Cannot run distlSignalStrength test with default config')
     def test_execute_distlSignalStrength(self):
         referenceDataPath = self.dataPath / \
-                            'distlSignalStrength_pilatus6m_1image.json'
+                            'distlSignalStrength_eiger9m_1image.json'
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         distlSignalStrengthTask = DistlSignalStrengthTask(inData=inData)
         distlSignalStrengthTask.execute()
