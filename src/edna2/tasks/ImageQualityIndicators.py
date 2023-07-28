@@ -24,6 +24,7 @@ __license__ = "MIT"
 __date__ = "10/05/2019"
 
 import json
+
 # Corresponding EDNA code:
 # https://github.com/olofsvensson/edna-mx
 # mxv1/plugins/EDPluginControlImageQualityIndicators-v1.4/plugins/
@@ -41,6 +42,7 @@ from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.WaitFileTask import WaitFileTask
 from edna2.tasks.ControlDozor import ControlDozor
 from edna2.tasks.PhenixTasks import DistlSignalStrengthTask
+from edna2.tasks.H5ToCBFTask import H5ToCBFTask
 
 from edna2.utils import UtilsPath
 from edna2.utils import UtilsImage
@@ -234,6 +236,7 @@ class ImageQualityIndicators(AbstractTask):
         distl_tasks = []
         dozor_tasks = []
         template4d = re.sub("#+", "{0:04d}", self.template)
+        template6d = re.sub("#+", "{0:06d}", self.template)
         for index, images_in_batch in enumerate(listOfBatches):
             listOfH5FilesInBatch = []
             image_no = images_in_batch[-1]
@@ -254,6 +257,16 @@ class ImageQualityIndicators(AbstractTask):
                 batchStartNo = images_in_batch[0]
                 batchEndNo = images_in_batch[-1]
                 dozorTemplate = self.template
+                # Convert images to CBF if necessary
+                if self.doDistlSignalStrength and dozorTemplate.endswith(".h5"):
+                    inDataH5ToCBF = {
+                        "startImageNumber": batchStartNo,
+                        "endImageNumber": batchEndNo,
+                        "hdf5ImageNumber": 1,
+                        "hdf5File": self.directory / template4d.format(batchStartNo),
+                    }
+                    h5ToCBFTask = H5ToCBFTask(inData=inDataH5ToCBF)
+                    h5ToCBFTask.start()
                 # Run Control Dozor
                 inDataControlDozor = {
                     "template": dozorTemplate,
@@ -279,8 +292,15 @@ class ImageQualityIndicators(AbstractTask):
                 )
                 # Check if we should run distl.signalStrength
                 if self.doDistlSignalStrength:
+                    if image_path.suffix == ".h5":
+                        h5ToCBFTask.join()
                     for image_no in images_in_batch:
                         image_path = self.directory / template4d.format(image_no)
+                        if image_path.suffix == ".h5":
+                            image_path = str(
+                                self.directory / template6d.format(image_no)
+                            )
+                            image_path = image_path.replace(".h5", ".cbf")
                         inDataDistl = {
                             "referenceImage": str(image_path),
                         }
@@ -338,7 +358,11 @@ class ImageQualityIndicators(AbstractTask):
             if self.doDistlSignalStrength:
                 for outDataControlDozor in listOutDataControlDozor:
                     for distlResult in listDistlResult:
-                        if outDataControlDozor["image"] == distlResult["image"]:
+                        dozor_image_no = UtilsImage.getImageNumber(
+                            outDataControlDozor["image"]
+                        )
+                        distl_image_no = UtilsImage.getImageNumber(distlResult["image"])
+                        if dozor_image_no == distl_image_no:
                             imageQualityIndicators = dict(outDataControlDozor)
                             imageQualityIndicators.update(distlResult)
                             listImageQualityIndicators.append(imageQualityIndicators)
