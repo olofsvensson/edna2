@@ -682,6 +682,11 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
         if working_directory.parts[-2] == "nobackup":
             beamline, proposal = self.getBeamlineProposalFromPath(working_directory)
             logger.debug(beamline)
+            if beamline == "id23eh1":
+                icat_beamline = "ID23-1"
+            else:
+                icat_beamline = beamline
+            logger.debug(icat_beamline)
             logger.debug(proposal)
             if beamline is not None:
                 dict_config = UtilsConfig.getTaskConfig("ICAT")
@@ -698,9 +703,10 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
                         "Sample_name": "dozor_plot",
                     }
                     dataset_name = "dozor_plot"
+                    logger.debug(f"icat_directory {icat_directory}")
                     logger.debug("Before store")
                     client.store_processed_data(
-                        beamline=beamline,
+                        beamline=icat_beamline,
                         proposal=proposal,
                         dataset=dataset_name,
                         path=str(icat_directory),
