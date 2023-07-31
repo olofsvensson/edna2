@@ -723,8 +723,10 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
                     }
                     dataset_name = "dozor_plot"
                     logger.debug("Before store")
+                    icat_beamline = UtilsPath.getIcatBeamline(beamline)
+                    logger.debug(icat_beamline)
                     client.store_processed_data(
-                        beamline=beamline,
+                        beamline=icat_beamline,
                         proposal=proposal,
                         dataset=dataset_name,
                         path=str(icat_directory),
