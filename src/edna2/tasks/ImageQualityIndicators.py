@@ -122,7 +122,7 @@ class ImageQualityIndicators(AbstractTask):
                 logger.debug("doIcatUpload")
                 self.uploadDataToIcat(
                     working_directory=working_directory,
-                    raw=[str(self.directory)],
+                    raw=str(self.directory),
                     dozor_csv_path=dozor_csv_path,
                     dozor_plot_path=dozor_plot_path,
                 )
@@ -720,6 +720,8 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
                     shutil.copy(dozor_plot_path, gallery_directory)
                     data = {
                         "Sample_name": "dozor_plot",
+                        "scanType": "qualityIndicator",
+                        "Process_program": "dozor"
                     }
                     dataset_name = "dozor_plot"
                     logger.debug(f"icat_directory {icat_directory}")
@@ -732,6 +734,6 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
                         dataset=dataset_name,
                         path=str(icat_directory),
                         metadata=data,
-                        raw=raw,
+                        raw=[raw],
                     )
                     logger.debug("After store")
