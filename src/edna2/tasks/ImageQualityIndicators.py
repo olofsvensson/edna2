@@ -79,6 +79,7 @@ class ImageQualityIndicators(AbstractTask):
         self.doIspybUpload = None
         self.dataCollectionId = None
         self.doIcatUpload = None
+        self.overlap = None
 
     def run(self, inData):
         listImageQualityIndicators = []
@@ -160,6 +161,9 @@ class ImageQualityIndicators(AbstractTask):
                 + dataCollection["numberOfImages"]
                 - 1
             )
+            self.overlap = dataCollection["overlap"]
+        else:
+            self.overlap = inData.get("overlap", 0.0)
 
     def getInDataSchema(self):
         return {
@@ -183,6 +187,7 @@ class ImageQualityIndicators(AbstractTask):
                 "startNo": {"type": "integer"},
                 "endNo": {"type": "integer"},
                 "dataCollectionId": {"anyOf": [{"type": "integer"}, {"type": "null"}]},
+                "overlap": {"type": "number"}
             },
         }
 
@@ -277,6 +282,7 @@ class ImageQualityIndicators(AbstractTask):
                     "doSubmit": self.doSubmit,
                     "doDozorM": self.doDozorM,
                     "doIspybUpload": self.doIspybUpload,
+                    "overlap": self.overlap,
                 }
                 if self.beamline is not None:
                     inDataControlDozor["beamline"] = self.beamline
