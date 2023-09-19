@@ -246,6 +246,20 @@ def systemCopyTree(from_path, to_path, dirs_exists_ok=False):
     p = subprocess.Popen(["cp", "-r", from_path, to_path])
     p.wait()
 
+def getBeamlineProposal(directory):
+    listDirectory = directory.split(os.sep)
+    try:
+        if listDirectory[1] == "data":
+            if listDirectory[2] == "visitor":
+                beamline = listDirectory[4]
+                proposal = listDirectory[3]
+            else:
+                beamline = listDirectory[2]
+                proposal = listDirectory[4]
+    except:
+        beamline = "unknown"
+        proposal = userName
+    return beamline, proposal
 
 def getIcatBeamline(beamline):
     dict_beamline = {
