@@ -724,8 +724,27 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
                     gallery_directory.mkdir(mode=0o755, exist_ok=False)
                     shutil.copy(dozor_csv_path, gallery_directory)
                     shutil.copy(dozor_plot_path, gallery_directory)
+                    sample_name = None
+                    metadata_path = os.path.join(raw, "metadata.json")
+                    if os.path.exists(metadata_path):
+                        with open(metadata_path) as f:
+                            metadata = json.loads(f.read())
+                        if "Sample_name" in metadata:
+                            sample_name = metadata["Sample_name"]
+                    if sample_name is None:
+                        dir1 = os.path.dirname(raw)
+                        dir1_name = os.path.basename(dir1)
+                        if dir1_name.startswith("run"):
+                            dir2 = os.path.dirname(dir1)
+                            dir2_name = os.path.basename(dir2)
+                            if dir2_name.startswith("run"):
+                                sample_name = os.path.basename(os.path.dirname(dir2))
+                            else:
+                                sample_name = dir2_name
+                        else:
+                            sample_name = dir1_name
                     data = {
-                        "Sample_name": "dozor_plot",
+                        "Sample_name": sample_name,
                         "scanType": "qualityIndicator",
                         "Process_program": "dozor"
                     }
