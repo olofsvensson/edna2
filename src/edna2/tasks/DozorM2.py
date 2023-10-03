@@ -32,6 +32,7 @@ import matplotlib.pyplot as plt
 
 from edna2.tasks.AbstractTask import AbstractTask
 
+from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 from edna2.utils import UtilsDetector
 
@@ -92,10 +93,11 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         }
 
     def run(self, inData):
+        executable = UtilsConfig.get(self, "executable", "dozorm2")
         if len(inData["list_dozor_all"]) > 1:
-            commandLine = "dozorm2 -avs -cr dozorm2.dat"
+            commandLine = f"{executable} -avs -cr dozorm2.dat"
         else:
-            commandLine = "dozorm2 dozorm2.dat"
+            commandLine = f"{executable} dozorm2.dat"
         commands = self.generateCommands(inData, self.getWorkingDirectory())
         with open(str(self.getWorkingDirectory() / "dozorm2.dat"), "w") as f:
             f.write(commands)
