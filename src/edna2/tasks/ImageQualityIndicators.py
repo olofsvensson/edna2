@@ -133,6 +133,7 @@ class ImageQualityIndicators(AbstractTask):
     def init(self, inData):
         self.beamline = inData.get("beamline", None)
         self.doSubmit = inData.get("doSubmit", False)
+        self.slurm_salloc_jobid = inData.get("slurm_salloc_jobid", None)
         self.doDozorM = inData.get("doDozorM", False)
         self.doDistlSignalStrength = inData.get("doDistlSignalStrength", False)
         self.isFastMesh = inData.get("fastMesh", True)
@@ -187,7 +188,8 @@ class ImageQualityIndicators(AbstractTask):
                 "startNo": {"type": "integer"},
                 "endNo": {"type": "integer"},
                 "dataCollectionId": {"anyOf": [{"type": "integer"}, {"type": "null"}]},
-                "overlap": {"type": "number"}
+                "overlap": {"type": "number"},
+                "slurm_salloc_jobid": {"anyOf": [{"type": "integer"}, {"type": "null"}]}
             },
         }
 
@@ -283,6 +285,7 @@ class ImageQualityIndicators(AbstractTask):
                     "doDozorM": self.doDozorM,
                     "doIspybUpload": self.doIspybUpload,
                     "overlap": self.overlap,
+                    "slurm_salloc_jobid": self.slurm_salloc_jobid
                 }
                 if self.beamline is not None:
                     inDataControlDozor["beamline"] = self.beamline

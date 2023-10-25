@@ -23,7 +23,7 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "21/04/2019"
 
-
+import time
 import unittest
 
 from edna2.utils import UtilsSlurm
@@ -55,6 +55,23 @@ salloc: Nodes mxhpc3-2201 are ready for job
         )
         self.assertIsNotNone(job_id)
         UtilsSlurm.scancel(job_id)
+
+
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default",
+        "Cannot run slurm exec test with default config",
+    )
+    def test_get_jobid_1(self):
+        job_name_that_doesnt_exist = str(time.time())
+        job_id = UtilsSlurm.get_jobid(job_name_that_doesnt_exist)
+        self.assertIsNone(job_id)
+
+    def test_get_jobid_2(self):
+        job_name = "Workflow_test"
+        job_id_1 = UtilsSlurm.salloc(partition="mx", job_name=job_name)
+        self.assertIsNotNone(job_id_1)
+        job_id_2 = UtilsSlurm.get_jobid(job_name)
+        self.assertEqual(job_id_1, job_id_2)
 
 
     @unittest.skipIf(

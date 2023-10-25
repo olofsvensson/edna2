@@ -57,16 +57,38 @@ def parse_salloc_stderr(stderr):
     return job_id
 
 
-def salloc(partition, exclusive=False):
+def get_jobid(job_name):
+    # First check if ressource is already allocated
+    squeue_command_line = f"squeue -n {job_name}"
+    stdout, stderr = run_command_line(squeue_command_line, timeout_sec=10)
+    list_lines = stdout.split("\n")
+    no_lines = len(list_lines)
+    if no_lines == 2:
+        job_id = None
+    else:
+        job_id = int(list_lines[1].split()[0])
+        if no_lines > 3:
+            # Too many processes named <job_name> are running!
+            # We cancel all but one
+            for index_line in range(2,no_lines-1):
+                job_id_to_be_cancelled = int(list_lines[index_line].split()[0])
+                scancel(job_id_to_be_cancelled)
+    return job_id
+
+def salloc(partition, job_name, exclusive=False):
     timeout_sec = 100
-    salloc_command_line = f"salloc --no-shell -p {partition}"
-    if exclusive:
-        salloc_command_line += " --exclusive"
-    stdout, stderr = run_command_line(salloc_command_line, timeout_sec)
-    job_id = parse_salloc_stderr(stderr)
+    job_id = get_jobid(job_name=job_name)
     if job_id is None:
-        print(stdout)
-        print(stderr)
+        salloc_command_line = f"salloc --job-name={job_name} --no-shell -p {partition}"
+        salloc_command_line += f" --node-list mxhpc3-[2301-2302]"
+        salloc_command_line += f" --cpus-per-task=25 -N 1"
+        if exclusive:
+            salloc_command_line += " --exclusive"
+        stdout, stderr = run_command_line(salloc_command_line, timeout_sec)
+        job_id = parse_salloc_stderr(stderr)
+        if job_id is None:
+            print(stdout)
+            print(stderr)
     return job_id
 
 

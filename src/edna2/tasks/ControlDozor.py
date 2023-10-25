@@ -116,7 +116,8 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 "radiationDamage": {"type": "boolean"},
                 "overlap": {"type": "number"},
                 "doDozorM": {"type": "boolean"},
-                "doSubmit": {"type": "boolean"}
+                "doSubmit": {"type": "boolean"},
+                "slurm_salloc_jobid": {"anyOf": [{"type": "integer"}, {"type": "null"}]}
             },
         }
 
@@ -139,6 +140,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
 
     def run(self, inData):
         doSubmit = inData.get("doSubmit", False)
+        slurm_salloc_jobid = inData.get("slurm_salloc_jobid", None)
         doDozorM = inData.get("doDozorM", False)
         commands = self.generateCommands(inData)
         with open(str(self.getWorkingDirectory() / "dozor.dat"), "w") as f:
@@ -163,6 +165,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         self.runCommandLine(
             commandLine,
             doSubmit=doSubmit,
+            slurm_salloc_jobid=slurm_salloc_jobid,
             partition=partition,
             noCores=noCores
         )
@@ -532,6 +535,8 @@ class ControlDozor(AbstractTask):
                 "doISPyBUpload": {"type": "boolean"},
                 "doDozorM": {"type": "boolean"},
                 "returnSpotList": {"type": "boolean"},
+                "doSubmit": {"type": "boolean"},
+                "slurm_salloc_jobid": {"anyOf": [{"type": "integer"}, {"type": "null"}]}
             },
         }
 
@@ -694,6 +699,7 @@ class ControlDozor(AbstractTask):
         hasOverlap,
     ):
         doSubmit = inData.get("doSubmit", False)
+        slurm_salloc_jobid = inData.get("slurm_salloc_jobid", None)
         doDozorM = inData.get("doDozorM", False)
         outDataDozor = None
         image = dictImage[listBatch[0]]

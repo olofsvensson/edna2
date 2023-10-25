@@ -190,7 +190,7 @@ class AbstractTask():  # noqa R0904
             errorLog = f.read()
         return errorLog
 
-    def submitCommandLine(self, commandLine, jobName, partition, ignoreErrors, noCores=None):
+    def sbatchCommandLine(self, commandLine, jobName, partition, ignoreErrors, noCores=None):
         workingDir = str(self._workingDirectory)
         if workingDir.startswith("/mntdirect/_users"):
             workingDir = workingDir.replace("/mntdirect/_users", "/home/esrf")
@@ -250,6 +250,38 @@ class AbstractTask():  # noqa R0904
             logger.warning(warningMessage)
             # raise RuntimeError(errorMessage)
 
+    def srunCommandLine(self, commandLine, jobName, slurm_salloc_jobid, ignoreErrors):
+        slurmCommandLine = "srun {0}".format(slurm_salloc_jobid)
+        pipes = subprocess.Popen(
+            slurmCommandLine,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            close_fds=True,
+            cwd=str(self._workingDirectory),
+        )
+        stdout, stderr = pipes.communicate()
+        slurmLogPath = self._workingDirectory / (jobName + "_slurm.log")
+        slurmErrorLogPath = self._workingDirectory / (jobName + "_slurm.error.log")
+        if len(stdout) > 0:
+            log = str(stdout, "utf-8")
+            with open(str(slurmLogPath), "w") as f:
+                f.write(log)
+        if len(stderr) > 0:
+            if not ignoreErrors:
+                logger.warning(
+                    "Error messages from command {0}".format(commandLine.split(" ")[0])
+                )
+            with open(str(slurmErrorLogPath), "w") as f:
+                f.write(str(stderr, "utf-8"))
+        if pipes.returncode != 0:
+            # Error!
+            warningMessage = "{0}, code {1}".format(stderr, pipes.returncode)
+            logger.warning(warningMessage)
+            # raise RuntimeError(errorMessage)
+
+
+
     def runCommandLine(
         self,
         commandLine,
@@ -258,7 +290,8 @@ class AbstractTask():  # noqa R0904
         ignoreErrors=False,
         doSubmit=False,
         partition=None,
-        noCores=None
+        noCores=None,
+        slurm_salloc_jobid=None
     ):
         if logPath is None:
             logPath = self.getLogPath()
@@ -277,7 +310,20 @@ class AbstractTask():  # noqa R0904
         with open(str(commandLinePath), "w") as f:
             f.write(commandLine)
         if doSubmit:
-            self.submitCommandLine(commandLine, jobName, partition, ignoreErrors, noCores)
+            if slurm_salloc_jobid is None:
+                self.sbatchCommandLine(
+                    commandLine=commandLine,
+                    jobName=jobName,
+                    partition=partition,
+                    ignoreErrors=ignoreErrors,
+                    noCores=noCores,
+                )
+            else:
+                self.srunCommandLine(
+                    commandLine=commandLine,
+                    jobName=jobName,
+                    slurm_salloc_jobid=slurm_salloc_jobid,
+                    ignoreErrors=ignoreErrors)
         else:
             pipes = subprocess.Popen(
                 commandLine,
@@ -315,12 +361,14 @@ class AbstractTask():  # noqa R0904
 
     def join(self):
         self._process.join()
+        self._process.close()
         if self._process.exception:
             error, trace = self._process.exception
             logger.error(error)
             logger.error(trace)
             self._dictInOut["isFailure"] = True
             self.onError()
+        self._dictInOut = dict(self._dictInOut)
 
     def execute(self):
         self.start()
