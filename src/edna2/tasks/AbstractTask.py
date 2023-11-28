@@ -204,7 +204,6 @@ class AbstractTask():  # noqa R0904
         else:
             partition = "{0}".format(partition)
         script += "#SBATCH --partition={0}\n".format(partition)
-        script += "#SBATCH --exclusive\n"
         script += "#SBATCH --mem={0}\n".format(mem)
         script += "#SBATCH --nodes={0}\n".format(nodes)
         if noCores is None:
