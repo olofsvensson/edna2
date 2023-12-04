@@ -18,20 +18,23 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-__author__ = "Olof Svensson"
-__contact__ = "svensson@esrf.eu"
+__authors__ = "Olof Svensson, Igor Melnikov"
+__contact__ = "svensson@esrf.fr"
 __copyright__ = "ESRF"
 __updated__ = "2021-07-20"
 
 import os
+import re
+
 import numpy
-import textwrap
 import matplotlib
 import matplotlib.cm
 import matplotlib.pyplot as plt
+import scipy
 
 from edna2.tasks.AbstractTask import AbstractTask
 
+from edna2.utils import UtilsImage
 from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 from edna2.utils import UtilsDetector
@@ -168,33 +171,36 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         return command
 
     @staticmethod
-    def parseOutput(workingDir, logPath):
+    def parseOutput(working_dir, log_path):
         outData = {}
-        pathDozorm2Map = workingDir / "dozorm_001.map"
-        if pathDozorm2Map.exists():
-            dictMap = DozorM2.parseMap(pathDozorm2Map)
-            nx = dictMap["nx"]
-            ny = dictMap["ny"]
-            dictCoord = DozorM2.parseDozorm2LogFile(logPath)
-            # Fix for problem with 1D scans
-            # listPositions = DozorM2.check1Dpositions(listPositions, nx, ny)
-            crystalMapPath = DozorM2.makeCrystalPlot(dictMap["crystal"], workingDir)
+        path_dozorm2_map = working_dir / "dozorm_001.map"
+        if path_dozorm2_map.exists():
+            dict_map = DozorM2.parseMap(path_dozorm2_map)
+            nx = dict_map["nx"]
+            ny = dict_map["ny"]
+            dict_coord = DozorM2.parseDozorm2LogFile(log_path)
+            crystal_map_path = DozorM2.makeCrystalPlot(dict_map["crystal"], working_dir)
             if nx != 1 and ny != 1:
-                imageNumberMapPath = DozorM2.makeImageNumberMap(
-                    dictMap["imageNumber"], workingDir
+                image_number_map_path = DozorM2.makeImageNumberMap(
+                    dict_map["imageNumber"], working_dir
                 )
             else:
-                imageNumberMapPath = None
+                image_number_map_path = None
+            # Colour map
+            D, Z = DozorM2.parser(path_dozorm2_map)
+            colour_map_path = DozorM2.colourMapPlot(Z, D, working_dir=working_dir)
+
             outData = {
-                "dozorMap": str(pathDozorm2Map),
-                "dictCoord": dictCoord,
+                "dozorMap": str(path_dozorm2_map),
+                "dictCoord": dict_coord,
                 "nx": nx,
                 "ny": ny,
-                "score": dictMap["score"],
-                "crystal": dictMap["crystal"],
-                "imageNumber": dictMap["imageNumber"],
-                "crystalMapPath": crystalMapPath,
-                "imageNumberMapPath": imageNumberMapPath,
+                "score": dict_map["score"],
+                "crystal": dict_map["crystal"],
+                "imageNumber": dict_map["imageNumber"],
+                "crystalMapPath": crystal_map_path,
+                "colourMapPath": colour_map_path,
+                "imageNumberMapPath": image_number_map_path,
             }
         return outData
 
@@ -237,7 +243,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 if not do3dCoordinates:
                     try:
                         iOverSigma = float(listValues[5])
-                    except:
+                    except ValueError:
                         iOverSigma = listValues[5]
                     position = {
                         "number": int(listValues[0]),
@@ -327,7 +333,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
 
         fig, ax = plt.subplots()
 
-        im = ax.imshow(npArrayCrystalAbs, cmap=matplotlib.cm.Spectral)
+        _ = ax.imshow(npArrayCrystalAbs, cmap=matplotlib.cm.Spectral)
 
         ax.set_xticks(numpy.arange(len(range(xSize))))
         ax.set_yticks(numpy.arange(len(range(ySize))))
@@ -342,7 +348,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         for i in range(ySize):
             for j in range(xSize):
                 if abs(npArrayCrystal[i, j]) > 0.001:
-                    text = ax.text(
+                    _ = ax.text(
                         j, i, npArrayCrystal[i, j], ha="center", va="center", color="b"
                     )
 
@@ -360,6 +366,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
             plt.show()
         crystalMapPath = os.path.join(workingDirectory, "crystalMap.png")
         plt.savefig(crystalMapPath, dpi=dpi)
+        UtilsImage.crop_image(crystalMapPath)
 
         return crystalMapPath
 
@@ -385,7 +392,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         matplotlib.rc("font", **font)
 
         fig, ax = plt.subplots()
-        im = ax.imshow(npArrayImageNumber, cmap=matplotlib.cm.Greys)
+        _ = ax.imshow(npArrayImageNumber, cmap=matplotlib.cm.Greys)
 
         ax.set_xticks(numpy.arange(len(range(xSize))))
         ax.set_yticks(numpy.arange(len(range(ySize))))
@@ -399,7 +406,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         # Loop over data dimensions and create text annotations.
         for i in range(ySize):
             for j in range(xSize):
-                text = ax.text(
+                _ = ax.text(
                     j, i, arrayImageNumber[i][j], ha="center", va="center", color="b"
                 )
 
@@ -417,6 +424,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
             plt.show()
         imageNumberPath = os.path.join(workingDirectory, "imageNumber.png")
         plt.savefig(imageNumberPath, dpi=dpi)
+        UtilsImage.crop_image(imageNumberPath)
 
         return imageNumberPath
 
@@ -505,3 +513,237 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 newPosition["yPosition"] = 1.0
             newListPositions.append(newPosition)
         return newListPositions
+
+    @staticmethod
+    def constructColorlist(array):
+        basecolors = [
+            "#00CA02",
+            "#FF0101",
+            "#F5A26F",
+            "#668DE5",
+            "#E224DE",
+            "#04FEFD",
+            "#FEFE00",
+            "#0004AF",
+            "#B5FF06",
+        ]
+
+        N = int(numpy.max(array))
+        AdjacentArray = numpy.identity(N)
+
+        t = numpy.ones((3, 3), dtype="int32")
+        for j in range(1, N + 1):
+            cut = scipy.ndimage.measurements.label(array == j)
+            c = scipy.signal.convolve2d(cut[0], t, mode="same")
+            adjacentvalues = numpy.unique(array[numpy.where(c != 0)]).astype("int")
+
+            for i in adjacentvalues:
+                if i == -1 or i == -2:
+                    pass
+                else:
+                    AdjacentArray[j - 1, i - 1] = 1
+
+        #    print(AdjacentArray)
+
+        t = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        Adjacent_NULL = numpy.tril(AdjacentArray, k=-1)
+        AdjacentArray = Adjacent_NULL
+
+        ColorVector = numpy.ones(N)
+        for i in range(N):
+            BannedColors = numpy.unique(AdjacentArray[i, :])[1:]
+            for item in BannedColors:
+                t.remove(item)
+            ColorVector[i] = t[0]
+            AdjacentArray = ColorVector * Adjacent_NULL
+            t = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        ColorVector = ColorVector.astype(int)
+
+        #    random.shuffle(basecolors)
+        colors = ColorVector.astype(str)
+        for i in range(N):
+            colors[i] = basecolors[ColorVector[i] - 1]
+
+        clrs = ["grey", "black", "black"]
+        clrs.extend(colors.tolist())
+
+        #    print(clrs)
+
+        return clrs
+
+    @staticmethod
+    def colourMapPlot(crystalN_array, dozorscore_array, working_dir=None):
+        fig, ax = plt.subplots()
+
+        Ztable, Dtable = crystalN_array, dozorscore_array
+        row, col = Dtable.shape
+
+        Zcopy = numpy.copy(Ztable)
+        Ztable = numpy.abs(Ztable)
+        Ztable[Ztable == 999] = -2
+
+        #    print(numpy.sort(numpy.unique(Ztable[Ztable>0])))
+
+        clrs = DozorM2.constructColorlist(Ztable)
+
+        cmap = matplotlib.colors.ListedColormap(
+            [matplotlib.colors.to_rgba(str(i)) for i in clrs]
+        )
+        if numpy.max(Ztable > 0):
+            plt.imshow(
+                Ztable,
+                cmap=cmap,
+                interpolation="nearest",
+                origin="upper",
+                extent=[0.5, (col + 0.5), (row + 0.5), 0.5],
+            )
+
+            m = int(round(numpy.log10(numpy.max(Dtable)) - 2, 0))
+            M = numpy.max(Dtable)
+            for (j, i) in numpy.ndindex((row, col)):
+                if Ztable[j, i] > 0:
+                    if (j, i + 1) in numpy.ndindex((row, col)):
+                        if Ztable[j, i + 1] != Ztable[j, i]:
+                            line = plt.Line2D(
+                                (i + 1.5, i + 1.5),
+                                (j + 0.5, j + 1.5),
+                                lw=2,
+                                color="white",
+                            )
+                            plt.gca().add_line(line)
+                    if (j, i - 1) in numpy.ndindex((row, col)):
+                        if Ztable[j, i - 1] != Ztable[j, i]:
+                            line = plt.Line2D(
+                                (i + 0.5, i + 0.5),
+                                (j + 0.5, j + 1.5),
+                                lw=2,
+                                color="white",
+                            )
+                            plt.gca().add_line(line)
+                    if (j + 1, i) in numpy.ndindex((row, col)):
+                        if Ztable[j + 1, i] != Ztable[j, i]:
+                            line = plt.Line2D(
+                                (i + 0.5, i + 1.5),
+                                (j + 1.5, j + 1.5),
+                                lw=2,
+                                color="white",
+                            )
+                            plt.gca().add_line(line)
+                    if (j - 1, i) in numpy.ndindex((row, col)):
+                        if Ztable[j - 1, i] != Ztable[j, i]:
+                            line = plt.Line2D(
+                                (i + 0.5, i + 1.5),
+                                (j + 0.5, j + 0.5),
+                                lw=2,
+                                color="white",
+                            )
+                            plt.gca().add_line(line)
+
+                    plt.text(
+                        i + 1,
+                        j + 1,
+                        Zcopy[j, i].astype(int),
+                        c="black",
+                        ha="center",
+                        va="center",
+                        size=3,
+                    )
+                    ax.add_patch(
+                        matplotlib.patches.Circle(
+                            (i + 1, j + 1), Dtable[j, i] / (3 * M), color="white"
+                        )
+                    )
+                elif Ztable[j, i] == -2:
+                    ax.add_patch(
+                        matplotlib.patches.Circle(
+                            (i + 1, j + 1), Dtable[j, i] / (3 * M), color="white"
+                        )
+                    )
+
+            plt.text(
+                col + 1, 2, "Dozor\nscore", c="black", ha="left", va="center", size=10
+            )
+            ax.add_patch(
+                matplotlib.patches.Circle(
+                    (col + 1.5, 4), 0.333, color="black", clip_on=False
+                )
+            )
+            plt.text(
+                col + 2,
+                4,
+                ("{:." + str(m) + "f}").format(M),
+                c="black",
+                ha="left",
+                va="center",
+                size=10,
+            )
+        else:
+            plt.imshow(
+                Dtable,
+                cmap="hot",
+                interpolation="nearest",
+                origin="upper",
+                extent=[0.5, (col + 0.5), (row + 0.5), 0.5],
+            )
+
+        plt.xticks(numpy.arange(1, Ztable.shape[1] + 1, 2), rotation=45)
+        plt.yticks(numpy.arange(1, Ztable.shape[0] + 1, 2))
+        plot_name = "colourMap.png"
+        if working_dir is None:
+            crystal_map_path = os.path.join(os.getcwd(), plot_name)
+        else:
+            crystal_map_path = os.path.join(working_dir, plot_name)
+        plt.savefig(crystal_map_path, dpi=140)
+        UtilsImage.crop_image(crystal_map_path)
+        # plt.show()
+        plt.close()
+        return crystal_map_path
+
+    @staticmethod
+    def parser(filename):
+        l = []
+        with open(filename, "r") as f:
+            l = f.readlines()
+            f.close()
+
+        #    print(re.split(r'\s+', l[1])[1:3])
+        col, row = [int(x) for x in re.split(r"\s+", l[1])[1:3]]
+
+        #    Dtable
+        Dtable = numpy.zeros((row, col))
+        i = -4
+        for line in l:
+            if re.search("Map of Scores", line):
+                i = -3
+
+            if i > 0:
+                #            print(numpy.array(re.findall('.{6}', line[5:])).astype(float).size)
+                Dtable[i, :] = numpy.array(re.findall(".{6}", line[5:])).astype(float)
+
+            if i >= row - 1:
+                break
+
+            if i >= -3:
+                i += 1
+
+        #    Ztable
+        Ztable = numpy.zeros((row, col))
+        i = -4
+        for line in l:
+            if re.search("Map of Crystals", line):
+                i = -3
+
+            if i > 0:
+                #            print(numpy.array(re.findall('.{4}', line[5:])).astype(int).size)
+                Ztable[i, :] = numpy.array(re.findall(".{4}", line[5:])).astype(int)
+
+            if i >= row - 1:
+                break
+
+            if i >= -3:
+                i += 1
+
+        # plt.imshow(Dtable)
+        # plt.show()
+
+        return Dtable, Ztable

@@ -201,3 +201,10 @@ def mergeCbfInDirectory(cbfDirectory, prefix=None, newPrefix=None):
         )
         mergeCbf(list_image, new_cbf_path)
         image_number += 1
+
+
+def crop_image(image_path):
+    #
+    # Crop image
+    #
+    os.system(f"convert -trim -border 5 -bordercolor white {image_path} {image_path}")

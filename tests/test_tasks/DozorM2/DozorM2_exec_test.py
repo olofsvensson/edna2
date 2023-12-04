@@ -19,9 +19,9 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-__authors__ = ['O. Svensson']
-__license__ = 'MIT'
-__date__ = '21/04/2019'
+__authors__ = ["O. Svensson"]
+__license__ = "MIT"
+__date__ = "21/04/2019"
 
 import os
 import unittest
@@ -33,14 +33,14 @@ from edna2.utils import UtilsConfig
 
 
 class DozorM2Test(unittest.TestCase):
-
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run dozor test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default", "Cannot run dozor test with default config"
+    )
     def test_execute_DozorM2_twoScans(self):
-        referenceDataPath = self.dataPath / 'inDataDozorM2_twoScans.json'
+        referenceDataPath = self.dataPath / "inDataDozorM2_twoScans.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         dozorm2 = DozorM2(inData=inData)
         dozorm2.execute()
@@ -48,10 +48,11 @@ class DozorM2Test(unittest.TestCase):
         outData = dozorm2.outData
         # self.assertEqual(len(outData['imageDozor']), 10)
 
-    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
-                     'Cannot run dozor test with default config')
+    @unittest.skipIf(
+        UtilsConfig.getSite() == "Default", "Cannot run dozor test with default config"
+    )
     def test_execute_DozorM2_oneScan(self):
-        referenceDataPath = self.dataPath / 'inDataDozorM2_oneScan.json'
+        referenceDataPath = self.dataPath / "inDataDozorM2_oneScan.json"
         inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         dozorm = DozorM2(inData=inData)
         dozorm.execute()
