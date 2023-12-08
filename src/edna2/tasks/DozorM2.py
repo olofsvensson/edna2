@@ -585,20 +585,24 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         #    print(numpy.sort(numpy.unique(Ztable[Ztable>0])))
 
         clrs = DozorM2.constructColorlist(Ztable)
-
         cmap = matplotlib.colors.ListedColormap(
             [matplotlib.colors.to_rgba(str(i)) for i in clrs]
         )
+        bounds = numpy.arange(-2.5, int(numpy.max(Ztable)) + 1)
+        norm = matplotlib.colors.BoundaryNorm(bounds, len(clrs))
         if numpy.max(Ztable > 0):
             plt.imshow(
                 Ztable,
                 cmap=cmap,
+                norm=norm,
                 interpolation="nearest",
                 origin="upper",
                 extent=[0.5, (col + 0.5), (row + 0.5), 0.5],
             )
 
-            m = int(round(numpy.log10(numpy.max(Dtable)) - 2, 0))
+            m = int(numpy.log10(numpy.max(Dtable)))
+            if m < 1:
+                m = 1
             M = numpy.max(Dtable)
             for (j, i) in numpy.ndindex((row, col)):
                 if Ztable[j, i] > 0:
@@ -665,13 +669,16 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
             )
             ax.add_patch(
                 matplotlib.patches.Circle(
-                    (col + 1.5, 4), 0.333, color="black", clip_on=False
+                    (col + 1.5, 4),
+                    0.333 * round(M, -m + 1) / M,
+                    color="black",
+                    clip_on=False,
                 )
             )
             plt.text(
                 col + 2,
                 4,
-                ("{:." + str(m) + "f}").format(M),
+                ("{:." + ("0" if m > 0 else "1") + "f}").format(round(M, -m + 1)),
                 c="black",
                 ha="left",
                 va="center",
@@ -693,7 +700,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
             crystal_map_path = os.path.join(os.getcwd(), plot_name)
         else:
             crystal_map_path = os.path.join(working_dir, plot_name)
-        plt.savefig(crystal_map_path, dpi=140)
+        plt.savefig(crystal_map_path, dpi=200)
         UtilsImage.crop_image(crystal_map_path)
         # plt.show()
         plt.close()
@@ -716,7 +723,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
             if re.search("Map of Scores", line):
                 i = -3
 
-            if i > 0:
+            if i >= 0:
                 #            print(numpy.array(re.findall('.{6}', line[5:])).astype(float).size)
                 Dtable[i, :] = numpy.array(re.findall(".{6}", line[5:])).astype(float)
 
@@ -733,7 +740,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
             if re.search("Map of Crystals", line):
                 i = -3
 
-            if i > 0:
+            if i >= 0:
                 #            print(numpy.array(re.findall('.{4}', line[5:])).astype(int).size)
                 Ztable[i, :] = numpy.array(re.findall(".{4}", line[5:])).astype(int)
 
@@ -745,5 +752,5 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
 
         # plt.imshow(Dtable)
         # plt.show()
-
+        #
         return Dtable, Ztable
