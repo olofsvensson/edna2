@@ -36,6 +36,7 @@ from edna2.utils import UtilsTest
 
 
 class DozorM2UnitTest(unittest.TestCase):
+
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
@@ -112,3 +113,10 @@ class DozorM2UnitTest(unittest.TestCase):
         self.assertTrue(os.path.exists(image_path))
         shutil.rmtree(tmp_dir)
 
+    def test_id30a3_unit_mainPlot(self):
+        tmp_dir = tempfile.mkdtemp(prefix="test_id30a3_unit_DozorM_mainPlot_")
+        mapPath = self.dataPath / "dozorm_id30a3_001.map"
+        D, Z = DozorM2.parser(mapPath)
+        image_path = DozorM2.colourMapPlot(Z, D, working_dir=tmp_dir)
+        self.assertTrue(os.path.exists(image_path))
+        shutil.rmtree(tmp_dir)
