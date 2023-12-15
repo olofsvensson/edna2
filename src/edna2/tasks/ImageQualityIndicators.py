@@ -89,13 +89,12 @@ class ImageQualityIndicators(AbstractTask):
         # Set up batch list
         listOfBatches = self.createBatchList(inData)
         outData = dict()
-        listDozorTask, listDistlTask = self.runDozorAndDistl(listOfBatches)
+        listDozorTask, distl_results = self.runDozorAndDistl(listOfBatches)
         if not self.isFailure():
-            listDisltResult = self.synchronizeDislt(listDistlTask)
             (
                 listImageQualityIndicators,
                 listControlDozorAllFile,
-            ) = self.synchronizeDozor(listDozorTask, listDisltResult)
+            ) = self.synchronizeDozor(listDozorTask, distl_results)
             # Assemble all controlDozorAllFiles into one
             if self.doDozorM:
                 imageQualityIndicatorsDozorAllFile = self.createDozorAllFile(
@@ -238,11 +237,12 @@ class ImageQualityIndicators(AbstractTask):
         # - Wait for all files in batch
         # - Run Dozor and DistlSignalStrength (if required) in parallel
         #
-        distl_tasks = []
         dozor_tasks = []
+        distl_results = {}
         template4d = re.sub("#+", "{0:04d}", self.template)
         template6d = re.sub("#+", "{0:06d}", self.template)
         for index, images_in_batch in enumerate(listOfBatches):
+            distl_tasks = []
             listOfH5FilesInBatch = []
             image_no = images_in_batch[-1]
             # Wait for last image
@@ -314,9 +314,16 @@ class ImageQualityIndicators(AbstractTask):
                             inData=inDataDistl,
                             workingDirectorySuffix=image_no,
                         )
+                        # logger.info(f"Running {image_path}")
                         distlTask.start()
-                        distl_tasks.append((image_path, distlTask))
-        return dozor_tasks, distl_tasks
+                        # logger.info(f"After running {image_path}")
+                        distl_tasks.append((distlTask, image_path))
+            for distlTask, image_path in distl_tasks:
+                logger.info(f"Joining distlTask {image_path}")
+                distlTask.join()
+                distl_results[os.path.basename(image_path)] = dict(distlTask.outData)
+
+        return dozor_tasks, distl_results
 
     def synchronizeDislt(self, listDistlTask):
         listDistlResult = []
@@ -324,7 +331,7 @@ class ImageQualityIndicators(AbstractTask):
         for (image, distlTask) in listDistlTask:
             imageQualityIndicators = {}
             if distlTask is not None:
-                distlTask.join()
+                # distlTask.join()
                 if distlTask.isSuccess():
                     outDataDistl = distlTask.outData
                     if outDataDistl is not None:
@@ -333,7 +340,7 @@ class ImageQualityIndicators(AbstractTask):
             listDistlResult.append(imageQualityIndicators)
         return listDistlResult
 
-    def synchronizeDozor(self, listDozorTask, listDistlResult):
+    def synchronizeDozor(self, listDozorTask, distl_results):
         listImageQualityIndicators = []
         listControlDozorAllFile = []
         for (
@@ -363,15 +370,14 @@ class ImageQualityIndicators(AbstractTask):
             )
             if self.doDistlSignalStrength:
                 for outDataControlDozor in listOutDataControlDozor:
-                    for distlResult in listDistlResult:
-                        dozor_image_no = UtilsImage.getImageNumber(
-                            outDataControlDozor["image"]
-                        )
-                        distl_image_no = UtilsImage.getImageNumber(distlResult["image"])
-                        if dozor_image_no == distl_image_no:
-                            imageQualityIndicators = dict(outDataControlDozor)
-                            imageQualityIndicators.update(distlResult)
-                            listImageQualityIndicators.append(imageQualityIndicators)
+                    image = os.path.basename(outDataControlDozor["image"])
+                    image = image.replace(".h5", ".cbf")
+                    if image in distl_results:
+                        imageQualityIndicators = dict(outDataControlDozor)
+                        imageQualityIndicators.update(distl_results[image]["imageQualityIndicators"])
+                        listImageQualityIndicators.append(imageQualityIndicators)
+                    else:
+                        listImageQualityIndicators += listOutDataControlDozor
             else:
                 listImageQualityIndicators += listOutDataControlDozor
             # Check if dozorm
