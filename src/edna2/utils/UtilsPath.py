@@ -248,6 +248,8 @@ def systemCopyTree(from_path, to_path, dirs_exists_ok=False):
 
 def getBeamlineProposal(directory):
     listDirectory = directory.split(os.sep)
+    beamline = "unknown"
+    proposal = "unknown"
     try:
         if listDirectory[1] == "data":
             if listDirectory[2] == "visitor":
@@ -257,8 +259,7 @@ def getBeamlineProposal(directory):
                 beamline = listDirectory[2]
                 proposal = listDirectory[4]
     except:
-        beamline = "unknown"
-        proposal = userName
+        pass
     return beamline, proposal
 
 def getIcatBeamline(beamline):
