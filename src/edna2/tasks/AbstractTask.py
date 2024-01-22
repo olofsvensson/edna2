@@ -190,7 +190,7 @@ class AbstractTask():  # noqa R0904
             errorLog = f.read()
         return errorLog
 
-    def submitCommandLine(self, commandLine, jobName, partition, ignoreErrors, noCores=None):
+    def submitCommandLine(self, commandLine, jobName, partition, ignoreErrors, noCores=10):
         workingDir = str(self._workingDirectory)
         if workingDir.startswith("/mntdirect/_users"):
             workingDir = workingDir.replace("/mntdirect/_users", "/home/esrf")
@@ -206,10 +206,7 @@ class AbstractTask():  # noqa R0904
         script += "#SBATCH --partition={0}\n".format(partition)
         script += "#SBATCH --mem={0}\n".format(mem)
         script += "#SBATCH --nodes={0}\n".format(nodes)
-        if noCores is None:
-            script += "#SBATCH --exclusive\n"
-        else:
-            script += "#SBATCH --cpus-per-task={0}\n".format(noCores)
+        script += "#SBATCH --cpus-per-task={0}\n".format(noCores)
         script += "#SBATCH --time={0}\n".format(time)
         script += "#SBATCH --chdir={0}\n".format(workingDir)
         script += "#SBATCH --output=stdout.txt\n"

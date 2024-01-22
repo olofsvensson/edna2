@@ -147,7 +147,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         if doSubmit:
             executable = UtilsConfig.get(self, "slurm_executable", "dozor")
             partition = UtilsConfig.get(self, "slurm_partition", None)
-            noCores = UtilsConfig.get(self, "noCores", 10)
+            noCores = UtilsConfig.get(self, "slurm_no_cores", 10)
         else:
             executable = UtilsConfig.get(self, "executable", "dozor")
             partition = None
