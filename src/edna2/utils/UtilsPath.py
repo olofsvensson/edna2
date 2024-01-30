@@ -213,7 +213,7 @@ def waitForFile(file, expectedSize=None, timeOut=DEFAULT_TIMEOUT):
 
 
 def stripDataDirectoryPrefix(data_directory):
-    """ Removes any paths before /data/..., e.g. /gpfs/easy/data/..."""
+    """Removes any paths before /data/..., e.g. /gpfs/easy/data/..."""
     list_paths = str(data_directory).split(os.sep)
     if "data" in list_paths:
         while list_paths[1] != "data":
@@ -223,9 +223,11 @@ def stripDataDirectoryPrefix(data_directory):
         new_data_directory = data_directory
     return pathlib.Path(new_data_directory)
 
+
 def systemCopyFile(from_path, to_path):
     p = subprocess.Popen(["cp", from_path, to_path])
     p.wait()
+
 
 def systemRmTree(treePath, ignore_errors=False):
     try:
@@ -237,6 +239,7 @@ def systemRmTree(treePath, ignore_errors=False):
         if not ignore_errors:
             raise
 
+
 def systemCopyTree(from_path, to_path, dirs_exists_ok=False):
     if os.path.exists(to_path):
         if dirs_exists_ok:
@@ -245,6 +248,7 @@ def systemCopyTree(from_path, to_path, dirs_exists_ok=False):
             raise FileExistsError(to_path)
     p = subprocess.Popen(["cp", "-r", from_path, to_path])
     p.wait()
+
 
 def getBeamlineProposal(directory):
     listDirectory = directory.split(os.sep)
@@ -262,6 +266,7 @@ def getBeamlineProposal(directory):
         pass
     return beamline, proposal
 
+
 def getIcatBeamline(beamline):
     dict_beamline = {
         "id23eh1": "ID23-1",
@@ -270,6 +275,6 @@ def getIcatBeamline(beamline):
         "id30a2": "ID30A-2",
         "id30a3": "ID30A-3",
         "id30b": "ID30b",
-        "bm07": "BM07"
+        "bm07": "BM07",
     }
     return dict_beamline[beamline]

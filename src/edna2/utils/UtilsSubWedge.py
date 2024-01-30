@@ -46,8 +46,6 @@ def subWedgeMerge(inData):
     return list_result_sub_wedge_merge
 
 
-
-
 def compareTwoValues(value1, value2, tolerance=0.001):
     """
     This method compares two values which can be of type double, integer or string.
@@ -144,7 +142,9 @@ def isSameExperimentalCondition(exp_cond_1, exp_cond_2):
     if not compareTwoParameters(exp_cond_1, exp_cond_2, "detector", "twoTheta"):
         return_value = False
 
-    if not compareTwoParameters(exp_cond_1, exp_cond_2, "goniostat", "oscillationWidth"):
+    if not compareTwoParameters(
+        exp_cond_1, exp_cond_2, "goniostat", "oscillationWidth"
+    ):
         return_value = False
 
     if not compareTwoParameters(exp_cond_1, exp_cond_2, "goniostat", "rotationAxis"):

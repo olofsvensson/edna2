@@ -393,9 +393,7 @@ def storeOrUpdateAutoProcScaling(
 
 
 def storeOrUpdateAutoProcScalingHasInt(
-    auto_proc_integration_id,
-    auto_proc_scaling_id,
-    record_time_stamp=None
+    auto_proc_integration_id, auto_proc_scaling_id, record_time_stamp=None
 ):
     if record_time_stamp is None:
         record_time_stamp = DateTime(datetime.datetime.now())
@@ -404,7 +402,7 @@ def storeOrUpdateAutoProcScalingHasInt(
         arg0=None,
         autoProcIntegrationId=auto_proc_integration_id,
         autoProcScalingId=auto_proc_scaling_id,
-        recordTimeStamp=record_time_stamp
+        recordTimeStamp=record_time_stamp,
     )
     return auto_proc_scaling_has_int_id
 

@@ -71,6 +71,7 @@ def addConfigFileHandler(logger):
         fileHandler.setFormatter(formatter)
         logger.addHandler(fileHandler)
 
+
 def addFileHandler(logger, log_path):
     if "DATETIME" in log_path:
         log_path = log_path.replace(
@@ -91,6 +92,7 @@ def addFileHandler(logger, log_path):
     formatter = logging.Formatter(logFileFormat)
     fileHandler.setFormatter(formatter)
     logger.addHandler(fileHandler)
+
 
 def setLoggingLevel(logger, level):
     if level is None:
