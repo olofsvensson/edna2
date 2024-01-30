@@ -88,7 +88,7 @@ def submit_job_to_slurm(
     core=4,
     time="2:00:00",
     host=None,
-    queue=None,
+    queue="mx",
     name=None,
     mem=None,
 ):
@@ -96,13 +96,9 @@ def submit_job_to_slurm(
     script = "#!/bin/bash\n"
     if name is not None:
         script += '#SBATCH --job-name="{0}"\n'.format(name)
-    if queue is None:
-        partition = "mx"
-    else:
-        partition = "mx,{0}".format(queue)
-    script += "#SBATCH --partition={0}\n".format(partition)
+    script += "#SBATCH --partition={0}\n".format(queue)
     if mem is None:
-        mem = 4000  # 4 Gb memory by default
+        mem = 8000  # 8 Gb memory by default
     script += "#SBATCH --mem={0}\n".format(mem)
     script += "#SBATCH --ntasks={0}\n".format(nodes)
     script += "#SBATCH --nodes=1\n"  # Necessary for not splitting jobs! See ATF-57
