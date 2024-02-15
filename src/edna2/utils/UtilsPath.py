@@ -251,7 +251,7 @@ def systemCopyTree(from_path, to_path, dirs_exists_ok=False):
 
 
 def getBeamlineProposal(directory):
-    listDirectory = directory.split(os.sep)
+    listDirectory = str(directory).split(os.sep)
     beamline = "unknown"
     proposal = "unknown"
     try:
