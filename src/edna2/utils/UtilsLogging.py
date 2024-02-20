@@ -50,7 +50,7 @@ def addStreamHandler(logger):
 
 def addConfigFileHandler(logger):
     logPath = UtilsConfig.get("Logging", "log_file_path")
-    if logPath is not None:
+    if logPath is not None and os.path.exists(logPath) and os.access(logPath, os.W_OK):
         if "DATE" in logPath:
             logPath = logPath.replace(
                 "DATE", time.strftime("%Y-%m-%d", time.localtime(time.time()))
