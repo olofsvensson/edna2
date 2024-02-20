@@ -50,26 +50,43 @@ def addStreamHandler(logger):
 
 def addConfigFileHandler(logger):
     logPath = UtilsConfig.get("Logging", "log_file_path")
-    if logPath is not None and os.path.exists(logPath) and os.access(logPath, os.W_OK):
-        if "DATE" in logPath:
-            logPath = logPath.replace(
-                "DATE", time.strftime("%Y-%m-%d", time.localtime(time.time()))
+    if logPath is not None:
+        is_ok = False
+        if os.path.exists(logPath):
+            if os.access(logPath, os.W_OK):
+                is_ok = True
+        else:
+            logDir = os.path.dirname(logPath)
+            if os.path.exists(logDir):
+                if os.access(logDir, os.W_OK):
+                    is_ok = True
+            else:
+                logDirParent = os.path.dirname(logDir)
+                if os.access(logDirParent, os.W_OK):
+                    os.makedirs(logDir)
+                    is_ok = True
+        if is_ok:
+            if "DATE" in logPath:
+                logPath = logPath.replace(
+                    "DATE", time.strftime("%Y-%m-%d", time.localtime(time.time()))
+                )
+            if "USER" in logPath:
+                logPath = logPath.replace(
+                    "USER", os.environ["USER"]
+                )
+            maxBytes = int(UtilsConfig.get("Logging", "log_file_maxbytes", 1e7))
+            backupCount = int(UtilsConfig.get("Logging", "log_file_backupCount", 0))
+            fileHandler = logging.handlers.RotatingFileHandler(
+                logPath, maxBytes=maxBytes, backupCount=backupCount
             )
-        if not os.path.exists(os.path.dirname(logPath)):
-            os.makedirs(os.path.dirname(logPath))
-        maxBytes = int(UtilsConfig.get("Logging", "log_file_maxbytes", 1e7))
-        backupCount = int(UtilsConfig.get("Logging", "log_file_backupCount", 0))
-        fileHandler = logging.handlers.RotatingFileHandler(
-            logPath, maxBytes=maxBytes, backupCount=backupCount
-        )
-        logFileFormat = UtilsConfig.get("Logging", "log_file_format")
-        if logFileFormat is None:
-            logFileFormat = (
-                "%(asctime)s %(module)-20s %(funcName)-15s %(levelname)-8s %(message)s"
-            )
-        formatter = logging.Formatter(logFileFormat)
-        fileHandler.setFormatter(formatter)
-        logger.addHandler(fileHandler)
+            logFileFormat = UtilsConfig.get("Logging", "log_file_format")
+            if logFileFormat is None:
+                logFileFormat = (
+                    "%(asctime)s %(module)-20s %(funcName)-15s %(levelname)-8s %(message)s"
+                )
+            formatter = logging.Formatter(logFileFormat)
+            fileHandler.setFormatter(formatter)
+            logger.addHandler(fileHandler)
 
 
 def addFileHandler(logger, log_path):
