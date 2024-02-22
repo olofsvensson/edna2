@@ -28,10 +28,9 @@ import unittest
 from edna2.utils import UtilsTest
 from edna2.utils import UtilsLogging
 
-from edna2.tasks.AutoProcessingWrappers import AutoProcessingWrappers
+from edna2.tasks.AutoProcessingWrappers import AutoPROCWrapper
 
 logger = UtilsLogging.getLogger()
-
 
 
 def get_ispyb_xml():
@@ -45,37 +44,43 @@ def get_ispyb_xml():
 def test_copy_data_to_icat_dir(tmpdir):
     tmp_path = pathlib.Path(tmpdir)
     ispyb_xml = get_ispyb_xml()
-    AutoProcessingWrappers.copy_data_to_icat_dir(
-        ispyb_xml=ispyb_xml,
-        icat_dir=tmp_path
-    )
-
+    AutoPROCWrapper.copy_data_to_icat_dir(ispyb_xml=ispyb_xml, icat_dir=tmp_path)
 
 
 def test_create_icat_metadata_from_ispyb_xml():
     ispyb_xml = get_ispyb_xml()
-    icat_metadata = AutoProcessingWrappers.create_icat_metadata_from_ispyb_xml(
-        ispyb_xml
-    )
+    icat_metadata = AutoPROCWrapper.create_icat_metadata_from_ispyb_xml(ispyb_xml)
     assert icat_metadata is not None
     pprint.pprint(icat_metadata)
 
-def test_upload_autoPROC_to_icat():
-    # tmp_path = pathlib.Path(tmpdir)
-    # ispyb_xml = get_ispyb_xml()
-    # working_dir = tmp_path / "nobackup"
-    os.environ["EDNA2_SITE"] = "ESRF_ID30A1"
-    processed_data_dir = pathlib.Path("/data/visitor/mx2532/id30a1/20240220/PROCESSED_DATA/INS/INS-Helical_test1/run_01_MXPressA/autoprocessing_combined/autoPROC")
-    list_raw_dir = [
-        "/data/visitor/mx2532/id30a1/20240220/RAW_DATA/INS/INS-Helical_test1/run_01_MXPressA/run_01_07_datacollection",
-        "/data/visitor/mx2532/id30a1/20240220/RAW_DATA/INS/INS-Helical_test1/run_01_MXPressA/run_01_09_datacollection",
-        "/data/visitor/mx2532/id30a1/20240220/RAW_DATA/INS/INS-Helical_test1/run_01_MXPressA/run_01_11_datacollection",
-        "/data/visitor/mx2532/id30a1/20240220/RAW_DATA/INS/INS-Helical_test1/run_01_MXPressA/run_01_13_datacollection"
-    ]
-    AutoProcessingWrappers.upload_autoPROC_to_icat(
-        beamline="id30a1",
-        proposal="mx2532",
-        processName="autoPROC",
-        list_raw_dir=list_raw_dir,
-        processed_data_dir=processed_data_dir,
-    )
+
+def test_get_metadata():
+    in_data = {
+        "raw_data": [
+            "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20240220/RAW_DATA/INS/INS-Helical_test1/run_01_07_datacollection",
+        ]
+    }
+    metadata = AutoPROCWrapper.get_metadata(in_data)
+    pprint.pprint(metadata)
+
+def test_wait_for_data_cbf():
+    in_data = {
+        "raw_data": [
+            "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20240220/RAW_DATA/INS/INS-Helical_test1/run_01_07_datacollection",
+            "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20240220/RAW_DATA/INS/INS-Helical_test1/run_01_09_datacollection",
+            "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20240220/RAW_DATA/INS/INS-Helical_test1/run_01_11_datacollection",
+            "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20240220/RAW_DATA/INS/INS-Helical_test1/run_01_13_datacollection",
+        ]
+    }
+    is_success = AutoPROCWrapper.wait_for_data(in_data)
+    assert is_success
+
+
+def test_wait_for_data_h5():
+    in_data = {
+        "raw_data": [
+            "/data/visitor/mx2112/id23eh1/20240130/RAW_DATA/Sample-8:2:08/run_01_MXPressF/run_01_04_datacollection",
+        ]
+    }
+    is_success = AutoPROCWrapper.wait_for_data(in_data)
+    assert is_success
