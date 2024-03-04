@@ -23,7 +23,9 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "21/04/2019"
 
+import gzip
 import os
+import shutil
 import time
 import graypy
 import logging
@@ -47,6 +49,11 @@ def addStreamHandler(logger):
     streamHandler.setFormatter(formatter)
     logger.addHandler(streamHandler)
 
+def rotator(source, dest):
+    with open(source, 'rb') as f_in:
+        with gzip.open(dest + ".gz", 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    os.remove(source)
 
 def addConfigFileHandler(logger):
     logPath = UtilsConfig.get("Logging", "log_file_path")
@@ -66,27 +73,30 @@ def addConfigFileHandler(logger):
                     os.makedirs(logDir)
                     is_ok = True
         if is_ok:
-            if "DATE" in logPath:
-                logPath = logPath.replace(
-                    "DATE", time.strftime("%Y-%m-%d", time.localtime(time.time()))
-                )
+            # if "DATE" in logPath:
+            #     logPath = logPath.replace(
+            #         "DATE", time.strftime("%Y-%m-%d", time.localtime(time.time()))
+            #     )
             if "USER" in logPath:
                 logPath = logPath.replace(
                     "USER", os.environ["USER"]
                 )
-            maxBytes = int(UtilsConfig.get("Logging", "log_file_maxbytes", 1e7))
-            backupCount = int(UtilsConfig.get("Logging", "log_file_backupCount", 0))
-            fileHandler = logging.handlers.RotatingFileHandler(
-                logPath, maxBytes=maxBytes, backupCount=backupCount
+            backup_count = int(UtilsConfig.get("Logging", "log_file_backupCount", 30))
+            when = UtilsConfig.get("Logging", "when", "midnight")
+            file_handler = logging.handlers.TimedRotatingFileHandler(
+                filename=logPath,
+                when=when,
+                backupCount=backup_count
             )
-            logFileFormat = UtilsConfig.get("Logging", "log_file_format")
-            if logFileFormat is None:
-                logFileFormat = (
+            file_handler.rotator = rotator
+            log_file_format = UtilsConfig.get("Logging", "log_file_format")
+            if log_file_format is None:
+                log_file_format = (
                     "%(asctime)s %(module)-20s %(funcName)-15s %(levelname)-8s %(message)s"
                 )
-            formatter = logging.Formatter(logFileFormat)
-            fileHandler.setFormatter(formatter)
-            logger.addHandler(fileHandler)
+            formatter = logging.Formatter(log_file_format)
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
 
 
 def addFileHandler(logger, log_path):
