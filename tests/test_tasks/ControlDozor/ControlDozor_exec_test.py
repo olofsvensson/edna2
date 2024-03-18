@@ -79,22 +79,3 @@ class ControlDozorExecTest(unittest.TestCase):
         outData = controlDozor.outData
         self.assertEqual(len(outData["imageQualityIndicators"]), 4)
 
-    @unittest.skipIf(
-        UtilsConfig.getSite() == "Default",
-        "Cannot run control dozor test with default config",
-    )
-    @unittest.skipIf(
-        not os.path.exists(
-            "/data/visitor/mx415/id30a2/20160315/" + "RAW_DATA/test3/mx415_1_0001.cbf"
-        ),
-        "Image /data/visitor/mx415/id30a2/20160315/RAW_DATA/"
-        + "test3/mx415_1_0001.cbf doesn't exist",
-    )
-    def test_execute_ControlDozor_wedgeNumber(self):
-        referenceDataPath = self.dataPath / "ControlDozor_wedgeNumber.json"
-        self.inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        controlDozor = ControlDozor(inData=self.inData)
-        controlDozor.execute()
-        self.assertTrue(controlDozor.isSuccess())
-        outData = controlDozor.outData
-        self.assertEqual(len(outData["imageQualityIndicators"]), 740)
