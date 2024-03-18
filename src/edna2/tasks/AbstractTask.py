@@ -271,7 +271,7 @@ class AbstractTask:  # noqa R0904
             if do_submit:
                 command_line += " << EOF-EDNA2\n"
             else:
-                command_line += f" 1>{log_file_name} 2>{error_log_file_name} << EOF-EDNA2"
+                command_line += f" 1>{log_file_name} 2>{error_log_file_name} << EOF-EDNA2\n"
             for command in list_command:
                 command_line += command + "\n"
             command_line += "EOF-EDNA2"
