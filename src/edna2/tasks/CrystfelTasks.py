@@ -129,7 +129,7 @@ class ExeCrystFEL(AbstractTask):
         else:
             os.chdir(self.getWorkingDirectory())
             streampath, results = self.exeIndexing(inData)
-            if streampath.exists():
+            if streampath is not None and streampath.exists():
                 outData = results
                 outData["streamfile"] = str(streampath)
                 outData["first_data_path"] = first_data_path
