@@ -278,3 +278,17 @@ def getIcatBeamline(beamline):
         "bm07": "BM07",
     }
     return dict_beamline[beamline]
+
+
+def getProcessedDataPath(raw_data_path, raise_error=False):
+    if type(raw_data_path) == str:
+        raw_data_path = pathlib.Path(raw_data_path)
+    dir_parts = list(raw_data_path.parts)
+    if "RAW_DATA" in dir_parts:
+        index_raw_data = dir_parts.index("RAW_DATA")
+        dir_parts[index_raw_data] = "PROCESSED_DATA"
+    elif raise_error:
+        raise RuntimeError(f"No RAW_DATA in raw data path {raw_data_path}")
+    processed_data_path = pathlib.Path(*dir_parts)
+    return processed_data_path
+
