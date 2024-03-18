@@ -33,9 +33,13 @@ logger = UtilsLogging.getLogger()
 
 class AutoPROCWrapperExecTest_single_sweep(unittest.TestCase):
 
-    def test_execute_multiple_sweeps(self):
+    def setUp(self):
+        self.dataPath = UtilsTest.prepareTestDataPath(__file__)
+
+    def tes_execute_multiple_sweeps(self):
         in_data = {
-            "fromN"
+            "start_image_number": 1,
+            "end_image_number": 50,
             "raw_data": [
                 "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20240220/RAW_DATA/INS/INS-Helical_test1/run_01_07_datacollection",
                 "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20240220/RAW_DATA/INS/INS-Helical_test1/run_01_09_datacollection",

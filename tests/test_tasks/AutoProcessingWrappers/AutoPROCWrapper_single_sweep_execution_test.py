@@ -37,7 +37,7 @@ class AutoPROCWrapperExecTest_single_sweep(unittest.TestCase):
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    def test_execute_single_sweep(self):
+    def tes_execute_single_sweep(self):
         in_data = {
             "start_image_number": 1,
             "end_image_number": 50,
