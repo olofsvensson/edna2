@@ -268,7 +268,10 @@ class AbstractTask:  # noqa R0904
         error_log_path = self.getErrorLogPath()
         error_log_file_name = os.path.basename(error_log_path)
         if list_command is not None:
-            command_line += " << EOF-EDNA2\n"
+            if do_submit:
+                command_line += " << EOF-EDNA2\n"
+            else:
+                command_line += f" 1>{log_file_name} 2>{error_log_file_name} << EOF-EDNA2"
             for command in list_command:
                 command_line += command + "\n"
             command_line += "EOF-EDNA2"
@@ -283,12 +286,11 @@ class AbstractTask:  # noqa R0904
                 no_cores=no_cores,
             )
         else:
-            command_line += " 1>{0} 2>{1}".format(log_file_name, error_log_file_name)
             script_file_name = job_name + ".sh"
             script_path = self._workingDirectory / script_file_name
             with open(script_path, "w") as f:
                 f.write("#!/bin/bash\n")
-                f.write(f"exec {command_line}")
+                f.write(command_line + "\n")
             script_path.chmod(0o755)
             result = subprocess.run(
                 str(script_path), shell=True, capture_output=True, text=True
