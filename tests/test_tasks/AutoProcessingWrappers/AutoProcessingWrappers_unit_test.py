@@ -55,12 +55,8 @@ def test_create_icat_metadata_from_ispyb_xml():
 
 
 def test_get_metadata():
-    in_data = {
-        "raw_data": [
-            "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20240220/RAW_DATA/INS/INS-Helical_test1/run_01_07_datacollection",
-        ]
-    }
-    metadata = AutoPROCWrapper.get_metadata(in_data)
+    raw_data_path = "/data/scisoft/pxsoft/data/WORKFLOW_TEST_DATA/id30a1/20240220/RAW_DATA/INS/INS-Helical_test1/run_01_07_datacollection"
+    metadata = AutoPROCWrapper.get_metadata(raw_data_path)
     pprint.pprint(metadata)
 
 def test_wait_for_data_cbf():
