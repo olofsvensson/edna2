@@ -100,25 +100,32 @@ def addConfigFileHandler(logger):
 
 
 def addFileHandler(logger, log_path):
-    if "DATETIME" in log_path:
-        log_path = log_path.replace(
-            "DATETIME", time.strftime("%Y%m%d-%H%M%S", time.localtime(time.time()))
+    do_add_rotating_fileHandler = False
+    if len(logger.handlers) > 0:
+        # making sure we do not add duplicate handlers
+        for handler in logger.handlers:
+            if isinstance(handler, logging.RotatingFileHandler):
+                do_add_rotating_fileHandler = False
+    if do_add_rotating_fileHandler:
+        if "DATETIME" in log_path:
+            log_path = log_path.replace(
+                "DATETIME", time.strftime("%Y%m%d-%H%M%S", time.localtime(time.time()))
+            )
+        if not os.path.exists(os.path.dirname(log_path)):
+            os.makedirs(os.path.dirname(log_path))
+        maxBytes = int(UtilsConfig.get("Logging", "log_file_maxbytes", 1e7))
+        backupCount = int(UtilsConfig.get("Logging", "log_file_backupCount", 0))
+        fileHandler = logging.handlers.RotatingFileHandler(
+            log_path, maxBytes=maxBytes, backupCount=backupCount
         )
-    if not os.path.exists(os.path.dirname(log_path)):
-        os.makedirs(os.path.dirname(log_path))
-    maxBytes = int(UtilsConfig.get("Logging", "log_file_maxbytes", 1e7))
-    backupCount = int(UtilsConfig.get("Logging", "log_file_backupCount", 0))
-    fileHandler = logging.handlers.RotatingFileHandler(
-        log_path, maxBytes=maxBytes, backupCount=backupCount
-    )
-    logFileFormat = UtilsConfig.get("Logging", "log_file_format")
-    if logFileFormat is None:
-        logFileFormat = (
-            "%(asctime)s %(module)-20s %(funcName)-15s %(levelname)-8s %(message)s"
-        )
-    formatter = logging.Formatter(logFileFormat)
-    fileHandler.setFormatter(formatter)
-    logger.addHandler(fileHandler)
+        logFileFormat = UtilsConfig.get("Logging", "log_file_format")
+        if logFileFormat is None:
+            logFileFormat = (
+                "%(asctime)s %(module)-20s %(funcName)-15s %(levelname)-8s %(message)s"
+            )
+        formatter = logging.Formatter(logFileFormat)
+        fileHandler.setFormatter(formatter)
+        logger.addHandler(fileHandler)
 
 
 def setLoggingLevel(logger, level):
