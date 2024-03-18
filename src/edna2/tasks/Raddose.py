@@ -51,7 +51,7 @@ class Raddose(AbstractTask):
 
     def run(self, inData):
         commandLine, listCommand = self.createCommandLine(inData)
-        self.runCommandLine(commandLine, listCommand=listCommand)
+        self.runCommandLine(commandLine, list_command=listCommand)
         dictResults = self.parseLogFile(self.getLogPath())
         outData = self.createOutData(inData, dictResults, pathToLogFile=self.getLogPath())
         return outData

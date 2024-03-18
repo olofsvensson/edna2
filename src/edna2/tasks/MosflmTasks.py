@@ -60,7 +60,7 @@ class AbstractMosflmTask(AbstractTask):
             f.write(json.dumps(mosflmInData, indent=4))
         listCommand = self.generateMOSFLMCommands(mosflmInData, self.getWorkingDirectory())
         self.setLogFileName('mosflm.log')
-        self.runCommandLine(commandLine, listCommand=listCommand)
+        self.runCommandLine(commandLine, list_command=listCommand)
         # Work in progress!
         outData = self.parseMosflmOutput(self.getWorkingDirectory())
         return outData

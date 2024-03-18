@@ -93,7 +93,7 @@ class Best(AbstractTask):
 
     def run(self, inData):
         commandLine = self.createBestCommandLine(inData)
-        self.runCommandLine(commandLine, listCommand=[])
+        self.runCommandLine(commandLine, list_command=[])
         outData = {}
         return outData
 

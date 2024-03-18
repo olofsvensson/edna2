@@ -319,7 +319,7 @@ class MergeUtls(AbstractTask):
             shutil.copy(hklLp['hkl'], str(dataDir / 'XDS_ASCII.HKL'))
             index += 1
         commandLine = 'Merge_utls.py --root {0} --expt serial-xtal'.format(str(workingDir))
-        self.runCommandLine(commandLine, logPath=None)
+        self.runCommandLine(commandLine, log_path=None)
         # Find Mergeing_results.json
         resultPath = self.getWorkingDirectory() / 'adm_serial-xtal' / 'adm_3' / 'Mergeing_results.json'
         if resultPath.exists():

@@ -79,7 +79,7 @@ class AimlessTask(AbstractTask):
             'END'
             ]
         self.setLogFileName('aimless.log')
-        self.runCommandLine(commandLine, listCommand=listCommand)
+        self.runCommandLine(commandLine, list_command=listCommand)
         outData['isSuccess'] = os.path.exists(output_file)
         return outData
 
@@ -100,7 +100,7 @@ class PointlessTask(AbstractTask):
             listCommand += 'choose spacegroup {0}'.format(
                 inData['choose_spacegroup'])
         self.setLogFileName('pointless.log')
-        self.runCommandLine(commandLine, listCommand=listCommand)
+        self.runCommandLine(commandLine, list_command=listCommand)
         outData = self.parsePointlessOutput(self.getLogPath())
         return outData
 

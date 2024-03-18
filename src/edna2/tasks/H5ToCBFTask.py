@@ -75,7 +75,7 @@ class H5ToCBFTask(AbstractTask):
                 inData, directory, prefix, hdf5File)
             outData['outputCBFFileTemplate'] = template
         self.setLogFileName('h5ToCBF.log')
-        self.runCommandLine('/cvmfs/sb.esrf.fr/bin/eiger2cbf ' + commandLine, ignoreErrors=True)
+        self.runCommandLine('/cvmfs/sb.esrf.fr/bin/eiger2cbf ' + commandLine, ignore_errors=True)
         return outData
 
     @classmethod

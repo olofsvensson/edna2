@@ -59,7 +59,7 @@ class XDSTask(AbstractTask):
         listXDS_INP = self.generateXDS_INP(inData)
         self.writeXDS_INP(listXDS_INP, self.getWorkingDirectory())
         self.setLogFileName("xds.log")
-        self.runCommandLine(commandLine, listCommand=[])
+        self.runCommandLine(commandLine, list_command=[])
         # Work in progress!
         outData = self.parseXDSOutput(self.getWorkingDirectory())
         return outData

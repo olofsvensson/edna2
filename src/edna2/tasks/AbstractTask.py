@@ -25,7 +25,10 @@ __date__ = "21/04/2019"
 
 import os
 import json
+import shlex
 import pathlib
+
+
 import billiard
 import traceback
 import jsonschema
@@ -62,7 +65,7 @@ class EDNA2Process(billiard.Process):
         return self._exception
 
 
-class AbstractTask():  # noqa R0904
+class AbstractTask:  # noqa R0904
     """
     Parent task to all EDNA2 tasks.
     """
@@ -190,15 +193,17 @@ class AbstractTask():  # noqa R0904
             errorLog = f.read()
         return errorLog
 
-    def submitCommandLine(self, commandLine, jobName, partition, ignoreErrors, noCores=10):
-        workingDir = str(self._workingDirectory)
-        if workingDir.startswith("/mntdirect/_users"):
-            workingDir = workingDir.replace("/mntdirect/_users", "/home/esrf")
+    def submit(
+        self, command_line, job_name, partition, log_path, error_path, ignore_errors, no_cores=10
+    ):
+        working_dir = str(self._workingDirectory)
+        if working_dir.startswith("/mntdirect/_users"):
+            working_dir = working_dir.replace("/mntdirect/_users", "/home/esrf")
         nodes = 1
         time = "1:00:00"
         mem = 16000  # 16 Gb memory by default
         script = "#!/bin/bash\n"
-        script += '#SBATCH --job-name="{0}"\n'.format(jobName)
+        script += '#SBATCH --job-name="{0}"\n'.format(job_name)
         if partition is None:
             partition = "mx"
         else:
@@ -206,13 +211,13 @@ class AbstractTask():  # noqa R0904
         script += "#SBATCH --partition={0}\n".format(partition)
         script += "#SBATCH --mem={0}\n".format(mem)
         script += "#SBATCH --nodes={0}\n".format(nodes)
-        script += "#SBATCH --cpus-per-task={0}\n".format(noCores)
+        script += "#SBATCH --cpus-per-task={0}\n".format(no_cores)
         script += "#SBATCH --time={0}\n".format(time)
-        script += "#SBATCH --chdir={0}\n".format(workingDir)
-        script += "#SBATCH --output=stdout.txt\n"
-        script += "#SBATCH --error=stderr.txt\n"
-        script += commandLine + "\n"
-        shellFile = self._workingDirectory / (jobName + "_slurm.sh")
+        script += "#SBATCH --chdir={0}\n".format(working_dir)
+        script += f"#SBATCH --output={log_path}\n"
+        script += f"#SBATCH --error={error_path}\n"
+        script += command_line + "\n"
+        shellFile = self._workingDirectory / (job_name + "_slurm.sh")
         with open(str(shellFile), "w") as f:
             f.write(script)
             f.close()
@@ -227,16 +232,16 @@ class AbstractTask():  # noqa R0904
             cwd=str(self._workingDirectory),
         )
         stdout, stderr = pipes.communicate()
-        slurmLogPath = self._workingDirectory / (jobName + "_slurm.log")
-        slurmErrorLogPath = self._workingDirectory / (jobName + "_slurm.error.log")
+        slurmLogPath = self._workingDirectory / (job_name + "_slurm.log")
+        slurmErrorLogPath = self._workingDirectory / (job_name + "_slurm.error.log")
         if len(stdout) > 0:
             log = str(stdout, "utf-8")
             with open(str(slurmLogPath), "w") as f:
                 f.write(log)
         if len(stderr) > 0:
-            if not ignoreErrors:
+            if not ignore_errors:
                 logger.warning(
-                    "Error messages from command {0}".format(commandLine.split(" ")[0])
+                    "Error messages from command {0}".format(command_line.split(" ")[0])
                 )
             with open(str(slurmErrorLogPath), "w") as f:
                 f.write(str(stderr, "utf-8"))
@@ -248,59 +253,62 @@ class AbstractTask():  # noqa R0904
 
     def runCommandLine(
         self,
-        commandLine,
-        logPath=None,
-        listCommand=None,
-        ignoreErrors=False,
-        doSubmit=False,
+        command_line,
+        log_path=None,
+        list_command=None,
+        ignore_errors=False,
+        do_submit=False,
         partition=None,
-        noCores=None
+        no_cores=None,
     ):
-        if logPath is None:
-            logPath = self.getLogPath()
-        jobName = self.__class__.__name__
-        logFileName = os.path.basename(logPath)
-        errorLogPath = self.getErrorLogPath()
-        errorLogFileName = os.path.basename(errorLogPath)
-        commandLine += " 1>{0} 2>{1}".format(logFileName, errorLogFileName)
-        if listCommand is not None:
-            commandLine += " << EOF-EDNA2\n"
-            for command in listCommand:
-                commandLine += command + "\n"
-            commandLine += "EOF-EDNA2"
-        commandLogFileName = jobName + ".commandLine.txt"
-        commandLinePath = self._workingDirectory / commandLogFileName
-        with open(str(commandLinePath), "w") as f:
-            f.write(commandLine)
-        if doSubmit:
-            self.submitCommandLine(commandLine, jobName, partition, ignoreErrors, noCores)
-        else:
-            pipes = subprocess.Popen(
-                commandLine,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                close_fds=True,
-                cwd=str(self._workingDirectory),
+        if log_path is None:
+            log_path = self.getLogPath()
+        job_name = self.__class__.__name__
+        log_file_name = os.path.basename(log_path)
+        error_log_path = self.getErrorLogPath()
+        error_log_file_name = os.path.basename(error_log_path)
+        # command_line += " 1>{0} 2>{1}".format(log_file_name, error_log_file_name)
+        if list_command is not None:
+            command_line += " << EOF-EDNA2\n"
+            for command in list_command:
+                command_line += command + "\n"
+            command_line += "EOF-EDNA2"
+        script_file_name = job_name + ".sh"
+        script_path = self._workingDirectory / script_file_name
+        with open(script_path, "w") as f:
+            f.write("#!/bin/bash\n")
+            f.write(f"exec {command_line}")
+        script_path.chmod(0o755)
+        if do_submit:
+            self.submit(
+                command_line=command_line,
+                job_name=job_name,
+                partition=partition,
+                log_path=log_path,
+                error_path=error_log_path,
+                ignore_errors=ignore_errors,
+                no_cores=no_cores,
             )
-            stdout, stderr = pipes.communicate()
-            if len(stdout) > 0:
-                log = str(stdout, "utf-8")
-                with open(str(logPath), "w") as f:
-                    f.write(log)
-            if len(stderr) > 0:
-                if not ignoreErrors:
+        else:
+            result = subprocess.run(
+                str(script_path), shell=True, capture_output=True, text=True
+            )
+            if len(result.stdout) > 0:
+                with open(str(log_path), "w") as f:
+                    f.write(result.stdout)
+            if len(result.stderr) > 0:
+                if not ignore_errors:
                     logger.warning(
                         "Error messages from command {0}".format(
-                            commandLine.split(" ")[0]
+                            command_line.split(" ")[0]
                         )
                     )
-                errorLogPath = self._workingDirectory / errorLogFileName
-                with open(str(errorLogPath), "w") as f:
-                    f.write(str(stderr, "utf-8"))
-            if pipes.returncode != 0:
+                error_log_path = self._workingDirectory / error_log_file_name
+                with open(str(error_log_path), "w") as f:
+                    f.write(result.stderr)
+            if result.returncode != 0:
                 # Error!
-                errorMessage = "{0}, code {1}".format(stderr, pipes.returncode)
+                errorMessage = "{0}, code {1}".format(result.stderr, result.returncode)
                 raise RuntimeError(errorMessage)
 
     def onError(self):
@@ -345,4 +353,3 @@ class AbstractTask():  # noqa R0904
 
     def setPersistInOutData(self, value):
         self._persistInOutData = value
-

@@ -46,7 +46,7 @@ class DistlSignalStrengthTask(AbstractTask):
             image_path = h5ToCBFTask.outData["outputCBFFile"]
         commandLine += str(image_path)
         logPath = self.getWorkingDirectory() / 'distl.log'
-        self.runCommandLine(commandLine, logPath=logPath)
+        self.runCommandLine(commandLine, log_path=logPath)
         with open(str(logPath)) as f:
             logText = f.read()
         imageQualityIndicators = self.parseLabelitDistlOutput(logText)

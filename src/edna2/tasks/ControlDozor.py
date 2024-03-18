@@ -162,9 +162,9 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         self.setLogFileName("dozor.log")
         self.runCommandLine(
             commandLine,
-            doSubmit=doSubmit,
+            do_submit=doSubmit,
             partition=partition,
-            noCores=noCores
+            no_cores=noCores
         )
         log = self.getLog()
         outData = self.parseOutput(

@@ -105,7 +105,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         with open(str(self.getWorkingDirectory() / "dozorm2.dat"), "w") as f:
             f.write(commands)
         logPath = self.getWorkingDirectory() / "dozorm2.log"
-        self.runCommandLine(commandLine, logPath=logPath)
+        self.runCommandLine(commandLine, log_path=logPath)
         outData = self.parseOutput(self.getWorkingDirectory(), logPath)
         outData["logPath"] = str(logPath)
         outData["workingDirectory"] = str(self.getWorkingDirectory())
