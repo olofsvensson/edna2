@@ -116,7 +116,8 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 "radiationDamage": {"type": "boolean"},
                 "overlap": {"type": "number"},
                 "doDozorM": {"type": "boolean"},
-                "doSubmit": {"type": "boolean"}
+                "doSubmit": {"type": "boolean"},
+                "doTotalIntensity": {"type": "boolean"}
             },
         }
 
@@ -140,6 +141,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
     def run(self, inData):
         doSubmit = inData.get("doSubmit", False)
         doDozorM = inData.get("doDozorM", False)
+        doTotalIntensity = inData.get("doTotalIntensity", False)
         commands = self.generateCommands(inData)
         with open(str(self.getWorkingDirectory() / "dozor.dat"), "w") as f:
             f.write(commands)
@@ -153,6 +155,8 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
             partition = None
             noCores = None
         commandLine = executable + " -pall"
+        if doTotalIntensity:
+            commandLine += " -s"
         if doDozorM:
             commandLine += " -mesh"
         if "radiationDamage" in inData:
@@ -350,8 +354,26 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 resultDozor["imageDozor"].append(imageDozor)
             elif line.startswith("h"):
                 resultDozor["halfDoseTime"] = line.split("=")[1].split()[0]
-        # Check if mtv plot file exists
         if workingDir is not None:
+            # Check if dozor_sum_int.dat filr exists
+            dozor_sum_int_file = "dozor_sum_int.dat"
+            dozor_sum_int_path = os.path.join(str(workingDir), dozor_sum_int_file)
+            if os.path.exists(dozor_sum_int_path):
+                first_image_number = inData["firstImageNumber"]
+                with open(dozor_sum_int_path) as f:
+                    list_lines = f.readlines()
+                for line in list_lines[1:]:
+                    if "end" in line:
+                        break
+                    line_parts = line.split()
+                    image_no = int(line_parts[0]) + first_image_number - 1
+                    image_dozor = next(item for item in resultDozor["imageDozor"] if item["number"] == image_no)
+                    image_dozor["totalIntensity"] = float(line_parts[1])
+                    image_dozor["totalBackground"] = float(line_parts[2])
+                    image_dozor["relDIntensity"] = float(line_parts[3])
+                    image_dozor["relIntPerInt1"] = float(line_parts[4])
+
+            # Check if mtv plot file exists
             mtvFileName = "dozor_rd.mtv"
             mtvFilePath = os.path.join(str(workingDir), mtvFileName)
             if os.path.exists(mtvFilePath):
@@ -531,7 +553,8 @@ class ControlDozor(AbstractTask):
                 "keepCbfTmpDirectory": {"type": "boolean"},
                 "doISPyBUpload": {"type": "boolean"},
                 "doDozorM": {"type": "boolean"},
-                "returnSpotList": {"type": "boolean"},
+                "doTotalIntensity": {"type": "boolean"},
+                "returnSpotList": {"type": "boolean"}
             },
         }
 
@@ -563,6 +586,7 @@ class ControlDozor(AbstractTask):
         returnSpotList = inData.get("returnSpotList", False)
         # Check doDozorM
         doDozorM = inData.get("doDozorM", False)
+        doTotalIntensity = inData.get("doTotalIntensity", False)
         # Check if connection to ISPyB needed
         batchSize, dictImage = self.determineBatchsize(inData)
         # Check overlap
@@ -582,7 +606,7 @@ class ControlDozor(AbstractTask):
                 overlap=overlap,
                 workingDirectory=str(self.getWorkingDirectory()),
                 hasHdf5Prefix=hasHdf5Prefix,
-                hasOverlap=self.hasOverlap,
+                hasOverlap=self.hasOverlap
             )
             if outDataDozor is not None:
                 for imageDozor in outDataDozor["imageDozor"]:
@@ -596,7 +620,13 @@ class ControlDozor(AbstractTask):
                         "dozorSpotsIntAver": imageDozor["spotsIntAver"],
                         "dozorSpotsResolution": imageDozor["spotsResolution"],
                         "dozorVisibleResolution": imageDozor["visibleResolution"],
+
                     }
+                    if doTotalIntensity:
+                        imageQualityIndicators["totalIntensity"] = imageDozor["totalIntensity"]
+                        imageQualityIndicators["totalBackground"] = imageDozor["totalBackground"]
+                        imageQualityIndicators["relDIntensity"] = imageDozor["relDIntensity"]
+                        imageQualityIndicators["relIntPerInt1"] = imageDozor["relIntPerInt1"]
                     if "spotFile" in imageDozor:
                         if os.path.exists(imageDozor["spotFile"]):
                             spotFile = imageDozor["spotFile"]
@@ -691,10 +721,11 @@ class ControlDozor(AbstractTask):
         overlap,
         workingDirectory,
         hasHdf5Prefix,
-        hasOverlap,
+        hasOverlap
     ):
         doSubmit = inData.get("doSubmit", False)
         doDozorM = inData.get("doDozorM", False)
+        doTotalIntensity = inData.get("doTotalIntensity", False)
         outDataDozor = None
         image = dictImage[listBatch[0]]
         prefix = UtilsImage.getPrefix(image)
@@ -752,6 +783,7 @@ class ControlDozor(AbstractTask):
             "overlap": overlap,
             "doSubmit": doSubmit,
             "doDozorM": doDozorM,
+            "doTotalIntensity": doTotalIntensity
         }
         if "beamline" in inData:
             inDataDozor["beamline"] = inData["beamline"]

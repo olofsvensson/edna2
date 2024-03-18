@@ -133,6 +133,7 @@ class ImageQualityIndicators(AbstractTask):
         self.beamline = inData.get("beamline", None)
         self.doSubmit = inData.get("doSubmit", False)
         self.doDozorM = inData.get("doDozorM", False)
+        self.doTotalIntensity = inData.get("doTotalIntensity", False)
         self.doDistlSignalStrength = inData.get("doDistlSignalStrength", False)
         self.isFastMesh = inData.get("fastMesh", True)
         self.listImage = inData.get("image", [])
@@ -170,6 +171,7 @@ class ImageQualityIndicators(AbstractTask):
             "properties": {
                 "beamline": {"type": "string"},
                 "doDozorM": {"type": "boolean"},
+                "doTotalIntensity": {"type": "boolean"},
                 "doDistlSignalStrength": {"type": "boolean"},
                 "doIndexing": {"type": "boolean"},
                 "doIspybUpload": {"type": "boolean"},
@@ -283,6 +285,7 @@ class ImageQualityIndicators(AbstractTask):
                     "doDozorM": self.doDozorM,
                     "doIspybUpload": self.doIspybUpload,
                     "overlap": self.overlap,
+                    "doTotalIntensity": self.doTotalIntensity
                 }
                 if self.beamline is not None:
                     inDataControlDozor["beamline"] = self.beamline

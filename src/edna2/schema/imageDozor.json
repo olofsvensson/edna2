@@ -21,6 +21,10 @@
         "powderWilsonResolution": {"type": "number"},
         "powderWilsonCorrelation": {"type": "number"},
         "powderWilsonRfactor": {"type": "number"},
-        "spotFile": {"type": "string"}
+        "spotFile": {"type": "string"},
+        "totalIntensity": {"type": "number"},
+        "totalBackground": {"type": "number"},
+        "relDIntensity": {"type": "number"},
+        "relIntPerInt1": {"type": "number"}
     }
 }
