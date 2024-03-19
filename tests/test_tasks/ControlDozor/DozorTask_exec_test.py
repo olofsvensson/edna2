@@ -61,17 +61,17 @@ class ExecDozorTest(unittest.TestCase):
         referenceDataPath = self.dataPath / "inDataDozor.json"
         in_data = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
         # Use SLURM - use /tmp_14_days as working dir
-        username = os.environ["USER"]
-        working_dir = tempfile.mkdtemp(dir=f"/tmp_14_days/{username}", prefix="edna2_dozor_slurm_")
+        # username = os.environ["USER"]
+        # working_dir = tempfile.mkdtemp(dir=f"/tmp_14_days/{username}", prefix="edna2_dozor_slurm_")
         in_data["doSubmit"] = True
-        in_data["workingDirectory"] = working_dir
+        # in_data["workingDirectory"] = working_dir
         # 'Manually' load the 10 test images
         for image_no in range(1, 11):
             file_name = "x_1_{0:04d}.cbf".format(image_no)
             UtilsTest.loadTestImage(file_name)
         dozor = ExecDozor(inData=in_data)
         dozor.execute()
-        shutil.rmtree(working_dir)
+        # shutil.rmtree(working_dir)
         self.assertTrue(dozor.isSuccess())
         out_data = dozor.outData
         self.assertEqual(len(out_data["imageDozor"]), 10)
