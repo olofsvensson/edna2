@@ -300,7 +300,7 @@ class ReadImageHeader(AbstractTask):
         if dictHeader is None:
             raise RuntimeError("Cannot read header from {0}!".format(h5MasterFilePath))
         description = dictHeader["description"]
-        if "Eiger 4M" in description:
+        if "Eiger 4M" in description or "EIGER1 Si 4M" in description:
             detectorName = "EIGER 4M"
             detectorType = "eiger4m"
             numberPixelX = 2070
