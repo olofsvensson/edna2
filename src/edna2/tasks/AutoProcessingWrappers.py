@@ -66,11 +66,13 @@ class AutoPROCWrapper(AbstractTask):
         return {
             "type": "object",
             "properties": {
+                "beamline": {"type": "string"},
+                "proposal": {"type": "string"},
                 "start_image_number": {"type": "number"},
                 "end_image_number": {"type": "number"},
                 "dataCollectionId": {"type": "number"},
-                "icatProcessDataDir": {"type": "string"},
-                "processDirectory": {"type": "string"},
+                "icat_processed_data_dir": {"type": "string"},
+                "processed_data_dir": {"type": "string"},
                 "doAnom": {"type": "boolean"},
                 "doAnomAndNonanom": {"type": "boolean"},
                 "symm": {"type": "string"},
@@ -99,7 +101,12 @@ class AutoPROCWrapper(AbstractTask):
     def run(self, in_data):
         out_data = {}
         logger = UtilsLogging.getLogger()
-        logger.info("Starting auto-processing with autoPROC")
+        if len(in_data["raw_data"]) == 1:
+            logger.info("Starting auto-processing with autoPROC")
+            do_merge = False
+        else:
+            logger.info("Starting merged auto-processing with autoPROC")
+            do_merge = True
         AutoPROCWrapper.host_info()
         # Wait for data files
         is_success = AutoPROCWrapper.wait_for_data(in_data)
@@ -111,7 +118,7 @@ class AutoPROCWrapper(AbstractTask):
             command_line = self.get_command_line(in_data)
             logger.info(command_line)
             # self.set_ispyb_status(status="RUNNING")
-            self.runCommandLine(command_line)
+            self.runCommandLine(command_line, do_submit=True, no_cores=20)
             # if len(in_data["raw_data"]) == 1:
             #     logger.info("Processing single sweep")
             #     out_data = self.process_single_sweep(in_data)
@@ -120,6 +127,15 @@ class AutoPROCWrapper(AbstractTask):
             #     out_data = self.process_multiple_sweeps(in_data)
             logger.info("Setting ISPyB status to FINISHED")
             # self.set_ispyb_status(status="FINISHED")
+            logger.info("Uploading processed data to ICAT")
+            self.upload_autoPROC_to_icat(
+                beamline=in_data["beamline"],
+                proposal=in_data["proposal"],
+                processName="autoPROC",
+                list_raw_dir=in_data["raw_data"],
+                processed_data_dir=in_data["icat_processed_data_dir"],
+                working_dir=self.getWorkingDirectory()
+            )
         return out_data
 
     def process_single_sweep(self, in_data, command_line):
@@ -134,7 +150,7 @@ class AutoPROCWrapper(AbstractTask):
         rotation_axis = None
         scale_with_xscale = True
         nthreads = 20
-        command_line = "process -B -xml"
+        command_line = "/cvmfs/sb.esrf.fr/bin/process -B -xml"
         command_line += f" -nthreads {nthreads}"
         command_line += ' -M ReportingInlined autoPROC_HIGHLIGHT="no"'
         if scale_with_xscale:
@@ -277,13 +293,17 @@ class AutoPROCWrapper(AbstractTask):
 
     @staticmethod
     def upload_autoPROC_to_icat(
-        beamline, proposal, processName, list_raw_dir, processed_data_dir
+        beamline,
+        proposal,
+        processName,
+        list_raw_dir,
+        processed_data_dir,
+        working_dir
     ):
         dataset_name = processName
-        icat_dir = processed_data_dir / processName
+        icat_dir = pathlib.Path(processed_data_dir) / processName
         if not icat_dir.exists():
             icat_dir.mkdir(mode=0o755)
-        working_dir = processed_data_dir / "nobackup"
         ispyb_xml_path = working_dir / f"{processName}.xml"
         if ispyb_xml_path.exists():
             with open(ispyb_xml_path) as f:
@@ -344,8 +364,14 @@ class AutoPROCWrapper(AbstractTask):
         # Meta-data
         metadata = {}
         autoProcContainer = dict_ispyb["AutoProcContainer"]
-        autoProc = autoProcContainer["AutoProc"][0]
-        autoProcScalingContainer = autoProcContainer["AutoProcScalingContainer"][0]
+        if type(autoProcContainer["AutoProc"]) == list:
+            autoProc = autoProcContainer["AutoProc"][0]
+        else:
+            autoProc = autoProcContainer["AutoProc"]
+        if type(autoProcContainer["AutoProcScalingContainer"]) == list:
+            autoProcScalingContainer = autoProcContainer["AutoProcScalingContainer"][0]
+        else:
+            autoProcScalingContainer = autoProcContainer["AutoProcScalingContainer"]
         if "autoProcIntegrationContainer" in autoProcScalingContainer:
             autoProcIntegrationContainer = autoProcScalingContainer[
                 "autoProcIntegrationContainer"
