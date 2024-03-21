@@ -24,10 +24,9 @@ __license__ = "MIT"
 __date__ = "21/04/2019"
 
 import os
+import sys
 import json
-import shlex
 import pathlib
-
 
 import billiard
 import traceback
@@ -35,6 +34,7 @@ import jsonschema
 import subprocess
 
 from edna2.utils import UtilsPath
+from edna2.utils import UtilsSlurm
 from edna2.utils import UtilsLogging
 
 logger = UtilsLogging.getLogger()
@@ -194,7 +194,14 @@ class AbstractTask:  # noqa R0904
         return errorLog
 
     def submit(
-        self, command_line, job_name, partition, log_path, error_path, ignore_errors, no_cores=10
+        self,
+        command_line,
+        job_name,
+        partition,
+        log_path,
+        error_path,
+        ignore_errors,
+        no_cores=10,
     ):
         working_dir = str(self._workingDirectory)
         if working_dir.startswith("/mntdirect/_users"):
@@ -271,7 +278,9 @@ class AbstractTask:  # noqa R0904
             if do_submit:
                 command_line += " << EOF-EDNA2\n"
             else:
-                command_line += f" 1>{log_file_name} 2>{error_log_file_name} << EOF-EDNA2\n"
+                command_line += (
+                    f" 1>{log_file_name} 2>{error_log_file_name} << EOF-EDNA2\n"
+                )
             for command in list_command:
                 command_line += command + "\n"
             command_line += "EOF-EDNA2"
@@ -357,3 +366,62 @@ class AbstractTask:  # noqa R0904
 
     def setPersistInOutData(self, value):
         self._persistInOutData = value
+
+    @classmethod
+    def launch_on_slurm(
+        cls, working_dir, in_data, partition, no_cores=1, environment=None
+    ):
+        # Save input data
+        edna2_module_name = cls.__module__
+        edna2_task_name = cls.__name__
+        input_path = working_dir / f"{edna2_task_name}.json"
+        with open(input_path, "w") as f:
+            f.write(json.dumps(in_data, indent=4))
+        # Prepare script
+        python_intepreter = sys.executable
+        script = f"#!{python_intepreter}\n"
+        script += "import os\n"
+        script += "import json\n"
+        script += "from edna2.utils import UtilsLogging\n"
+        script += f"from {edna2_module_name} import {edna2_task_name}\n"
+        script += "\n"
+        script += f'os.chdir("{working_dir}")\n'
+        script += "\n"
+        script += "# Remove start and end file if existing\n"
+        script += f'start_file = "{working_dir}/STARTED"\n'
+        script += f'finish_file = "{working_dir}/FINISHED"\n'
+        script += "if os.path.exists(start_file):\n"
+        script += "    os.remove(start_file)\n"
+        script += "if os.path.exists(finish_file):\n"
+        script += "    os.remove(finish_file)\n"
+        script += "\n"
+        for key, value in environment.items():
+            script += f'os.environ["{key}"] = "{value}"\n'
+        script += "\n"
+        script += "# Set up local logging\n"
+        script += "logger = UtilsLogging.getLogger()\n"
+        script += f'UtilsLogging.addFileHandler(logger, "{working_dir}/{edna2_task_name}_log_DATETIME.txt")\n'
+
+        script += f'in_data = json.loads(open("{input_path}").read())\n'
+        script += f"task = {edna2_task_name}(inData=in_data)\n"
+
+        script += f'print("Start of execution of EDNA2 task {edna2_task_name}")\n'
+        script += 'open(start_file, "w").write("Started")\n'
+        script += "task.execute()\n"
+        script += 'open(finish_file, "w").write("Finished")\n'
+        script_path = working_dir / f"{edna2_task_name}.py"
+        with open(f"{script_path}", "w") as f:
+            f.write(script)
+        script_path.chmod(0o755)
+        slurm_script_path, slurm_id, stdout, stderr = UtilsSlurm.submit_job_to_slurm(
+            command_line=str(script_path),
+            working_directory=str(working_dir),
+            nodes=1,
+            core=4,
+            time="2:00:00",
+            host=None,
+            queue="mx",
+            name=edna2_task_name,
+            mem=None,
+        )
+        return slurm_script_path, slurm_id, stdout, stderr
