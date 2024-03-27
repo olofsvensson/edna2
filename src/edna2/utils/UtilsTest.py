@@ -68,6 +68,8 @@ def getTestdataPath():
         path_file = pathlib.Path(__file__)
         path_project_base = path_file.parents[3]
         testdata_path = path_project_base / "tests" / "testdata"
+    else:
+        testdata_path = pathlib.Path(testdata_path)
     return testdata_path
 
 
