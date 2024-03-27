@@ -26,6 +26,7 @@ __date__ = "21/04/2019"
 import unittest
 
 from edna2.utils import UtilsTest
+from edna2.utils import UtilsConfig
 from edna2.utils import UtilsLogging
 
 from edna2.tasks.HelloWorldTask import HelloWorldTask
@@ -48,3 +49,16 @@ class HelloWorldTaskExecTest(unittest.TestCase):
         self.assertTrue('results' in outData)
         self.assertTrue('Hello world' in outData['results'])
         logger.info('Results from HelloWorldTask: {0}'.format(outData['results']))
+
+    @unittest.skipIf(UtilsConfig.getSite() == 'Default',
+                     'Cannot run test_execute_on_slurm test with default config')
+    def test_execute_on_slurm(self):
+        referenceDataPath = self.dataPath / 'inDataHelloWorldTask.json'
+        in_data = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+        working_dir = UtilsTest.getTestRunPath()
+        HelloWorldTask.launch_on_slurm(
+            working_dir=working_dir,
+            in_data=in_data,
+            partition="mx",
+            environment={"a": 1}
+        )
