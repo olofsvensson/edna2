@@ -28,6 +28,7 @@ __date__ = "21/04/2019"
 # kernel/tests/src/EDTestCasePlugin.py (for loadTestImage)
 
 import os
+import pprint
 import re
 import json
 import pathlib
@@ -35,8 +36,9 @@ import datetime
 import tempfile
 import threading
 
-from edna2.utils import UtilsLogging
 from edna2.utils import UtilsImage
+from edna2.utils import UtilsConfig
+from edna2.utils import UtilsLogging
 
 from urllib.request import urlopen, ProxyHandler, build_opener
 
@@ -60,10 +62,13 @@ def __timeoutDuringDownload():
 
 
 def getTestdataPath():
-    pathFile = pathlib.Path(__file__)
-    pathProjectBase = pathFile.parents[3]
-    testdataPath = pathProjectBase / "tests" / "testdata"
-    return testdataPath
+    config = UtilsConfig.getTaskConfig("Test")
+    testdata_path = config.get("test_path", None)
+    if testdata_path is None:
+        path_file = pathlib.Path(__file__)
+        path_project_base = path_file.parents[3]
+        testdata_path = path_project_base / "tests" / "testdata"
+    return testdata_path
 
 
 def getTestRunPath():
