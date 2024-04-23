@@ -23,6 +23,7 @@ __authors__ = ["O. Svensson"]
 __license__ = "MIT"
 __date__ = "21/04/2019"
 
+import gzip
 # Corresponding EDNA code:
 # https://github.com/olofsvensson/edna-mx
 # mxv1/plugins/EDPluginGroupReadImageHeader-v1.0/plugins/
@@ -78,9 +79,14 @@ class ReadImageHeader(AbstractTask):
         hasOverlap = inData.get("hasOverlap", False)
         listSubWedge = []
         for imagePath in listImagePath:
-            imageSuffix = os.path.splitext(imagePath)[1][1:]
+            gz_compressed = False
+            if imagePath.endswith(".gz"):
+                gz_compressed = True
+                imageSuffix = os.path.splitext(imagePath.replace(".gz", ""))[1][1:]
+            else:
+                imageSuffix = os.path.splitext(imagePath)[1][1:]
             if imageSuffix == "cbf":
-                subWedge = self.createCBFHeaderData(imagePath)
+                subWedge = self.createCBFHeaderData(imagePath, gz_compressed)
             elif imageSuffix == "h5":
                 skipNumberOfImages = inData.get("skipNumberOfImages", False)
                 subWedge = self.createHdf5HeaderData(
@@ -100,37 +106,41 @@ class ReadImageHeader(AbstractTask):
         return outData
 
     @classmethod
-    def readCBFHeader(cls, filePath):
+    def readCBFHeader(cls, filePath, gz_compressed=False):
         """
         Returns an dictionary with the contents of a CBF image header.
         """
         dictHeader = None
-        with open(filePath, "rb") as f:
-            logger.info("Reading header from image " + filePath)
-            f.seek(0, 0)
-            doContinue = True
-            iMax = 60
-            index = 0
-            while doContinue:
-                line = f.readline().decode("utf-8")
-                index += 1
-                if "_array_data.header_contents" in line:
-                    dictHeader = {}
-                if "_array_data.data" in line or index > iMax:
-                    doContinue = False
-                if dictHeader is not None and line[0] == "#":
-                    # Check for date
-                    strTmp = line[2:].replace("\r\n", "")
-                    if line[6] == "/" and line[10] == "/":
-                        dictHeader["DateTime"] = strTmp
-                    else:
-                        strKey = strTmp.split(" ")[0]
-                        strValue = strTmp.replace(strKey, "")[1:]
-                        dictHeader[strKey] = strValue
+        if gz_compressed:
+            f = gzip.open(filePath)
+        else:
+            f = open(filePath, "rb")
+        logger.info("Reading header from image " + filePath)
+        f.seek(0, 0)
+        doContinue = True
+        iMax = 60
+        index = 0
+        while doContinue:
+            line = f.readline().decode("utf-8")
+            index += 1
+            if "_array_data.header_contents" in line:
+                dictHeader = {}
+            if "_array_data.data" in line or index > iMax:
+                doContinue = False
+            if dictHeader is not None and line[0] == "#":
+                # Check for date
+                strTmp = line[2:].replace("\r\n", "")
+                if line[6] == "/" and line[10] == "/":
+                    dictHeader["DateTime"] = strTmp
+                else:
+                    strKey = strTmp.split(" ")[0]
+                    strValue = strTmp.replace(strKey, "")[1:]
+                    dictHeader[strKey] = strValue
+        f.close()
         return dictHeader
 
     @classmethod
-    def createCBFHeaderData(cls, imagePath):
+    def createCBFHeaderData(cls, imagePath, gz_compressed=False):
         # Waiting for file
         timedOut, finalSize = UtilsPath.waitForFile(
             imagePath, expectedSize=100000, timeOut=DEFAULT_TIME_OUT
@@ -139,7 +149,7 @@ class ReadImageHeader(AbstractTask):
             errorMessage = "Timeout when waiting for image %s" % imagePath
             logger.error(errorMessage)
             raise BaseException(errorMessage)
-        dictHeader = cls.readCBFHeader(imagePath)
+        dictHeader = cls.readCBFHeader(imagePath, gz_compressed)
         detector = dictHeader["Detector:"]
         if (
             "PILATUS 3M" in detector
@@ -222,7 +232,10 @@ class ReadImageHeader(AbstractTask):
         image = {"path": imagePath}
         if "DateTime" in dictHeader:
             image["date"] = dictHeader["DateTime"]
-        imageNumber = UtilsImage.getImageNumber(imagePath)
+        if gz_compressed:
+            imageNumber = UtilsImage.getImageNumber(imagePath.replace(".gz", ""))
+        else:
+            imageNumber = UtilsImage.getImageNumber(imagePath)
         image["number"] = imageNumber
         subWedge = {"experimentalCondition": experimentalCondition, "image": [image]}
         return subWedge

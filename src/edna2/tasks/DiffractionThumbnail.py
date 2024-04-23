@@ -99,6 +99,9 @@ class DiffractionThumbnail(AbstractTask):
         for imagePath in inData["image"]:
             # Check image file extension
             imageFileName, suffix = os.path.splitext(os.path.basename(imagePath))
+            # Check if gz compressed data
+            if suffix == ".gz":
+                imageFileName, suffix = os.path.splitext(os.path.basename(imageFileName))
             if not suffix in [".img", ".marccd", ".mccd", ".cbf", ".h5"]:
                 raise RuntimeError("Unknown image file name extension for pyarch thumbnail generator: %s" % imagePath)
             # Wait for image file
@@ -324,15 +327,13 @@ class CreateThumbnail(AbstractTask):
                 numpyImage = fabioImage.getframe(imageNumber-1).data
             else:
                 numpyImage = fabioImage.data
-            if numpyImage.dtype == numpy.dtype("uint32"):
-                numpyImage = numpy.where(numpyImage > 65536*65536-2, 0, numpyImage)
-            else:
-                numpyImage = numpy.where(numpyImage > 256*256-2, 0, numpyImage)
         else:
             fabioImage = fabio.openimage.openimage(image)
             numpyImage = fabioImage.data
-            if numpyImage.dtype == numpy.dtype("uint32"):
-                numpyImage = numpy.where(numpyImage > 65536 * 65536 - 2, 0, numpyImage)
+        if numpyImage.dtype == numpy.dtype("uint32"):
+            numpyImage = numpy.where(numpyImage > 65536 * 65536 - 2, 0, numpyImage)
+        else:
+            numpyImage = numpy.where(numpyImage > 256*256-2, 0, numpyImage)
         # Default format
         suffix = "jpg"
         pilFormat = "JPEG"
