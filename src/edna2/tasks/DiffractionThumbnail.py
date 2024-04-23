@@ -372,7 +372,7 @@ class CreateThumbnail(AbstractTask):
                     numpyImageInt = numpy.where(numpy.logical_and(circle < (radius+delta)**2, circle > (radius-delta)**2), 254, numpyImageInt)
         pilOutputImage = ImageOps.invert(Image.fromarray(numpyImageInt, 'L'))
         if height is not None and width is not None:
-            pilOutputImage = pilOutputImage.resize((width, height), Image.ANTIALIAS)
+            pilOutputImage = pilOutputImage.resize((width, height), Image.Resampling.LANCZOS)
         width, height = pilOutputImage.size
         for resolution, distance in listResolution:
             centreX = width / 2
