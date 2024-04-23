@@ -331,6 +331,8 @@ class CreateThumbnail(AbstractTask):
         else:
             fabioImage = fabio.openimage.openimage(image)
             numpyImage = fabioImage.data
+            if numpyImage.dtype == numpy.dtype("uint32"):
+                numpyImage = numpy.where(numpyImage > 65536 * 65536 - 2, 0, numpyImage)
         # Default format
         suffix = "jpg"
         pilFormat = "JPEG"

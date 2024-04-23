@@ -171,6 +171,11 @@ class ReadImageHeader(AbstractTask):
             detectorType = "eiger16m"
             numberPixelX = 4148
             numberPixelY = 4362
+        elif "eiger1" in detector.lower() and "16m" in detector.lower():
+            detectorName = "EIGER1 16M"
+            detectorType = "eiger16m"
+            numberPixelX = 4150
+            numberPixelY = 4371
         else:
             raise RuntimeError(
                 "{0} cannot read image header from images with dector type {1}".format(
