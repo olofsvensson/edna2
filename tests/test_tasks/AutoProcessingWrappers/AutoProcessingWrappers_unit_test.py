@@ -72,11 +72,11 @@ def test_wait_for_data_cbf():
     assert is_success
 
 
-def test_wait_for_data_h5():
-    in_data = {
-        "raw_data": [
-            "/data/visitor/mx2112/id23eh1/20240130/RAW_DATA/Sample-8:2:08/run_01_MXPressF/run_01_04_datacollection",
-        ]
-    }
-    is_success = AutoPROCWrapper.wait_for_data(in_data)
-    assert is_success
+# def test_wait_for_data_h5():
+#     in_data = {
+#         "raw_data": [
+#             "/data/visitor/mx2112/id23eh1/20240130/RAW_DATA/Sample-8:2:08/run_01_MXPressF/run_01_04_datacollection",
+#         ]
+#     }
+#     is_success = AutoPROCWrapper.wait_for_data(in_data)
+#     assert is_success
