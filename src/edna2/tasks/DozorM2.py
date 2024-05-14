@@ -58,7 +58,6 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 },
                 "name_template_scan": {"type": "string"},
                 "detectorType": {"type": "string"},
-                "beamline": {"type": "string"},
                 "detector_distance": {"type": "number"},
                 "wavelength": {"type": "number"},
                 "orgx": {"type": "number"},
@@ -66,20 +65,60 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 "number_row": {"type": "number"},
                 "number_images": {"type": "number"},
                 "isZigZag": {"type": "boolean"},
-                "step_h": {"type": "number"},
-                "step_v": {"type": "number"},
+                "step_h": { "anyOf": [
+                        {"type": "null"},
+                        {"type": "number"}
+                    ]
+                },
+                "step_v":  { "anyOf": [
+                        {"type": "null"},
+                        {"type": "number"}
+                    ]
+                },
                 "beam_shape": {"type": "string"},
-                "beam_h": {"type": "number"},
-                "beam_v": {"type": "number"},
-                "number_apertures": {"type": "integer"},
-                "aperture_size": {"type": "string"},
+                "beam_h":  { "anyOf": [
+                        {"type": "null"},
+                        {"type": "number"}
+                    ]
+                },
+                "beam_v":  { "anyOf": [
+                        {"type": "null"},
+                        {"type": "number"}
+                    ]
+                },
+                "number_apertures": { "anyOf": [
+                        {"type": "null"},
+                        {"type": "integer"}
+                    ]
+                },
+                "aperture_size":  { "anyOf": [
+                        {"type": "null"},
+                        {"type": "string"}
+                    ]
+                },
                 "reject_level": {"type": "integer"},
-                "loop_thickness": {"type": "integer"},
+                "loop_thickness":  { "anyOf": [
+                        {"type": "null"},
+                        {"type": "integer"}
+                    ]
+                },
                 "isHorizontalScan": {"type": "boolean"},
                 "number_scans": {"type": "integer"},
-                "grid_x0": {"type": "number"},
-                "grid_x1": {"type": "number"},
-                "phi_values": {"type": "array", "items": {"type": "number"}},
+                "grid_x0":  { "anyOf": [
+                        {"type": "null"},
+                        {"type": "number"}
+                    ]
+                },
+                "grid_x1":  { "anyOf": [
+                        {"type": "null"},
+                        {"type": "number"}
+                    ]
+                },
+                "phi_values": { "anyOf": [
+                    {"type": "array", "items": {"type": "number"}},
+                    {"type": "null"}
+                    ]
+                },
                 "sampx": {"type": "number"},
                 "sampy": {"type": "number"},
                 "phiy": {"type": "number"},
@@ -141,8 +180,10 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         command += "number_row {0}\n".format(inData["number_row"])
         command += "number_images {0}\n".format(inData["number_images"])
         command += "mesh_direct {0}\n".format(meshDirect)
-        command += "step_h {0}\n".format(inData["step_h"])
-        command += "step_v {0}\n".format(inData["step_v"])
+        if inData["step_h"] is not None:
+            command += "step_h {0}\n".format(inData["step_h"])
+        if inData["step_v"] is not None:
+            command += "step_v {0}\n".format(inData["step_v"])
         command += "beam_shape {0}\n".format(inData["beam_shape"])
         command += "beam_h {0}\n".format(inData["beam_h"])
         command += "beam_v {0}\n".format(inData["beam_v"])
@@ -154,7 +195,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         command += "name_template_scan {0}\n".format(nameTemplateScan)
         command += "number_scans {0}\n".format(inData["number_scans"])
         command += "first_scan_number 1\n"
-        if "phi_values" in inData:
+        if "phi_values" in inData and inData["phi_values"] is not None:
             for index, phi_value in enumerate(inData["phi_values"]):
                 command += "phi{0} {1}\n".format(index + 1, phi_value)
             command += "axis_zero {0} {1}\n".format(
@@ -223,6 +264,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
         scan1 = None
         scan2 = None
         listCoord = None
+        unsuccessful_scans = False
         for line in listLogLines:
             # print([line])
             if "SCAN 1" in line:
@@ -234,6 +276,8 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 scan2 = listPositions
                 do3dCoordinates = True
                 listCoord = []
+            elif "unsuccessful scans" in line:
+                unsuccessful_scans = True
             if line.startswith("------"):
                 doParseLine = True
             elif len(line) == 1:
@@ -293,7 +337,7 @@ class DozorM2(AbstractTask):  # pylint: disable=too-many-instance-attributes
                     listCoord.append(coord)
         if scan1 is None:
             scan1 = listPositions
-        dictCoord = {"scan1": scan1, "scan2": scan2, "coord": listCoord}
+        dictCoord = {"scan1": scan1, "scan2": scan2, "coord": listCoord, "unsuccessful_scans": unsuccessful_scans}
         return dictCoord
 
     @staticmethod

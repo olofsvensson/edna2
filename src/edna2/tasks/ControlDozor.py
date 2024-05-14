@@ -32,6 +32,7 @@ import matplotlib.pyplot as plt
 from edna2.tasks.AbstractTask import AbstractTask
 from edna2.tasks.ReadImageHeader import ReadImageHeader
 from edna2.tasks.ISPyBTasks import ISPyBRetrieveDataCollection
+from edna2.tasks.DozorM2 import DozorM2
 
 from edna2.utils import UtilsPath
 from edna2.utils import UtilsImage
@@ -115,7 +116,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
                 "wedgeNumber": {"type": "integer"},
                 "radiationDamage": {"type": "boolean"},
                 "overlap": {"type": "number"},
-                "doDozorM": {"type": "boolean"},
+                "prepareDozorAllFile": {"type": "boolean"},
                 "doSubmit": {"type": "boolean"},
                 "doTotalIntensity": {"type": "boolean"}
             },
@@ -140,7 +141,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
 
     def run(self, inData):
         doSubmit = inData.get("doSubmit", False)
-        doDozorM = inData.get("doDozorM", False)
+        prepareDozorAllFile = inData.get("prepareDozorAllFile", True)
         doTotalIntensity = inData.get("doTotalIntensity", False)
         commands = self.generateCommands(inData)
         with open(str(self.getWorkingDirectory() / "dozor.dat"), "w") as f:
@@ -157,7 +158,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         commandLine = executable + " -pall"
         if doTotalIntensity:
             commandLine += " -s"
-        if doDozorM:
+        if prepareDozorAllFile:
             commandLine += " -mesh"
         if "radiationDamage" in inData:
             commandLine += " -rd dozor.dat"
@@ -172,7 +173,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         )
         log = self.getLog()
         outData = self.parseOutput(
-            inData, log, doDozorM=doDozorM, workingDir=self.getWorkingDirectory()
+            inData, log, prepareDozorAllFile=prepareDozorAllFile, workingDir=self.getWorkingDirectory()
         )
         return outData
 
@@ -271,7 +272,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
         # logger.debug('command: {0}'.format(command))
         return command
 
-    def parseOutput(self, inData, output, doDozorM=False, workingDir=None):
+    def parseOutput(self, inData, output, prepareDozorAllFile=True, workingDir=None):
         """
         This method parses the output of dozor
         """
@@ -379,7 +380,7 @@ class ExecDozor(AbstractTask):  # pylint: disable=too-many-instance-attributes
             if os.path.exists(mtvFilePath):
                 resultDozor["plotmtvFile"] = mtvFilePath
                 resultDozor["pngPlots"] = self.generatePngPlots(mtvFilePath, workingDir)
-        if doDozorM:
+        if prepareDozorAllFile:
             # Create 'dozor_all_result' file
             dozorAllFile = str(self.getWorkingDirectory() / "dozor_all")
             os.system(
@@ -552,7 +553,8 @@ class ControlDozor(AbstractTask):
                 "radiationDamage": {"type": "string"},
                 "keepCbfTmpDirectory": {"type": "boolean"},
                 "doISPyBUpload": {"type": "boolean"},
-                "doDozorM": {"type": "boolean"},
+                "prepareDozorAllFile": {"type": "boolean"},
+                "runDozorM2": {"type": "boolean"},
                 "doTotalIntensity": {"type": "boolean"},
                 "returnSpotList": {"type": "boolean"}
             },
@@ -584,8 +586,11 @@ class ControlDozor(AbstractTask):
         hasHdf5Prefix = False
         detectorType = None
         returnSpotList = inData.get("returnSpotList", False)
-        # Check doDozorM
-        doDozorM = inData.get("doDozorM", False)
+        # Check prepareDozorAllFile and runDozormM2
+        prepareDozorAllFile = inData.get("prepareDozorAllFile", True)
+        runDozorM2 = inData.get("runDozorM2", False)
+        if runDozorM2 and not prepareDozorAllFile:
+            prepareDozorAllFile = True
         doTotalIntensity = inData.get("doTotalIntensity", False)
         # Check if connection to ISPyB needed
         batchSize, dictImage = self.determineBatchsize(inData)
@@ -599,7 +604,7 @@ class ControlDozor(AbstractTask):
         )
         outData["imageQualityIndicators"] = []
         for listBatch in listAllBatches:
-            outDataDozor, detectorType = self.runDozorTask(
+            outDataDozor, dict_detector, dict_beam = self.runDozorTask(
                 inData=inData,
                 dictImage=dictImage,
                 listBatch=listBatch,
@@ -642,21 +647,21 @@ class ControlDozor(AbstractTask):
                                     numpyArray.shape
                                 )
                     outData["imageQualityIndicators"].append(imageQualityIndicators)
-                if doDozorM:
+                if prepareDozorAllFile:
                     listDozorAllFile.append(outDataDozor["dozorAllFile"])
         # Assemble all dozorAllFiles into one
-        if doDozorM:
+        if prepareDozorAllFile:
             controlDozorAllFile = str(self.getWorkingDirectory() / "dozor_all")
             os.system("touch {0}".format(controlDozorAllFile))
             for dozorAllFile in listDozorAllFile:
                 command = "cat " + dozorAllFile + " >> " + controlDozorAllFile
                 os.system(command)
         # Make plot if we have a data collection id
+        if "processDirectory" in inData:
+            processDirectory = pathlib.Path(inData["processDirectory"])
+        else:
+            processDirectory = self.getWorkingDirectory()
         if "dataCollectionId" in inData and inData["dataCollectionId"] is not None:
-            if "processDirectory" in inData:
-                processDirectory = pathlib.Path(inData["processDirectory"])
-            else:
-                processDirectory = self.getWorkingDirectory()
             dozorPlotPath, dozorCsvPath = self.makePlot(
                 inData["dataCollectionId"], outData, self.getWorkingDirectory()
             )
@@ -668,21 +673,52 @@ class ControlDozor(AbstractTask):
                     dozorCsvPath=dozorCsvPath,
                     workingDirectory=processDirectory,
                 )
-        #            xsDataResultControlDozor.halfDoseTime = edPluginDozor.dataOutput.halfDoseTime
-        #            xsDataResultControlDozor.pngPlots = edPluginDozor.dataOutput.pngPlots
-        #
-        #            self.sendResultToMXCuBE(imageDozorBatchList)
-        #            self.sendMessageToMXCuBE("Batch processed")
-        #        if self.cbfTempDir is not None:
-        #            if self.dataInput.keepCbfTmpDirectory is not None and self.dataInput.keepCbfTmpDirectory.value:
-        #                self.dataOutput.pathToCbfDirectory = XSDataFile(XSDataString(self.cbfTempDir))
-        #            else:
-        #                shutil.rmtree(self.cbfTempDir)
-
-        # Read the header from the first image in the batch
-        outData["detectorType"] = detectorType
-        if doDozorM:
+        outData["detectorType"] = dict_detector["type"]
+        if prepareDozorAllFile:
             outData["dozorAllFile"] = controlDozorAllFile
+        if runDozorM2:
+            # Run dozorm2
+            reject_level = 40
+            phiValues = None
+            nominal_beamsize_x = UtilsConfig.get(self, "nominal_beamsize_x")
+            nominal_beamsize_y = UtilsConfig.get(self, "nominal_beamsize_y")
+            inDataDozorM2 = {
+                "detectorType": dict_detector["type"],
+                "detector_distance": dict_detector["distance"],
+                "wavelength": dict_beam["wavelength"],
+                "orgx": dict_detector["beamPositionX"] / dict_detector["pixelSizeX"],
+                "orgy": dict_detector["beamPositionY"] / dict_detector["pixelSizeY"],
+                "number_row": 900,
+                "number_images": 900,
+                "isZigZag": False,
+                "step_h": None,
+                "step_v": None,
+                "beam_shape": "G",
+                "beam_h": nominal_beamsize_x,
+                "beam_v": nominal_beamsize_y,
+                "number_apertures": None,
+                "aperture_size": None,
+                "reject_level": reject_level,
+                "list_dozor_all": listDozorAllFile,
+                "phi_values": phiValues,
+                "number_scans": len(listDozorAllFile),
+                "first_scan_number": 1,
+                "workingDirectory": processDirectory,
+                "isHorizontalScan": True,
+                "grid_x0": None,
+                "grid_y0": None,
+                "loop_thickness": None,
+            }
+            workingDirectorySuffix = "dozorm2"
+            dozorM2 = DozorM2(
+                inData=inDataDozorM2,
+                workingDirectorySuffix=workingDirectorySuffix
+            )
+            logger.debug("Running DozorM2...")
+            logger.debug(f"workingDirectory: {processDirectory}")
+            dozorM2.execute()
+            logger.info("DozorM2 finished: success={0}".format(dozorM2.isSuccess()))
+
         return outData
 
     def determineBatchsize(self, inData):
@@ -724,7 +760,7 @@ class ControlDozor(AbstractTask):
         hasOverlap
     ):
         doSubmit = inData.get("doSubmit", False)
-        doDozorM = inData.get("doDozorM", False)
+        prepareDozorAllFile = inData.get("prepareDozorAllFile", True)
         doTotalIntensity = inData.get("doTotalIntensity", False)
         outDataDozor = None
         image = dictImage[listBatch[0]]
@@ -763,18 +799,18 @@ class ControlDozor(AbstractTask):
         outDataHeader = controlHeader.outData
         subWedge = outDataHeader["subWedge"][0]
         experimentalCondition = subWedge["experimentalCondition"]
-        beam = experimentalCondition["beam"]
-        detector = experimentalCondition["detector"]
-        detectorType = detector["type"]
+        dict_beam = experimentalCondition["beam"]
+        dict_detector = experimentalCondition["detector"]
+        detectorType = dict_detector["type"]
         goniostat = experimentalCondition["goniostat"]
         inDataDozor = {
-            "detectorType": detector["type"],
-            "exposureTime": beam["exposureTime"],
-            "detectorDistance": detector["distance"],
+            "detectorType": dict_detector["type"],
+            "exposureTime": dict_beam["exposureTime"],
+            "detectorDistance": dict_detector["distance"],
             "spotSize": 3,
-            "wavelength": beam["wavelength"],
-            "orgx": detector["beamPositionX"] / detector["pixelSizeX"],
-            "orgy": detector["beamPositionY"] / detector["pixelSizeY"],
+            "wavelength": dict_beam["wavelength"],
+            "orgx": dict_detector["beamPositionX"] / dict_detector["pixelSizeX"],
+            "orgy": dict_detector["beamPositionY"] / dict_detector["pixelSizeY"],
             "oscillationRange": goniostat["oscillationWidth"],
             "startingAngle": goniostat["rotationAxisStart"],
             "firstImageNumber": imageNumber,
@@ -782,7 +818,7 @@ class ControlDozor(AbstractTask):
             "workingDirectory": workingDirectory,
             "overlap": overlap,
             "doSubmit": doSubmit,
-            "doDozorM": doDozorM,
+            "prepareDozorAllFile": prepareDozorAllFile,
             "doTotalIntensity": doTotalIntensity
         }
         if "beamline" in inData:
@@ -813,7 +849,7 @@ class ControlDozor(AbstractTask):
             ].endswith(".h5"):
                 if outDataDozor["imageDozor"][0]["number"] != imageNumberOrig:
                     outDataDozor["imageDozor"][0]["number"] = imageNumberOrig
-        return outDataDozor, detectorType
+        return outDataDozor, dict_detector, dict_beam
 
     def createGnuPlotFile(self, workingDirectory, csvFileName, outDataImageDozor):
         with open(str(workingDirectory / csvFileName), "w") as gnuplotFile:

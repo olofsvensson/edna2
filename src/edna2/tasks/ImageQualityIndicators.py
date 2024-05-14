@@ -43,6 +43,8 @@ from edna2.tasks.WaitFileTask import WaitFileTask
 from edna2.tasks.ControlDozor import ControlDozor
 from edna2.tasks.PhenixTasks import DistlSignalStrengthTask
 from edna2.tasks.H5ToCBFTask import H5ToCBFTask
+from edna2.tasks.ReadImageHeader import ReadImageHeader
+from edna2.tasks.DozorM2 import DozorM2
 
 from edna2.utils import UtilsPath
 from edna2.utils import UtilsImage
@@ -69,7 +71,7 @@ class ImageQualityIndicators(AbstractTask):
         self.directory = None
         self.template = None
         self.doSubmit = None
-        self.doDozorM = None
+        self.runDozorM2 = None
         self.doDistlSignalStrength = None
         self.isFastMesh = None
         self.listImage = None
@@ -96,11 +98,12 @@ class ImageQualityIndicators(AbstractTask):
                 listControlDozorAllFile,
             ) = self.synchronizeDozor(listDozorTask, distl_results)
             # Assemble all controlDozorAllFiles into one
-            if self.doDozorM:
-                imageQualityIndicatorsDozorAllFile = self.createDozorAllFile(
-                    listControlDozorAllFile
-                )
-                outData["dozorAllFile"] = imageQualityIndicatorsDozorAllFile
+            imageQualityIndicatorsDozorAllFile = self.createDozorAllFile(
+                listControlDozorAllFile
+            )
+            outData["dozorAllFile"] = imageQualityIndicatorsDozorAllFile
+        if self.runDozorM2:
+            self.executeDozorM2(listControlDozorAllFile)
         outData["imageQualityIndicators"] = listImageQualityIndicators
         # Make plot if we have a data collection id
         if "dataCollectionId" in inData and inData["dataCollectionId"] is not None:
@@ -132,7 +135,7 @@ class ImageQualityIndicators(AbstractTask):
     def init(self, inData):
         self.beamline = inData.get("beamline", None)
         self.doSubmit = inData.get("doSubmit", False)
-        self.doDozorM = inData.get("doDozorM", False)
+        self.runDozorM2 = inData.get("runDozorM2", False)
         self.doTotalIntensity = inData.get("doTotalIntensity", False)
         self.doDistlSignalStrength = inData.get("doDistlSignalStrength", False)
         self.isFastMesh = inData.get("fastMesh", True)
@@ -170,7 +173,7 @@ class ImageQualityIndicators(AbstractTask):
             "type": "object",
             "properties": {
                 "beamline": {"type": "string"},
-                "doDozorM": {"type": "boolean"},
+                "runDozorM2": {"type": "boolean"},
                 "doTotalIntensity": {"type": "boolean"},
                 "doDistlSignalStrength": {"type": "boolean"},
                 "doIndexing": {"type": "boolean"},
@@ -212,7 +215,9 @@ class ImageQualityIndicators(AbstractTask):
         if len(self.listImage) == 0:
             self.directory = pathlib.Path(inData["directory"])
             self.template = inData["template"]
+            tmp_template = self.template.replace("####", "%04d")
             startNo = inData["startNo"]
+            self.firstImage = pathlib.Path(self.directory) / (tmp_template % startNo)
             endNo = inData["endNo"]
             for index in range(startNo, endNo + 1):
                 listOfImagesInBatch.append(index)
@@ -220,9 +225,9 @@ class ImageQualityIndicators(AbstractTask):
                     listOfBatches.append(listOfImagesInBatch)
                     listOfImagesInBatch = []
         else:
-            firstImage = pathlib.Path(self.listImage[0])
-            self.directory = firstImage.parent
-            self.template = UtilsImage.getTemplate(firstImage)
+            self.firstImage = pathlib.Path(self.listImage[0])
+            self.directory = self.firstImage.parent
+            self.template = UtilsImage.getTemplate(self.firstImage)
             for image in self.listImage:
                 imageNo = UtilsImage.getImageNumber(image)
                 listOfImagesInBatch.append(imageNo)
@@ -282,10 +287,11 @@ class ImageQualityIndicators(AbstractTask):
                     "endNo": batchEndNo,
                     "batchSize": self.batchSize,
                     "doSubmit": self.doSubmit,
-                    "doDozorM": self.doDozorM,
+                    "runDozorM2": False,
                     "doIspybUpload": self.doIspybUpload,
                     "overlap": self.overlap,
-                    "doTotalIntensity": self.doTotalIntensity
+                    "doTotalIntensity": self.doTotalIntensity,
+                    "prepareDozorAllFile": True
                 }
                 if self.beamline is not None:
                     inDataControlDozor["beamline"] = self.beamline
@@ -325,8 +331,74 @@ class ImageQualityIndicators(AbstractTask):
                 logger.info(f"Joining distlTask {image_path}")
                 distlTask.join()
                 distl_results[os.path.basename(image_path)] = dict(distlTask.outData)
-
         return dozor_tasks, distl_results
+
+
+    def executeDozorM2(self, listDozorAllFile):
+        image = str(self.firstImage)
+        if self.overlap > 0:
+            hasOverlap = True
+        else:
+            hasOverlap = False
+        inDataReadHeader = {
+            "imagePath": [image],
+            "skipNumberOfImages": True,
+            "hasOverlap": hasOverlap,
+            "isFastMesh": True,
+        }
+        workingDirectorySuffix = ""
+        controlHeader = ReadImageHeader(
+            inData=inDataReadHeader, workingDirectorySuffix=workingDirectorySuffix
+        )
+        controlHeader.execute()
+        outDataHeader = controlHeader.outData
+        subWedge = outDataHeader["subWedge"][0]
+        experimentalCondition = subWedge["experimentalCondition"]
+        dict_beam = experimentalCondition["beam"]
+        dict_detector = experimentalCondition["detector"]
+        detectorType = dict_detector["type"]
+        goniostat = experimentalCondition["goniostat"]
+        # Run dozorm2
+        reject_level = 40
+        phiValues = None
+        nominal_beamsize_x = UtilsConfig.get(self, "nominal_beamsize_x")
+        nominal_beamsize_y = UtilsConfig.get(self, "nominal_beamsize_y")
+        inDataDozorM2 = {
+            "detectorType": dict_detector["type"],
+            "detector_distance": dict_detector["distance"],
+            "wavelength": dict_beam["wavelength"],
+            "orgx": dict_detector["beamPositionX"] / dict_detector["pixelSizeX"],
+            "orgy": dict_detector["beamPositionY"] / dict_detector["pixelSizeY"],
+            "number_row": 900,
+            "number_images": 900,
+            "isZigZag": False,
+            "step_h": None,
+            "step_v": None,
+            "beam_shape": "G",
+            "beam_h": nominal_beamsize_x,
+            "beam_v": nominal_beamsize_y,
+            "number_apertures": None,
+            "aperture_size": None,
+            "reject_level": reject_level,
+            "list_dozor_all": listDozorAllFile,
+            "phi_values": phiValues,
+            "number_scans": len(listDozorAllFile),
+            "first_scan_number": 1,
+            "workingDirectory": self.getWorkingDirectory(),
+            "isHorizontalScan": True,
+            "grid_x0": None,
+            "grid_y0": None,
+            "loop_thickness": None,
+        }
+        workingDirectorySuffix = "dozorm2"
+        dozorM2 = DozorM2(
+            inData=inDataDozorM2,
+            workingDirectorySuffix=workingDirectorySuffix
+        )
+        logger.debug("Running DozorM2...")
+        logger.debug(f"workingDirectory: {self.getWorkingDirectory()}")
+        dozorM2.execute()
+        logger.info("DozorM2 finished: success={0}".format(dozorM2.isSuccess()))
 
     def synchronizeDislt(self, listDistlTask):
         listDistlResult = []
@@ -384,7 +456,7 @@ class ImageQualityIndicators(AbstractTask):
             else:
                 listImageQualityIndicators += listOutDataControlDozor
             # Check if dozorm
-            if self.doDozorM:
+            if "dozorAllFile" in controlDozor.outData:
                 listControlDozorAllFile.append(controlDozor.outData["dozorAllFile"])
         return listImageQualityIndicators, listControlDozorAllFile
 
