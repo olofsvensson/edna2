@@ -57,7 +57,13 @@ def rotator(source, dest):
 
 def addConfigFileHandler(logger):
     logPath = UtilsConfig.get("Logging", "log_file_path")
-    if logPath is not None:
+    do_add_rotating_fileHandler = True
+    if len(logger.handlers) > 0:
+        # making sure we do not add duplicate handlers
+        for handler in logger.handlers:
+            if isinstance(handler, logging.handlers.TimedRotatingFileHandler):
+                do_add_rotating_fileHandler = False
+    if do_add_rotating_fileHandler and (logPath is not None):
         is_ok = False
         if os.path.exists(logPath):
             if os.access(logPath, os.W_OK):
@@ -104,7 +110,7 @@ def addFileHandler(logger, log_path):
     if len(logger.handlers) > 0:
         # making sure we do not add duplicate handlers
         for handler in logger.handlers:
-            if isinstance(handler, logging.handlers.RotatingFileHandler):
+            if isinstance(handler, logging.handlers.TimedRotatingFileHandler):
                 do_add_rotating_fileHandler = False
     if do_add_rotating_fileHandler:
         if "DATETIME" in log_path:
@@ -115,7 +121,7 @@ def addFileHandler(logger, log_path):
             os.makedirs(os.path.dirname(log_path))
         maxBytes = int(UtilsConfig.get("Logging", "log_file_maxbytes", 1e7))
         backupCount = int(UtilsConfig.get("Logging", "log_file_backupCount", 0))
-        fileHandler = logging.handlers.RotatingFileHandler(
+        fileHandler = logging.handlers.TimedRotatingFileHandler(
             log_path, maxBytes=maxBytes, backupCount=backupCount
         )
         logFileFormat = UtilsConfig.get("Logging", "log_file_format")
@@ -159,7 +165,7 @@ def getLogger(level=None):
     for handler in logger.handlers:
         if isinstance(handler, graypy.GELFUDPHandler):
             hasGraylogHandler = True
-        elif isinstance(handler, logging.handlers.RotatingFileHandler):
+        elif isinstance(handler, logging.handlers.TimedRotatingFileHandler):
             hasFileHandler = True
         elif isinstance(handler, logging.StreamHandler):
             hasStreamHandler = True
