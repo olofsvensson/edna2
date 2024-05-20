@@ -55,6 +55,7 @@ class XDSTask(AbstractTask):
     """
 
     def run(self, inData):
+        logger.debug(f"Working directory: {self.getWorkingDirectory()}")
         commandLine = "xds_par"
         listXDS_INP = self.generateXDS_INP(inData)
         self.writeXDS_INP(listXDS_INP, self.getWorkingDirectory())
