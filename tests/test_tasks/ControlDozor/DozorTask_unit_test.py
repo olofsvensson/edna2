@@ -61,13 +61,13 @@ class ExecDozorUnitTest(unittest.TestCase):
         logFileName = self.dataPath / "Dozor_v2.0.2.log"
         with open(str(logFileName)) as f:
             output = f.read()
-        result = self.dozor.parseOutput(self.inData, output)
+        result = self.dozor.parseOutput(self.inData, output, prepareDozorAllFile=False)
         self.assertEqual(10, len(result["imageDozor"]), "Result from 10 images")
         # Log file with 'no results'
         logFileName2 = self.dataPath / "Dozor_v2.0.2_no_results.log"
         with open(str(logFileName2)) as f:
             output2 = f.read()
-        result2 = self.dozor.parseOutput(self.inData, output2)
+        result2 = self.dozor.parseOutput(self.inData, output2, prepareDozorAllFile=False)
         self.assertEqual(51, len(result2["imageDozor"]), "Result from 51 images")
 
     def test_parseDouble(self):

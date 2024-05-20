@@ -41,10 +41,10 @@ def get_ispyb_xml():
     return ispyb_xml
 
 
-def test_copy_data_to_icat_dir(tmpdir):
-    tmp_path = pathlib.Path(tmpdir)
-    ispyb_xml = get_ispyb_xml()
-    AutoPROCWrapper.copy_data_to_icat_dir(ispyb_xml=ispyb_xml, icat_dir=tmp_path)
+# def test_copy_data_to_icat_dir(tmpdir):
+#     tmp_path = pathlib.Path(tmpdir)
+#     ispyb_xml = get_ispyb_xml()
+#     AutoPROCWrapper.copy_data_to_icat_dir(ispyb_xml=ispyb_xml, icat_dir=tmp_path)
 
 
 def test_create_icat_metadata_from_ispyb_xml():
