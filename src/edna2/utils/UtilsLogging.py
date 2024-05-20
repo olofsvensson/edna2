@@ -104,7 +104,7 @@ def addFileHandler(logger, log_path):
     if len(logger.handlers) > 0:
         # making sure we do not add duplicate handlers
         for handler in logger.handlers:
-            if isinstance(handler, logging.handlers.TimedRotatingFileHandler):
+            if isinstance(handler, logging.handlers.RotatingFileHandler):
                 do_add_rotating_fileHandler = False
     if do_add_rotating_fileHandler:
         if "DATETIME" in log_path:
