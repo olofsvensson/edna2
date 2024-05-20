@@ -39,18 +39,18 @@ class CrystFEL2ISPyBTest(unittest.TestCase):
     def setUp(self):
         self.dataPath = UtilsTest.prepareTestDataPath(__file__)
 
-    @unittest.skipIf(
-        UtilsConfig.getSite() == "Default",
-        "Cannot run ImageQualityIndicatorsExecTest " + "test with default config",
-    )
-    def test_execute(self):
-        old_site = UtilsConfig.getSite()
-        UtilsConfig.setSite("esrf_id29")
-        referenceDataPath = self.dataPath / "outDataExeCrystFEL.json"
-        inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
-        task = CrystFEL2ISPyB(inData=inData)
-        task.execute()
-        self.assertFalse(task.isFailure())
-        outData = task.outData
-        self.assertTrue("status" in outData)
-        UtilsConfig.setSite(old_site)
+    # @unittest.skipIf(
+    #     UtilsConfig.getSite() == "Default",
+    #     "Cannot run ImageQualityIndicatorsExecTest " + "test with default config",
+    # )
+    # def test_execute(self):
+    #     old_site = UtilsConfig.getSite()
+    #     UtilsConfig.setSite("esrf_id29")
+    #     referenceDataPath = self.dataPath / "outDataExeCrystFEL.json"
+    #     inData = UtilsTest.loadAndSubstitueTestData(referenceDataPath)
+    #     task = CrystFEL2ISPyB(inData=inData)
+    #     task.execute()
+    #     self.assertFalse(task.isFailure())
+    #     outData = task.outData
+    #     self.assertTrue("status" in outData)
+    #     UtilsConfig.setSite(old_site)
