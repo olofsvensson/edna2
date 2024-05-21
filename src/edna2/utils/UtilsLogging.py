@@ -49,20 +49,17 @@ def addStreamHandler(logger):
     streamHandler.setFormatter(formatter)
     logger.addHandler(streamHandler)
 
+
 def rotator(source, dest):
-    with open(source, 'rb') as f_in:
-        with gzip.open(dest + ".gz", 'wb') as f_out:
+    with open(source, "rb") as f_in:
+        with gzip.open(dest + ".gz", "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
     os.remove(source)
+
 
 def addConfigFileHandler(logger):
     logPath = UtilsConfig.get("Logging", "log_file_path")
     do_add_rotating_fileHandler = True
-    if len(logger.handlers) > 0:
-        # making sure we do not add duplicate handlers
-        for handler in logger.handlers:
-            if isinstance(handler, logging.handlers.TimedRotatingFileHandler):
-                do_add_rotating_fileHandler = False
     if do_add_rotating_fileHandler and (logPath is not None):
         is_ok = False
         if os.path.exists(logPath):
@@ -84,22 +81,16 @@ def addConfigFileHandler(logger):
             #         "DATE", time.strftime("%Y-%m-%d", time.localtime(time.time()))
             #     )
             if "USER" in logPath:
-                logPath = logPath.replace(
-                    "USER", os.environ["USER"]
-                )
+                logPath = logPath.replace("USER", os.environ["USER"])
             backup_count = int(UtilsConfig.get("Logging", "log_file_backupCount", 30))
             when = UtilsConfig.get("Logging", "when", "midnight")
             file_handler = logging.handlers.TimedRotatingFileHandler(
-                filename=logPath,
-                when=when,
-                backupCount=backup_count
+                filename=logPath, when=when, backupCount=backup_count
             )
             file_handler.rotator = rotator
             log_file_format = UtilsConfig.get("Logging", "log_file_format")
             if log_file_format is None:
-                log_file_format = (
-                    "%(asctime)s %(module)-20s %(funcName)-15s %(levelname)-8s %(message)s"
-                )
+                log_file_format = "%(asctime)s %(module)-20s %(funcName)-15s %(levelname)-8s %(message)s"
             formatter = logging.Formatter(log_file_format)
             file_handler.setFormatter(formatter)
             logger.addHandler(file_handler)
