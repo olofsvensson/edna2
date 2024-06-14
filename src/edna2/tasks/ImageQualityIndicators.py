@@ -135,7 +135,7 @@ class ImageQualityIndicators(AbstractTask):
     def init(self, inData):
         self.beamline = inData.get("beamline", None)
         self.doSubmit = inData.get("doSubmit", False)
-        self.runDozorM2 = inData.get("runDozorM2", False)
+        self.runDozorM2 = False
         self.doTotalIntensity = inData.get("doTotalIntensity", False)
         self.doDistlSignalStrength = inData.get("doDistlSignalStrength", False)
         self.isFastMesh = inData.get("fastMesh", True)

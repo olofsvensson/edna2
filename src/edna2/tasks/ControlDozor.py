@@ -588,7 +588,7 @@ class ControlDozor(AbstractTask):
         returnSpotList = inData.get("returnSpotList", False)
         # Check prepareDozorAllFile and runDozormM2
         prepareDozorAllFile = inData.get("prepareDozorAllFile", True)
-        runDozorM2 = inData.get("runDozorM2", False)
+        runDozorM2 = False
         if runDozorM2 and not prepareDozorAllFile:
             prepareDozorAllFile = True
         doTotalIntensity = inData.get("doTotalIntensity", False)
