@@ -31,6 +31,7 @@ import json
 #      EDPluginControlImageQualityIndicatorsv1_4.py
 
 import os
+import pprint
 import re
 import shutil
 import time
@@ -797,7 +798,7 @@ plot '{dozorCsvFileName}' using 1:3 title 'Number of spots' axes x1y1 with point
             if beamline is not None:
                 dict_config = UtilsConfig.getTaskConfig("ICAT")
                 metadata_urls = json.loads(dict_config.get("metadata_urls", "[]"))
-                logger.debug(metadata_urls)
+                logger.debug(f"metadata_urls: {metadata_urls}")
                 if len(metadata_urls) > 0:
                     client = IcatClient(metadata_urls=metadata_urls)
                     icat_directory = working_directory.parents[1]
