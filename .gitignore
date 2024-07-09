@@ -1,13 +1,21 @@
-.project
-.pydevproject
-.settings
-venv/
-*.pyc
-testdata/
-.idea/
-docs/build
-src/edna2/lib/autocryst/ext/build
+# Hidden files
+.*
+!.gitignore
+!.travis.yml
+
+# Byte / compiled / optimized
+*.py[cod]
+__pycache__/
 *.so
-.cache
-.pytest_cache
-src/edna2.egg-info
+
+# Distribution / packaging
+/build/
+/dist/
+*.egg-info/
+.eggs/
+/docs/build
+/src/edna2/lib/autocryst/ext/build
+
+# Others
+venv/
+testdata/
